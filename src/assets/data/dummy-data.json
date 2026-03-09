@@ -1,0 +1,31 @@
+{
+  "employees": [
+    {
+      "id": 1,
+      "name": "Marko Markovic",
+      "email": "marko.markovic@company.com",
+      "role": "Admin",
+      "status": "Active",
+      "permissions": ["Create", "Delete", "Edit", "View"]
+    },
+    {
+      "id": 2,
+      "name": "Jelena Petrovic",
+      "email": "jelena.petrovic@company.com",
+      "role": "Regular",
+      "status": "Active",
+      "permissions": ["View"]
+    },
+    {
+      "id": 3,
+      "name": "Nikola Jovanovic",
+      "email": "nikola.jovanovic@company.com",
+      "role": "Regular",
+      "status": "Active",
+      "permissions": ["View"]
+    }
+  ],
+  "roles": ["Admin", "Regular"],
+  "statuses": ["Active", "Inactive"],
+  "permissions": ["Create", "Delete", "Edit", "View"]
+}
