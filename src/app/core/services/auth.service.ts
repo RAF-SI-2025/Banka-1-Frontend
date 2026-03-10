@@ -85,21 +85,23 @@ export class AuthService {
   /**
    * Resets password using the token from email link.
    * @param token - Reset token from URL
-   * @param newPassword - New password
+   * @param password - New password
    * @returns Observable with response message
    */
-  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, { token, newPassword });
+  resetPassword(token: string, password: string): Observable<{ message: string }> {
+    const id = this.getIdFromToken(token);
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/resetPassword`, { id, password });
   }
 
   /**
    * Activates account and sets initial password.
    * @param token - Activation token from URL
-   * @param newPassword - New password
+   * @param password - New password
    * @returns Observable with response message
    */
-  activateAccount(token: string, newPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/activate`, { token, newPassword });
+  activateAccount(token: string, password: string): Observable<{ message: string }> {
+    const id = this.getIdFromToken(token);
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/activate`, { id, password });
   }
 
   /**
@@ -117,6 +119,18 @@ export class AuthService {
    */
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getIdFromToken(token: string): number | null {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = atob(payload);
+      const parsed = JSON.parse(decoded);
+      return parsed.id ?? null;
+    } catch (e) {
+      console.error('Failed to extract id from token', e);
+      return null;
+    }
   }
 
   /**
