@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Forgot password component for initiating password reset.
@@ -11,9 +11,9 @@ import { AuthService } from '../../services/auth';
  */
 @Component({
   selector: 'app-forgot-password',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './forgot-password.html',
-  standalone: true,
   styleUrl: './forgot-password.css'
 })
 export class ForgotPassword {
@@ -47,18 +47,20 @@ export class ForgotPassword {
 
     const { email } = this.forgotPasswordForm.value;
 
-    this.authService.forgotPassword({ email })
+    this.authService.forgotPassword(email)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading.set(false);
           // Always show success message (security best practice)
           this.successMessage.set('If an account exists with this email, you will receive a password reset link.');
           this.forgotPasswordForm.reset();
         },
-        error: (error: Error) => {
+        error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.message || 'An error occurred. Please try again.');
+          // Still show success for security (don't reveal if email exists)
+          this.successMessage.set('If an account exists with this email, you will receive a password reset link.');
+          this.forgotPasswordForm.reset();
         }
       });
   }

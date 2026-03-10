@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Account activation component for first-time login and password setup.
@@ -11,9 +11,9 @@ import { AuthService } from '../../services/auth';
  */
 @Component({
   selector: 'app-activate-account',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './activate-account.html',
-  standalone: true,
   styleUrl: './activate-account.css'
 })
 export class ActivateAccount implements OnInit {
@@ -120,9 +120,9 @@ export class ActivateAccount implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { newPassword, confirmPassword } = this.activateForm.value;
+    const { newPassword } = this.activateForm.value;
 
-    this.authService.activateAccount({ token: this.token, newPassword, confirmPassword })
+    this.authService.activateAccount(this.token, newPassword)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -132,9 +132,9 @@ export class ActivateAccount implements OnInit {
             this.router.navigate(['/auth/login']);
           }, 2000);
         },
-        error: (error: Error) => {
+        error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.message || 'Failed to activate account. Please try again or contact support.');
+          this.errorMessage.set(error?.error?.message || 'Failed to activate account. Please try again or contact support.');
         }
       });
   }

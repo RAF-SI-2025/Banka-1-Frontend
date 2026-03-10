@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Reset password component for setting a new password via reset link.
@@ -11,9 +11,9 @@ import { AuthService } from '../../services/auth';
  */
 @Component({
   selector: 'app-reset-password',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './reset-password.html',
-  standalone: true,
   styleUrl: './reset-password.css'
 })
 export class ResetPassword implements OnInit {
@@ -120,9 +120,9 @@ export class ResetPassword implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { newPassword, confirmPassword } = this.resetPasswordForm.value;
+    const { newPassword } = this.resetPasswordForm.value;
 
-    this.authService.resetPassword({ token: this.token, newPassword, confirmPassword })
+    this.authService.resetPassword(this.token, newPassword)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -132,9 +132,9 @@ export class ResetPassword implements OnInit {
             this.router.navigate(['/auth/login']);
           }, 2000);
         },
-        error: (error: Error) => {
+        error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.message || 'Failed to reset password. Please try again.');
+          this.errorMessage.set(error?.error?.message || 'Failed to reset password. Please try again.');
         }
       });
   }

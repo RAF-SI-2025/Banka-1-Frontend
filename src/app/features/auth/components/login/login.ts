@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Login component for user authentication.
@@ -11,9 +11,9 @@ import { AuthService } from '../../services/auth';
  */
 @Component({
   selector: 'app-login',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
-  standalone: true,
   styleUrl: './login.css'
 })
 export class Login {
@@ -55,18 +55,16 @@ export class Login {
 
     const { email, password } = this.loginForm.value;
 
-    this.authService.login({ email, password })
+    this.authService.login(email, password)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.isLoading.set(false);
-          // Navigate to dashboard or home after successful login
-          // For now, just reset the form
-          this.loginForm.reset();
+          this.router.navigate(['/home']);
         },
-        error: (error: Error) => {
+        error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.message || 'Login failed. Please try again.');
+          this.errorMessage.set(error?.error?.message || 'Invalid credentials. Please try again.');
         }
       });
   }
