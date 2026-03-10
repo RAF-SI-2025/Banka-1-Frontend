@@ -1,10 +1,17 @@
 <div class="page-wrapper">
-  <header class="top-header">
+<header class="top-header">
     <div class="header-text">
       <h1>Employees</h1>
       <p>Manage company employees</p>
     </div>
-    <button class="btn-add">+ Add employee</button>
+    
+    <div style="display: flex; gap: 16px;">
+      <button class="btn-add">+ Add employee</button>
+      
+      <button class="btn-add" style="background-color: transparent; border: 1px solid white;" (click)="onLogout()">
+        Logout
+      </button>
+    </div>
   </header>
 
   <div class="main-content">

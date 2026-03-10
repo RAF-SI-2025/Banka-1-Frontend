@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Employee } from '../../models/employee';
 import { EmployeeService } from '../../services/employee.service';
-
+import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-employee-list',
   templateUrl: './employee-list.component.html',
@@ -16,7 +16,10 @@ export class EmployeeListComponent implements OnInit {
   currentStatusFilter: string = 'All';
   currentPermissionFilter: string = 'All';
 
-  constructor(private employeeService: EmployeeService) {}
+  constructor(
+    private employeeService: EmployeeService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadEmployees();
@@ -126,5 +129,9 @@ export class EmployeeListComponent implements OnInit {
     }
     this.closeEditModal();
   }
+  onLogout(): void {
+    this.authService.logout();
+  }
+
 
 }
