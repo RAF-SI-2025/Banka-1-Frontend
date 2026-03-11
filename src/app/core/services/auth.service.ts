@@ -23,13 +23,16 @@ export class AuthService {
    * @returns Observable sa JWT tokenom i listom permisija
    */
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password })
       .pipe(
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.token);
-          localStorage.setItem(this.USER_KEY, JSON.stringify({ email, permissions: res.permissions }));
-        }),
-        catchError(err => throwError(() => err))
+          localStorage.setItem(
+            this.USER_KEY,
+            JSON.stringify({ email, permissions: res.permissions })
+          );
+        })
       );
   }
 
@@ -50,7 +53,9 @@ export class AuthService {
    * @returns Observable sa novim JWT tokenom
    */
   refreshToken(): Observable<RefreshResponse> {
-    return this.http.post<RefreshResponse>(`${environment.apiUrl}/auth/refresh`, {})
+    const token = this.getToken();
+    return this.http
+      .post<RefreshResponse>(`${environment.apiUrl}/auth/refresh`, { token })
       .pipe(
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.token);
@@ -64,11 +69,29 @@ export class AuthService {
 
   /**
    * Proverava da li je korisnik trenutno autentifikovan
-   * na osnovu prisustva JWT tokena u localStorage.
-   * @returns true ako token postoji, false inače
+   * na osnovu prisustva i validnosti JWT tokena u localStorage.
+   * @returns true ako token postoji i nije istekao, false inače
    */
   isAuthenticated(): boolean {
-    return !!localStorage.getItem(this.TOKEN_KEY);
+    const token = this.getToken();
+    if (!token) return false;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // exp je u sekundama
+      return Date.now() < expiry;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Vraća JWT token iz localStorage.
+   * Enkapsulira direktan pristup localStorage-u — koristi se u interceptoru.
+   * @returns JWT token string ili null ako ne postoji
+   */
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
   /**

@@ -1,0 +1,8 @@
+<form>
+  <input data-cy="email" type="email" placeholder="Email"
+         [(ngModel)]="email" name="email" />
+  <input data-cy="password" type="password" placeholder="Password"
+         [(ngModel)]="password" name="password" />
+  <button data-cy="login-btn" type="button" (click)="onLogin()">Login</button>
+  <button data-cy="logout-btn" type="button" (click)="onLogout()">Logout</button>
+</form>

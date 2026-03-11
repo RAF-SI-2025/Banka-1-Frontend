@@ -26,9 +26,8 @@ export class AuthInterceptor implements HttpInterceptor {
    * @returns Observable sa HTTP eventom
    */
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = localStorage.getItem('authToken');
+    const token = this.authService.getToken();
 
-    // Ne kači token na login i refresh endpointe
     if (!token || req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
       return next.handle(req);
     }
@@ -75,12 +74,13 @@ export class AuthInterceptor implements HttpInterceptor {
         }),
         catchError(err => {
           this.isRefreshing = false;
+          this.refreshTokenSubject.next('');
+
+          this.authService.logout();
           return throwError(() => err);
         })
       );
     }
-
-    // Ako je refresh već u toku, sačekaj novi token pa ponovi zahtev
     return this.refreshTokenSubject.pipe(
       filter(token => token !== null),
       take(1),
