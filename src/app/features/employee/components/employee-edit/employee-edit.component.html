@@ -1,0 +1,80 @@
+<div class="modal-overlay">
+  <div class="modal-card">
+    <h2 class="modal-title">Edit employee</h2>
+
+    <form [formGroup]="editForm" (ngSubmit)="onSave()">
+      
+      <div class="form-row" style="display: flex; gap: 16px; margin-bottom: 16px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Ime: <span class="text-danger">*</span></label>
+          <input type="text" formControlName="ime" class="modal-input"
+                 [class.input-error]="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
+          <span class="error-message" *ngIf="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
+            Obavezno polje (min 2 karaktera).
+          </span>
+        </div>
+
+        <div class="form-group" style="flex: 1;">
+          <label>Prezime: <span class="text-danger">*</span></label>
+          <input type="text" formControlName="prezime" class="modal-input"
+                 [class.input-error]="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
+          <span class="error-message" *ngIf="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
+            Obavezno polje (min 2 karaktera).
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Email: <span class="text-danger">*</span></label>
+        <input type="email" formControlName="email" class="modal-input"
+               [class.input-error]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+        <span class="error-message" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+          Unesite validan email.
+        </span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Role:</label>
+        <select formControlName="pozicija" class="modal-input select-icon">
+          <option value="Regular employee">Regular employee</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Status:</label>
+        <select formControlName="aktivan" class="modal-input select-icon">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label>Permissions:</label>
+        <div class="permissions-grid">
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="editForm.get('permisije')?.value.includes('Create')" (change)="togglePermission('Create', $event)">
+            <span class="custom-checkbox"></span> Create
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="editForm.get('permisije')?.value.includes('Edit')" (change)="togglePermission('Edit', $event)">
+            <span class="custom-checkbox"></span> Edit
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="editForm.get('permisije')?.value.includes('Delete')" (change)="togglePermission('Delete', $event)">
+            <span class="custom-checkbox"></span> Delete
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="editForm.get('permisije')?.value.includes('View')" (change)="togglePermission('View', $event)">
+            <span class="custom-checkbox"></span> View
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-save" [disabled]="editForm.invalid">Save changes</button>
+        <button type="button" class="btn-cancel" (click)="onCancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

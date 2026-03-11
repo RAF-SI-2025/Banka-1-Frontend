@@ -1,0 +1,158 @@
+/* Zatamnjena pozadina preko celog ekrana */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Glavna siva kartica modala */
+.modal-card {
+  background-color: #D4D4D4; /* Siva pozadina sa slike */
+  width: 400px;
+  border-radius: 20px;
+  padding: 30px 40px;
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Naslov modala */
+.modal-title {
+  color: var(--figma-bright-green);
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* Grupa za svaki red forme */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: var(--figma-bright-green);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Input polja (zaobljena i bela) */
+.modal-input {
+  background-color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #374151;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.modal-input:focus {
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+/* Selekti sa zelenom strelicom izmenjenog izgleda */
+.select-icon {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322C55E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 14px;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/* Grid za checkbokseve */
+.permissions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 5px;
+  padding-left: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--figma-bright-green); /* Zeleni tekst za dozvole */
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Stilizovani beli kvadrati za checkbokseve */
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  appearance: none; /* Uklanja defaultni browser stil */
+  background-color: white;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Prikaz kvačice kad je checkirano */
+.checkbox-label input[type="checkbox"]:checked::after {
+  content: '✔';
+  position: absolute;
+  color: var(--figma-bright-green);
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Dugmići na dnu */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.btn-save {
+  background-color: var(--figma-bright-green);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.1s ease;
+}
+
+.btn-cancel {
+  background-color: #9CA3AF; /* Siva boja sa slike */
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.1s ease;
+}
+
+.btn-save:active, .btn-cancel:active {
+  transform: scale(0.95);
+}

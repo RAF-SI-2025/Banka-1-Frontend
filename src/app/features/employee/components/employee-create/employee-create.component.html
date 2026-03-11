@@ -1,0 +1,70 @@
+<div class="page-wrapper">
+  <div class="form-card">
+    
+    <div class="header-text">
+      <h2>Create employee</h2>
+      <p>Fill in the details to create a new employee account.</p>
+    </div>
+
+    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="figma-form">
+      
+      <div class="form-group">
+        <label for="fullName">Full name</label>
+        <input id="fullName" type="text" formControlName="fullName" placeholder="Enter full name">
+        <small *ngIf="employeeForm.get('fullName')?.touched && employeeForm.get('fullName')?.invalid" class="error-msg">
+          Full name is required (min 3 chars).
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="Enter email address">
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select id="role" formControlName="role">
+          <option value="Regular employee">Regular employee</option>
+          <option value="Manager">Manager</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" formControlName="status">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="permissions-section">
+        <h3>Permissions</h3>
+        <div class="permissions-grid">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="permCreate">
+            <span class="checkmark"></span> Create
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="permEdit">
+            <span class="checkmark"></span> Edit
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="permDelete">
+            <span class="checkmark"></span> Delete
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="permView">
+            <span class="checkmark"></span> View
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" routerLink="/employees">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="employeeForm.invalid">Create employee</button>
+      </div>
+
+    </form>
+  </div>
+</div>

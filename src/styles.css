@@ -1,0 +1,29 @@
+/* src/styles.css */
+
+/* 1. Uvoz Inter fonta (Pravilo 6.1) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* 2. Definisanje CSS promenljivih na osnovu tvoje palete boja (image_9.png) */
+:root {
+  --primary-dark-green: #14532D; /* Tamno zelena iz Figme */
+  --bright-green: #22C55E;       /* Svetlo zelena za dugmiće */
+  --light-gray-bg: #F9FAFB;     /* Pozadina stranice */
+  --text-main: #1F2937;         /* Tamno siva za tekst */
+  --text-secondary: #6B7280;   /* Svetlo siva za sekundarni tekst */
+  --table-border: #E5E7EB;     /* Boja linija u tabeli */
+  --surface-white: #FFFFFF;     /* Bela pozadina za tabelu */
+}
+
+/* 3. Globalni reset i podešavanja */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif; /* Primena Inter fonta */
+  background-color: var(--light-gray-bg);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
