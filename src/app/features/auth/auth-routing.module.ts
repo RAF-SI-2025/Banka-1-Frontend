@@ -5,6 +5,7 @@ import {LoginComponent} from "./components/login/login.component";
 import {ForgotPasswordComponent} from "./components/forgot-password/forgot-password.component";
 import {ResetPasswordComponent} from "./components/reset-password/reset-password.component";
 import {ActivateAccountComponent} from "./components/activate-account/activate-account.component";
+import {loggedInGuard} from "../../core/guards/logged-in.guard";
 
 const routes: Routes = [
   {
@@ -13,7 +14,9 @@ const routes: Routes = [
   },
   {
     path: 'login',
-    component: LoginComponent
+    component: LoginComponent,
+    canActivate: [loggedInGuard]
+
   },
   {
     path: 'forgot-password',

@@ -44,7 +44,3 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
-/*
-const routes: Routes = [{ path: 'login', component: LoginComponent },
-  { path: '', redirectTo: '/login', pathMatch: 'full' }];
-*/

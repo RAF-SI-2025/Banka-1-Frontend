@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { ResetPasswordComponent } from './reset-password.component';
 
 describe('ResetPasswordComponent', () => {
@@ -8,7 +9,8 @@ describe('ResetPasswordComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ResetPasswordComponent]
+      declarations: [ResetPasswordComponent],
+      imports: [HttpClientTestingModule, RouterTestingModule]
     });
     fixture = TestBed.createComponent(ResetPasswordComponent);
     component = fixture.componentInstance;
