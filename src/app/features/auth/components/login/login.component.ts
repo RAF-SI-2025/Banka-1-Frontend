@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import {AuthService} from "../../../../core/services/auth.service";
-import {Router} from "@angular/router";
-import {HttpErrorResponse} from "@angular/common/http";
+import { AuthService } from '../../../../core/services/auth.service';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -17,12 +18,10 @@ export class LoginComponent {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly toastService: ToastService
   ) {}
 
-  /**
-   * Handles login form submission.
-   */
   public onSubmit(): void {
     this.errorMessage = '';
 
@@ -39,6 +38,7 @@ export class LoginComponent {
     this.authService.login(trimmedEmail, trimmedPassword).subscribe({
       next: () => {
         this.isLoading = false;
+        this.toastService.success('Successfully signed in.');
         this.router.navigate(['/employees']);
       },
       error: (error: HttpErrorResponse) => {
@@ -46,22 +46,21 @@ export class LoginComponent {
         this.errorMessage =
           error.error?.message ||
           error.error?.error ||
-          'Login failed. Please try again.';
+          'Login failed. Please check your credentials.';
+        this.toastService.error(this.errorMessage);
       }
     });
   }
 
-  /**
-   * Toggles password visibility.
-   */
   public togglePasswordVisibility(): void {
     this.isPasswordVisible = !this.isPasswordVisible;
   }
 
-  /**
-   * Navigates to forgot password page.
-   */
   public goToForgotPassword(): void {
     this.router.navigate(['/forgot-password']);
+  }
+
+  public goToLanding(): void {
+    this.router.navigate(['/']);
   }
 }

@@ -1,59 +1,79 @@
-<div class="modal-overlay">
+<div class="modal-overlay" (click)="onOverlayClick($event)">
   <div class="modal-card">
-    <h2 class="modal-title">Edit employee</h2>
+    <div class="modal-header">
+      <h2>Edit employee</h2>
+      <button type="button" class="btn-close" (click)="onCancel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
 
     <form [formGroup]="editForm" (ngSubmit)="onSave()">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>First name <span class="required">*</span></label>
+            <input type="text" formControlName="ime" placeholder="First name" />
+            <p class="field-error" *ngIf="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
+              Required (min 2 characters).
+            </p>
+          </div>
 
-      <div class="form-row" style="display: flex; gap: 16px; margin-bottom: 16px;">
-        <div class="form-group" style="flex: 1;">
-          <label>Ime: <span class="text-danger">*</span></label>
-          <input type="text" formControlName="ime" class="modal-input"
-                 [class.input-error]="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
-          <span class="error-message" *ngIf="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
-            Obavezno polje (min 2 karaktera).
-          </span>
+          <div class="form-field">
+            <label>Last name <span class="required">*</span></label>
+            <input type="text" formControlName="prezime" placeholder="Last name" />
+            <p class="field-error" *ngIf="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
+              Required (min 2 characters).
+            </p>
+          </div>
         </div>
 
-        <div class="form-group" style="flex: 1;">
-          <label>Prezime: <span class="text-danger">*</span></label>
-          <input type="text" formControlName="prezime" class="modal-input"
-                 [class.input-error]="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
-          <span class="error-message" *ngIf="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
-            Obavezno polje (min 2 karaktera).
-          </span>
+        <div class="form-field">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" formControlName="email" placeholder="Email address" />
+          <p class="field-error" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+            Valid email is required.
+          </p>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Position</label>
+            <input type="text" formControlName="pozicija" placeholder="Position" />
+          </div>
+
+          <div class="form-field">
+            <label>Department</label>
+            <input type="text" formControlName="departman" placeholder="Department" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Role</label>
+            <select formControlName="role">
+              <option value="EmployeeBasic">Basic</option>
+              <option value="EmployeeAgent">Agent</option>
+              <option value="EmployeeSupervisor">Supervisor</option>
+              <option value="EmployeeAdmin">Admin</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Status</label>
+            <select formControlName="aktivan">
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label>Email: <span class="text-danger">*</span></label>
-        <input type="email" formControlName="email" class="modal-input"
-               [class.input-error]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
-        <span class="error-message" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
-          Unesite validan email.
-        </span>
-      </div>
-
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label>Role:</label>
-        <select formControlName="role" class="modal-input select-icon">
-          <option value="BASIC">Basic</option>
-          <option value="AGENT">Agent</option>
-          <option value="SUPERVISOR">Supervisor</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label>Status:</label>
-        <select formControlName="aktivan" class="modal-input select-icon">
-          <option [ngValue]="true">Active</option>
-          <option [ngValue]="false">Inactive</option>
-        </select>
-      </div>
-
-      <div class="modal-actions">
-        <button type="submit" class="btn-save" [disabled]="editForm.invalid">Save changes</button>
-        <button type="button" class="btn-cancel" (click)="onCancel()">Cancel</button>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="editForm.invalid">Save changes</button>
       </div>
     </form>
   </div>

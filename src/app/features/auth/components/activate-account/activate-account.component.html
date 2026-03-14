@@ -1,130 +1,145 @@
-<div class="activate-page">
-  <div class="activate-card">
-    <h1 class="activate-title">Activate your account</h1>
+<div class="auth-page">
+  <div class="auth-card">
+    <!-- Success state -->
+    <div *ngIf="successMessage" class="success-state">
+      <div class="success-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h2>Account activated!</h2>
+      <p>Your account has been activated. Redirecting to login...</p>
+    </div>
 
-    <p class="activate-description" *ngIf="hasValidActivationToken">
-      Create your password
-    </p>
-
-    <p class="activate-description invalid-link-text" *ngIf="!hasValidActivationToken">
-      This page must be opened using the account activation link sent to your email.
-    </p>
-
-    <form class="activate-form" *ngIf="hasValidActivationToken" (ngSubmit)="onSubmit()" novalidate>
-      <div class="input-row">
-        <div
-          class="password-wrapper"
-          [class.input-invalid]="passwordTouched && !!passwordErrorMessage"
-        >
-          <input
-            class="activate-input password-input"
-            [type]="isPasswordVisible ? 'text' : 'password'"
-            name="password"
-            [(ngModel)]="password"
-            placeholder="New password"
-            autocomplete="new-password"
-            (input)="onPasswordInput()"
-            (blur)="onPasswordBlur()"
-          />
-
-          <button
-            type="button"
-            class="password-toggle"
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="isPasswordVisible ? 'Hide password' : 'Show password'"
-          >
-            <svg *ngIf="!isPasswordVisible" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"></path>
-              <path d="M4 4l16 16" class="slash"></path>
-            </svg>
-
-            <svg *ngIf="isPasswordVisible" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"></path>
-            </svg>
-          </button>
+    <!-- Invalid token -->
+    <div *ngIf="!hasValidActivationToken && !successMessage">
+      <div class="auth-header">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
         </div>
-
-        <p class="field-error" *ngIf="passwordTouched && passwordErrorMessage">
-          {{ passwordErrorMessage }}
-        </p>
+        <h1 class="auth-title">Invalid link</h1>
+        <p class="auth-subtitle">This activation link is invalid or has expired. Contact your administrator.</p>
       </div>
 
-      <ul class="password-rules">
-        <li [class.rule-valid]="hasMinLength">At least 8 characters</li>
-        <li [class.rule-valid]="hasMaxLength">At most 32 characters</li>
-        <li [class.rule-valid]="hasUppercaseLetter">At least one uppercase letter</li>
-        <li [class.rule-valid]="hasLowercaseLetter">At least one lowercase letter</li>
-        <li [class.rule-valid]="hasTwoDigits">At least two digits</li>
-        <li [class.rule-valid]="hasNoSpaces">No spaces</li>
-      </ul>
-
-      <div class="input-row confirm-row">
-        <div
-          class="password-wrapper"
-          [class.input-invalid]="confirmPasswordTouched && !!confirmPasswordErrorMessage"
-        >
-          <input
-            class="activate-input password-input"
-            [type]="isConfirmPasswordVisible ? 'text' : 'password'"
-            name="confirmPassword"
-            [(ngModel)]="confirmPassword"
-            placeholder="Confirm password"
-            autocomplete="new-password"
-            (input)="onConfirmPasswordInput()"
-            (blur)="onConfirmPasswordBlur()"
-          />
-
-          <button
-            type="button"
-            class="password-toggle"
-            (click)="toggleConfirmPasswordVisibility()"
-            [attr.aria-label]="isConfirmPasswordVisible ? 'Hide password' : 'Show password'"
-          >
-            <svg *ngIf="!isConfirmPasswordVisible" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"></path>
-              <path d="M4 4l16 16" class="slash"></path>
-            </svg>
-
-            <svg *ngIf="isConfirmPasswordVisible" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"></path>
-            </svg>
-          </button>
-        </div>
-
-        <p class="field-error" *ngIf="confirmPasswordTouched && confirmPasswordErrorMessage">
-          {{ confirmPasswordErrorMessage }}
-        </p>
+      <div class="alert alert-error" *ngIf="generalErrorMessage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ generalErrorMessage }}</span>
       </div>
 
-      <p class="success-message" *ngIf="successMessage">
-        {{ successMessage }}
-      </p>
-
-      <p class="error-message" *ngIf="generalErrorMessage">
-        {{ generalErrorMessage }}
-      </p>
-
-      <button
-        type="submit"
-        class="activate-button"
-        [disabled]="isLoading || !isFormValid"
-      >
-        {{ isLoading ? 'Activating...' : 'Activate account' }}
-      </button>
-    </form>
-
-    <div class="invalid-link-actions" *ngIf="!hasValidActivationToken">
-      <p class="error-message invalid-link-error" *ngIf="generalErrorMessage">
-        {{ generalErrorMessage }}
-      </p>
-
-      <button
-        type="button"
-        class="activate-button"
-        (click)="goToLogin()"
-      >
+      <button type="button" class="btn-primary btn-full" (click)="goToLogin()">
         Go to login
       </button>
+    </div>
+
+    <!-- Valid token - show form -->
+    <div *ngIf="hasValidActivationToken && !successMessage">
+      <div class="auth-header">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <polyline points="17 11 19 13 23 9"></polyline>
+          </svg>
+        </div>
+        <h1 class="auth-title">Activate your account</h1>
+        <p class="auth-subtitle">Create a password to activate your account</p>
+      </div>
+
+      <div class="alert alert-error" *ngIf="generalErrorMessage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <span>{{ generalErrorMessage }}</span>
+      </div>
+
+      <form class="auth-form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-field">
+          <label for="password">Password</label>
+          <div class="input-with-icon">
+            <input
+              id="password"
+              [type]="isPasswordVisible ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Create a password"
+              autocomplete="new-password"
+              (input)="onPasswordInput()"
+              (blur)="onPasswordBlur()"
+            />
+            <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+              <svg *ngIf="!isPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="isPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <p class="field-error" *ngIf="passwordTouched && passwordErrorMessage">{{ passwordErrorMessage }}</p>
+        </div>
+
+        <!-- Password strength bar -->
+        <div class="strength-bar-container" *ngIf="password.length > 0" [ngClass]="strengthClass">
+          <div class="strength-bar">
+            <div class="strength-fill" [style.width.%]="strengthPercent"></div>
+          </div>
+          <span class="strength-label">{{ strengthLabel }}</span>
+        </div>
+
+        <ul class="password-rules">
+          <li [class.rule-valid]="hasMinLength">At least 8 characters</li>
+          <li [class.rule-valid]="hasMaxLength">At most 32 characters</li>
+          <li [class.rule-valid]="hasUppercaseLetter">At least one uppercase letter</li>
+          <li [class.rule-valid]="hasLowercaseLetter">At least one lowercase letter</li>
+          <li [class.rule-valid]="hasTwoDigits">At least two digits</li>
+          <li [class.rule-valid]="hasNoSpaces">No spaces</li>
+        </ul>
+
+        <div class="form-field">
+          <label for="confirmPassword">Confirm password</label>
+          <div class="input-with-icon">
+            <input
+              id="confirmPassword"
+              [type]="isConfirmPasswordVisible ? 'text' : 'password'"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+              (input)="onConfirmPasswordInput()"
+              (blur)="onConfirmPasswordBlur()"
+            />
+            <button type="button" class="toggle-password" (click)="toggleConfirmPasswordVisibility()">
+              <svg *ngIf="!isConfirmPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="isConfirmPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <p class="field-error" *ngIf="confirmPasswordTouched && confirmPasswordErrorMessage">{{ confirmPasswordErrorMessage }}</p>
+        </div>
+
+        <button type="submit" class="btn-primary btn-full" [disabled]="isLoading || !isFormValid">
+          <svg *ngIf="isLoading" class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+          {{ isLoading ? 'Activating...' : 'Activate account' }}
+        </button>
+      </form>
     </div>
   </div>
 </div>

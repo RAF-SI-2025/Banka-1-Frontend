@@ -1,327 +1,381 @@
-/* Definišemo Figma boje lokalno */
-:host {
-  --figma-dark-green: #14532D;
-  --figma-bright-green: #22C55E;
-  --figma-bg-color: #FAFAFA;
-  --figma-border: #E5E7EB;
-  --figma-text-dark: #1F2937;
-  --figma-table-header: #E2E2E2;
-}
-
 .page-wrapper {
-  background-color: var(--figma-bg-color);
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
-  color: var(--figma-text-dark);
+  background: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* HEADER */
-.top-header {
-  background-color: var(--figma-dark-green);
-  padding: 30px 60px;
+/* Navbar */
+.navbar {
+  background: linear-gradient(90deg, #14532d 0%, #15803d 50%, #16a34a 100%);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.navbar-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  font-family: inherit;
+}
+
+.btn-logout svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+/* Content */
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 32px;
+}
+
+/* Page header */
+.page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
-.header-text h1 {
-  color: white;
-  margin: 0;
+.page-header h1 {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
 }
 
-.header-text p {
-  color: rgba(255, 255, 255, 0.8);
-  margin: 5px 0 0 0;
+.page-header p {
   font-size: 14px;
+  color: #64748b;
+  margin: 0;
 }
 
-.btn-add {
-  background-color: var(--figma-bright-green);
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #166534, #16a34a, #22c55e);
   color: white;
   border: none;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 600;
+  border-radius: 10px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
-/* GLAVNI SADRŽAJ */
-.main-content {
-  padding: 40px 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.btn-primary svg {
+  width: 18px;
+  height: 18px;
 }
 
-/* FILTER BAR (Zelena kutija) */
-.filter-bar {
-  background-color: var(--figma-dark-green);
-  padding: 12px 20px;
-  border-radius: 8px;
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+/* Filters */
+.filters-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .search-wrapper {
   position: relative;
-  width: 280px;
+  max-width: 400px;
 }
 
 .search-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
-  color: #9CA3AF;
+  height: 16px;
+  color: #94a3b8;
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 8px 12px 8px 36px;
-  border-radius: 4px;
-  border: none;
+  padding: 10px 14px 10px 40px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
   font-size: 14px;
-  font-family: 'Inter', sans-serif;
-  box-sizing: border-box;
-}
-
-.dropdown-wrapper {
-  background-color: white;
-  padding: 4px 12px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dropdown-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #4B5563;
-}
-
-.custom-select {
-  border: none;
-  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #f8fafc;
   outline: none;
-  background: transparent;
-  font-style: italic;
-  color: #6B7280;
-  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-/* TABELA */
-.table-container {
-  width: 100%;
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
   background: white;
-  border-radius: 12px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden; /* Čuva ivice tabele unutar zaobljenog kontejnera */
 }
 
-.figma-table {
+/* Table card */
+.table-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.figma-table th {
-  background-color: var(--figma-table-header);
+thead th {
+  background: #f1f5f9;
   text-align: left;
-  padding: 16px 24px;
-  font-size: 13px;
-  font-weight: 700;
-  border-right: 1px solid #D1D5DB; /* Vertikalne linije */
-  border-bottom: 1px solid #D1D5DB;
+  padding: 13px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.figma-table th:last-child {
-  border-right: none;
+tbody td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.figma-table td {
-  padding: 16px 24px;
-  font-size: 13px;
-  border-right: 1px solid var(--figma-border);
-  border-bottom: 1px solid var(--figma-border);
-  height: 60px; /* Minimalna visina za prazne redove */
+tbody tr {
+  transition: background 0.15s;
 }
 
-.figma-table td:last-child {
-  border-right: none;
+tbody tr:hover {
+  background: #f0fdf4;
 }
 
-/* STILOVI ZA TEKST I PILULE UNUTAR TABELE */
-.fw-bold {
-  font-weight: 700;
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
-.email-text {
-  font-weight: 500;
+.cell-name {
+  font-weight: 600;
 }
 
-.role-pill {
+.cell-email {
+  color: #64748b;
+}
+
+/* Badges */
+.badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 9999px;
   font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-.role-pill.admin {
-  background-color: #D1FAE5; /* Svetlo zelena */
-  color: #065F46; /* Tamno zelena za tekst */
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.role-pill.regular {
-  background-color: #E5E7EB; /* Svetlo siva */
-  color: #374151;
+.badge-danger {
+  background: #fef2f2;
+  color: #991b1b;
 }
 
-.permissions-wrapper {
+.badge-role {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* Action buttons */
+.cell-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
 }
 
-.perm-pill {
-  background-color: #E5E7EB;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-style: italic;
-  font-weight: 600;
-  color: #4B5563;
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
-.perm-text {
-  font-size: 12px;
-  color: #4B5563;
-  margin-left: 4px;
+.btn-icon:hover {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
 }
 
-/* KANTA ZA SMEĆE I OLOVKA */
-.action-cell {
+.btn-icon-danger:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+/* Loading */
+.loading-state {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  height: 100%; /* Osigurava centriranje unutar celije */
+  padding: 48px;
 }
 
-.btn-delete, .btn-edit {
-  background: none;
-  border: none;
-  color: #6B7280; /* Neutralna siva za početno stanje */
-  cursor: pointer;
-  padding: 4px;
-  transition: color 0.2s ease;
+.spinner {
+  width: 32px;
+  height: 32px;
+  color: #16a34a;
+  animation: spin 0.8s linear infinite;
 }
 
-.btn-delete:hover {
-  color: #ef4444; /* Crvena na hover */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.btn-edit:hover {
-  color: #3b82f6; /* Plava na hover */
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: #94a3b8;
+  font-size: 14px;
 }
 
-.btn-delete {
-  background: none;
-  border: none;
-  color: black;
-  cursor: pointer;
-  padding: 4px;
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
 }
 
-.btn-delete:hover {
-  color: #ef4444; /* Crvena na hover */
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
 }
 
-/* 1. HOVER ZA REDOVE U TABELI */
-/* Celi red menja boju pozadine kako bi se naglasilo šta korisnik gleda */
-.figma-table tbody tr {
-  transition: background-color 0.2s ease;
-}
-.figma-table tbody tr:hover {
-  background-color: #F3F4F6; /* Svetlo siva boja na hover */
-}
-
-/* 2. HOVER ZA DUGMIĆE */
-/* Dugme za dodavanje zaposlenog */
-.btn-add {
-  transition: all 0.2s ease;
-}
-.btn-add:hover {
-  background-color: #166534; /* Tamnija nijansa zelene */
-  transform: translateY(-1px); /* Blago se podigne */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Dugmići za brisanje i editovanje (ako već nisu imali tranziciju) */
-.btn-delete, .btn-edit {
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-.btn-delete:hover {
-  color: #ef4444; 
-  transform: scale(1.1); /* Blago uvećanje */
-}
-.btn-edit:hover {
-  color: #3b82f6;
-  transform: scale(1.1);
-}
-
-/* 3. HOVER ZA TEKST U LISTI (ZELENA BOJA) */
-/* Imena, statusi i naslovi */
-.fw-bold, .header-text h1, .header-text p {
-  transition: color 0.2s ease;
-}
-
-/* Tekst u tabeli postaje zelen na hover */
-.figma-table .fw-bold:hover {
-  color: var(--figma-bright-green); 
-}
-
-/* Naslov u header-u ostaje crn na hover (da ne bi i on pozeleneo) */
-.header-text h1:hover {
-  color: #000000; 
-}
-
-/* Email tekst - dobija zelenu boju i liniju ispod */
-.email-text {
-  transition: color 0.2s ease;
-  cursor: pointer;
-}
-.email-text:hover {
-  color: var(--figma-bright-green); 
-  text-decoration: underline;
-}
-
-/* 4. HOVER ZA PILULE (Uloge i dozvole) */
-.role-pill, .perm-pill, .perm-text {
-  transition: transform 0.2s ease, filter 0.2s ease;
-  cursor: default;
-}
-.role-pill:hover, .perm-pill:hover, .perm-text:hover {
-  transform: scale(1.05); /* Blago se uvećaju */
-  filter: brightness(0.95); /* Postanu blago tamnije */
-}
-
-/* 5. HOVER ZA INPUTE I FILTERE */
-.search-input, .custom-select {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.search-input:hover, .custom-select:hover {
-  border-color: #9CA3AF; /* Tamnija ivica na hover */
-}
-.search-input:focus, .custom-select:focus {
+.pagination-info select {
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1e293b;
   outline: none;
-  border-color: var(--figma-bright-green);
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  cursor: pointer;
+  background: white;
+}
+
+.pagination-range {
+  margin-left: 12px;
+  font-weight: 500;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon-sm {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+}
+
+.btn-icon-sm svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon-sm:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.btn-icon-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .content { padding: 20px 16px; }
+  .page-header { flex-direction: column; gap: 16px; }
+  .navbar { padding: 0 16px; }
+  thead th, tbody td { padding: 10px 12px; font-size: 13px; }
 }

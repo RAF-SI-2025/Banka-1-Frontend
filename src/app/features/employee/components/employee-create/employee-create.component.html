@@ -1,49 +1,122 @@
-<div class="page-wrapper">
-  <div class="form-card">
+<div class="create-page">
+  <!-- Hero header with gradient -->
+  <div class="create-hero">
+    <div class="hero-content">
+      <button type="button" class="back-link" routerLink="/employees">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to employees
+      </button>
 
-    <div class="header-text">
-      <h2>Create employee</h2>
-      <p>Fill in the details to create a new employee account.</p>
+      <div class="page-title">
+        <h1>Create employee</h1>
+        <p>Fill in the details to create a new employee account. They will receive an activation email.</p>
+      </div>
     </div>
+  </div>
 
-    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="figma-form">
-
-      <div class="form-group">
-        <label for="fullName">Full name</label>
-        <input id="fullName" type="text" formControlName="fullName" placeholder="Enter full name">
-        <small *ngIf="employeeForm.get('fullName')?.touched && employeeForm.get('fullName')?.invalid" class="error-msg">
-          Full name is required (min 3 chars).
-        </small>
+  <div class="create-content">
+    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Personal info -->
+      <div class="form-card">
+        <h2 class="card-title">Personal information</h2>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="ime">First name <span class="required">*</span></label>
+            <input id="ime" type="text" formControlName="ime" placeholder="Enter first name" />
+            <p class="field-error" *ngIf="employeeForm.get('ime')?.touched && employeeForm.get('ime')?.invalid">
+              First name is required (min 2 characters).
+            </p>
+          </div>
+          <div class="form-field">
+            <label for="prezime">Last name <span class="required">*</span></label>
+            <input id="prezime" type="text" formControlName="prezime" placeholder="Enter last name" />
+            <p class="field-error" *ngIf="employeeForm.get('prezime')?.touched && employeeForm.get('prezime')?.invalid">
+              Last name is required (min 2 characters).
+            </p>
+          </div>
+          <div class="form-field">
+            <label for="datumRodjenja">Date of birth <span class="required">*</span></label>
+            <input id="datumRodjenja" type="date" formControlName="datumRodjenja" />
+          </div>
+          <div class="form-field">
+            <label for="pol">Gender <span class="required">*</span></label>
+            <select id="pol" formControlName="pol">
+              <option value="M">Male</option>
+              <option value="Z">Female</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" type="email" formControlName="email" placeholder="Enter email address">
+      <!-- Contact info -->
+      <div class="form-card">
+        <h2 class="card-title">Contact information</h2>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="email">Email <span class="required">*</span></label>
+            <input id="email" type="email" formControlName="email" placeholder="Enter email address" />
+            <p class="field-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.invalid">
+              Valid email is required.
+            </p>
+          </div>
+          <div class="form-field">
+            <label for="brojTelefona">Phone number <span class="required">*</span></label>
+            <input id="brojTelefona" type="text" formControlName="brojTelefona" placeholder="+381..." />
+          </div>
+          <div class="form-field full-width">
+            <label for="adresa">Address</label>
+            <input id="adresa" type="text" formControlName="adresa" placeholder="Enter address" />
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="role">Role</label>
-        <select id="role" formControlName="role">
-          <option value="BASIC">Basic</option>
-          <option value="AGENT">Agent</option>
-          <option value="SUPERVISOR">Supervisor</option>
-          <option value="ADMIN">Admin</option>
-        </select>
+      <!-- Job info -->
+      <div class="form-card">
+        <h2 class="card-title">Job details</h2>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="pozicija">Position <span class="required">*</span></label>
+            <input id="pozicija" type="text" formControlName="pozicija" placeholder="e.g. Software Developer" />
+          </div>
+          <div class="form-field">
+            <label for="departman">Department <span class="required">*</span></label>
+            <input id="departman" type="text" formControlName="departman" placeholder="e.g. IT" />
+          </div>
+          <div class="form-field">
+            <label for="role">Role <span class="required">*</span></label>
+            <select id="role" formControlName="role">
+              <option value="EmployeeBasic">Basic</option>
+              <option value="EmployeeAgent">Agent</option>
+              <option value="EmployeeSupervisor">Supervisor</option>
+              <option value="EmployeeAdmin">Admin</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="status">Status</label>
-        <select id="status" formControlName="status">
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+      <!-- Info notice -->
+      <div class="info-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>The employee will receive an activation email. They will become active after clicking the link and setting their password.</span>
       </div>
-      
+
+      <!-- Form actions -->
       <div class="form-actions">
-        <button type="button" class="btn-cancel" routerLink="/employees">Cancel</button>
-        <button type="submit" class="btn-submit" [disabled]="employeeForm.invalid">Create employee</button>
+        <button type="button" class="btn-outline" routerLink="/employees">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="isLoading || employeeForm.invalid">
+          <svg *ngIf="isLoading" class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+          {{ isLoading ? 'Creating...' : 'Create employee' }}
+        </button>
       </div>
-
     </form>
   </div>
 </div>

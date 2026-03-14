@@ -1,81 +1,84 @@
-<div class="login-page">
-  <div class="login-card">
-    <h1 class="login-title">Sign in</h1>
+<div class="auth-page">
+  <div class="auth-card">
+    <button type="button" class="back-link" (click)="goToLanding()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back
+    </button>
 
-    <form class="login-form" (ngSubmit)="onSubmit()">
-      <div class="input-row">
+    <div class="auth-header">
+      <div class="logo-circle">
+        <img src="assets/images/logo.png" alt="Banka 1" />
+      </div>
+      <h1 class="auth-title">Banka 1</h1>
+      <p class="auth-subtitle">Sign in to your account</p>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-field">
+        <label for="email">Email</label>
         <input
-          class="login-input"
+          id="email"
+          data-cy="email"
           type="email"
           name="email"
           [(ngModel)]="email"
-          placeholder="Email"
+          placeholder="Enter your email"
           autocomplete="email"
         />
       </div>
 
-      <div class="input-row password-row">
-        <div class="password-wrapper">
+      <div class="form-field">
+        <label for="password">Password</label>
+        <div class="input-with-icon">
           <input
-            class="login-input password-input"
+            id="password"
+            data-cy="password"
             [type]="isPasswordVisible ? 'text' : 'password'"
             name="password"
             [(ngModel)]="password"
-            placeholder="Password"
+            placeholder="Enter your password"
             autocomplete="current-password"
           />
-
           <button
             type="button"
-            class="password-toggle"
+            class="toggle-password"
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="isPasswordVisible ? 'Hide password' : 'Show password'"
           >
-            <svg
-              *ngIf="!isPasswordVisible"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"
-              ></path>
-              <path
-                d="M4 4l16 16"
-                class="slash"
-              ></path>
+            <svg *ngIf="!isPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
             </svg>
-
-            <svg
-              *ngIf="isPasswordVisible"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Zm10 3.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7Z"
-              ></path>
+            <svg *ngIf="isPasswordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
             </svg>
           </button>
         </div>
-
-        <button
-          type="button"
-          class="forgot-link"
-          (click)="goToForgotPassword()"
-        >
-          Forgot password?
-        </button>
+        <div class="field-footer">
+          <button type="button" class="forgot-link" (click)="goToForgotPassword()">
+            Forgot password?
+          </button>
+        </div>
       </div>
 
-      <p class="error-message" *ngIf="errorMessage">
-        {{ errorMessage }}
-      </p>
-
-      <button
-        type="submit"
-        class="login-button"
-        [disabled]="isLoading"
-      >
-        {{ isLoading ? 'Logging in...' : 'Login' }}
+      <button type="submit" data-cy="login-btn" class="btn-primary btn-full" [disabled]="isLoading">
+        <svg *ngIf="isLoading" class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        {{ isLoading ? 'Signing in...' : 'Sign in' }}
       </button>
     </form>
   </div>

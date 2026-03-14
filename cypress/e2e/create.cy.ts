@@ -1,57 +1,95 @@
+// cypress/e2e/create.cy.ts
+// E2E testovi za Employee Create stranicu
+
 describe('Employee Create Page', () => {
+
   beforeEach(() => {
-    // 1. Postavljamo lažni token da nas Guard ne bi izbacio na login
-    localStorage.setItem('authToken', 'moj-lazni-token');
-    
-    // 2. Odlazimo na stranicu za kreiranje
+    // Set auth token to bypass guard
+    localStorage.setItem('authToken', 'fake-jwt-token');
+    localStorage.setItem('loggedUser', JSON.stringify({
+      email: 'admin@test.com', role: 'EmployeeAdmin', permissions: []
+    }));
+
     cy.visit('/employees/new');
   });
 
-  it('should create a new employee and redirect to list', () => {
-    // Provera da li smo na pravoj stranici
-    cy.contains('h2', 'Create employee').should('be.visible');
+  it('treba da prikaže formu za kreiranje zaposlenog', () => {
+    cy.contains('h1', 'Create employee').should('be.visible');
+    cy.get('#ime').should('exist');
+    cy.get('#prezime').should('exist');
+    cy.get('#email').should('exist');
+    cy.get('#role').should('exist');
+  });
 
-    // Popunjavanje forme
-    // Koristimo 'id' ili 'formControlName' za pronalaženje elemenata
-    cy.get('#fullName').type('Marko Markovic');
-    cy.get('#email').type('marko@test.com');
-    
-    cy.get('#role').select('Admin');
-    cy.get('#status').select('Active');
+  it('treba da ne prikazuje polje za Active/Inactive status', () => {
+    // Active/Inactive status was removed from create form
+    cy.get('#status').should('not.exist');
+    cy.contains('select option', 'Active').should('not.exist');
+  });
 
-    // Klik na checkbox-ove za permisije
-    cy.contains('Create').click();
-    cy.contains('View').click();
+  it('treba da prikaže info notice o aktivacionom emailu', () => {
+    cy.get('.info-notice').should('be.visible')
+      .and('contain', 'activation email');
+  });
 
-    // Dugme bi sada trebalo da bude omogućeno
-    cy.get('button[type="submit"]').should('not.be.disabled');
+  it('treba da kreira novog zaposlenog i preusmeri na listu', () => {
+    // Fill the form
+    cy.get('#ime').clear().type('Marko');
+    cy.get('#prezime').clear().type('Markovic');
+    cy.get('#email').clear().type('marko@test.com');
+    cy.get('#brojTelefona').clear().type('+381611234567');
+    cy.get('#pozicija').clear().type('Developer');
+    cy.get('#departman').clear().type('IT');
+    cy.get('#role').select('EmployeeBasic');
 
-    // Presretanje (Intercept) mrežnog poziva da ne bismo stvarno gađali backend
-    cy.intercept('POST', '**/api/employees', {
+    // Intercept the create API call
+    cy.intercept('POST', '**/employees', {
       statusCode: 201,
-      body: { id: 123, ime: 'Marko', prezime: 'Markovic' }
+      body: { id: 123, ime: 'Marko', prezime: 'Markovic', aktivan: false }
     }).as('createRequest');
 
-    // Klik na dugme za kreiranje
-    cy.get('button[type="submit"]').click();
+    // Intercept the employees list for redirect
+    cy.intercept('GET', '**/employees*', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0, totalPages: 0 }
+    });
 
-    // Provera da li je poslat ispravan zahtev
-    cy.wait('@createRequest');
+    // Submit
+    cy.get('button[type="submit"]').should('not.be.disabled').click();
 
-    // Provera da li nas je vratilo na tabelu
+    cy.wait('@createRequest').then((interception) => {
+      // Verify aktivan is false (employee starts inactive)
+      expect(interception.request.body.aktivan).to.equal(false);
+    });
+
     cy.url().should('include', '/employees');
-    cy.contains('Marko Markovic').should('exist');
   });
 
-  it('should show validation error if name is too short', () => {
-    // Kucamo samo 2 slova (minimum je 3)
-    cy.get('#fullName').type('Ma').blur(); // blur() simulira izlazak iz polja (touched)
-    
-    // Provera da li se pojavila poruka o grešci
-    cy.get('.error-msg').should('be.visible')
-      .and('contain', 'Full name is required (min 3 chars).');
+  it('treba da prikaže validation error ako je ime prekratko', () => {
+    cy.get('#ime').clear().type('M').blur();
 
-    // Provera da li je dugme i dalje onemogućeno
+    cy.get('.field-error').should('be.visible')
+      .and('contain', 'First name is required');
+
     cy.get('button[type="submit"]').should('be.disabled');
   });
+
+  it('treba da prikaže validation error za neispravan email', () => {
+    cy.get('#email').clear().type('not-an-email').blur();
+
+    cy.get('.field-error').should('be.visible')
+      .and('contain', 'Valid email is required');
+  });
+
+  it('back link treba da vodi na /employees', () => {
+    // Intercept employees API
+    cy.intercept('GET', '**/employees*', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0, totalPages: 0 }
+    });
+
+    cy.get('.back-link').click();
+    cy.url().should('include', '/employees');
+  });
+
 });

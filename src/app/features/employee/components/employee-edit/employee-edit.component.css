@@ -1,158 +1,200 @@
-/* Zatamnjena pozadina preko celog ekrana */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px;
 }
 
-/* Glavna siva kartica modala */
 .modal-card {
-  background-color: #D4D4D4; /* Siva pozadina sa slike */
-  width: 400px;
-  border-radius: 20px;
-  padding: 30px 40px;
-  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+  background: white;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  animation: modal-in 0.25s ease-out;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #64748b;
+  transition: all 0.15s;
+}
+
+.btn-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-close:hover {
+  background: #dcfce7;
+  color: #1e293b;
+}
+
+.modal-body {
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* Naslov modala */
-.modal-title {
-  color: var(--figma-bright-green);
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  margin-top: 0;
-  margin-bottom: 10px;
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
-/* Grupa za svaki red forme */
-.form-group {
+.form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form-group label {
-  color: var(--figma-bright-green);
-  font-weight: 700;
+.form-field label {
   font-size: 13px;
-}
-
-/* Input polja (zaobljena i bela) */
-.modal-input {
-  background-color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 16px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: #374151;
-  box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
-  outline: none;
-  transition: box-shadow 0.2s ease;
-}
-
-.modal-input:focus {
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
-}
-
-/* Selekti sa zelenom strelicom izmenjenog izgleda */
-.select-icon {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322C55E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 14px;
-  font-style: italic;
-  cursor: pointer;
-}
-
-/* Grid za checkbokseve */
-.permissions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 5px;
-  padding-left: 10px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--figma-bright-green); /* Zeleni tekst za dozvole */
   font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
+  color: #1e293b;
 }
 
-/* Stilizovani beli kvadrati za checkbokseve */
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: none;
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
-  appearance: none; /* Uklanja defaultni browser stil */
-  background-color: white;
-  cursor: pointer;
-  position: relative;
+.required {
+  color: #ef4444;
 }
 
-/* Prikaz kvačice kad je checkirano */
-.checkbox-label input[type="checkbox"]:checked::after {
-  content: '✔';
-  position: absolute;
-  color: var(--figma-bright-green);
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
   font-size: 14px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
 }
 
-/* Dugmići na dnu */
-.modal-actions {
+.form-field input::placeholder {
+  color: #94a3b8;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+  background: white;
+}
+
+.form-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 36px;
+  background-color: #f8fafc;
+}
+
+.field-error {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 500;
+  margin: 0;
+}
+
+.modal-footer {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 15px;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
 }
 
-.btn-save {
-  background-color: var(--figma-bright-green);
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #166534, #16a34a, #22c55e);
   color: white;
   border: none;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.1s ease;
+  transition: transform 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
-.btn-cancel {
-  background-color: #9CA3AF; /* Siva boja sa slike */
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.1s ease;
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
 }
 
-.btn-save:active, .btn-cancel:active {
-  transform: scale(0.95);
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: white;
+  color: #1e293b;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.btn-outline:hover {
+  background: #f1f5f9;
 }
