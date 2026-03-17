@@ -10,6 +10,12 @@ import { ForbiddenComponent } from './shared/components/forbidden/forbidden.comp
 
 const routes: Routes = [
   {
+    path: 'home',
+    loadChildren: () =>
+      import('./features/client/client.module').then((m) => m.ClientModule),
+    canActivate: [authGuard]
+  },
+  {
     path: 'employees/new',
     component: EmployeeCreateComponent,
     canActivate: [authGuard, roleGuard],

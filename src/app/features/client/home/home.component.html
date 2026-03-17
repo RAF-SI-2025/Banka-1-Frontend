@@ -1,0 +1,141 @@
+<div class="layout">
+
+  <!-- Reusable navigacioni meni -->
+  <app-navbar></app-navbar>
+
+  <div class="main">
+
+    <!-- Zaglavlje -->
+    <header class="topbar">
+      <div class="topbar__search">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Transakcije, računi, kartice..." />
+      </div>
+
+      <div class="topbar__right">
+        <button class="topbar__icon-btn" title="Obaveštenja">
+          <span class="material-icons">notifications</span>
+        </button>
+        <span class="topbar__greeting">Dobro došli</span>
+        <button class="topbar__icon-btn" routerLink="/profile" title="Profil">
+          <span class="material-icons">account_circle</span>
+        </button>
+        <button class="topbar__logout" (click)="logout()">
+          <span class="material-icons">logout</span>
+          <span>Odjava</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <h1 class="page-heading">Početna</h1>
+
+      <div class="grid">
+
+        <!-- Raspoloživo stanje -->
+        <div class="card card--balance">
+          <div class="card__head">
+            <span class="card__label">RASPOLOŽIVO STANJE</span>
+            <span class="material-icons card__more">more_horiz</span>
+          </div>
+
+          <ng-container *ngIf="loading">
+            <div class="skel skel--lg"></div>
+            <div class="skel skel--chart"></div>
+          </ng-container>
+
+          <ng-container *ngIf="!loading && !error">
+            <div class="balance">
+              <span class="balance__amount">{{ formatAmount(totalAvailableBalance) }}</span>
+              <span class="badge badge--up">+10.2%</span>
+            </div>
+            <svg class="mini-chart" viewBox="0 0 300 80" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#22c55e" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,60 L30,50 L60,55 L90,35 L120,40 L150,28 L180,42 L210,18 L240,22 L270,10 L300,4"
+                    fill="none" stroke="#22c55e" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M0,60 L30,50 L60,55 L90,35 L120,40 L150,28 L180,42 L210,18 L240,22 L270,10 L300,4 L300,80 L0,80Z"
+                    fill="url(#g)"/>
+            </svg>
+          </ng-container>
+
+          <ng-container *ngIf="!loading && error">
+            <p class="error-msg">Greška pri učitavanju računa.</p>
+          </ng-container>
+        </div>
+
+        <!-- Novo plaćanje -->
+        <div class="card card--action" routerLink="/payments">
+          <div class="action-circle">
+            <span class="material-icons">swap_horiz</span>
+          </div>
+          <span class="action-label">Novo plaćanje</span>
+        </div>
+
+        <!-- Računi -->
+        <div class="card card--accounts">
+          <div class="card__head">
+            <span class="card__label">RAČUNI</span>
+          </div>
+
+          <ng-container *ngIf="loading">
+            <div *ngFor="let i of [1,2]" class="skel-account">
+              <div class="skel skel--line"></div>
+              <div class="skel skel--line skel--short"></div>
+            </div>
+          </ng-container>
+
+          <p *ngIf="!loading && accounts.length === 0" class="placeholder-msg">
+            Nema aktivnih računa.
+          </p>
+
+          <div *ngFor="let acc of accounts" class="acc-item">
+            <div class="acc-item__row">
+              <span class="acc-item__type">{{ acc.name }}</span>
+              <span class="acc-item__num">{{ acc.accountNumber }}</span>
+            </div>
+            <div class="acc-item__amount">
+              {{ formatAmount(acc.availableBalance, acc.currency) }}
+            </div>
+            <div class="acc-item__track">
+              <div class="acc-item__fill" [style.width.%]="getBalancePercent(acc)"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Poslednje transakcije — placeholder -->
+        <div class="card card--transactions">
+          <div class="card__head">
+            <span class="card__label">PREGLED TRANSAKCIJA</span>
+            <div class="card__filter">
+              Prethodnih 7 dana <span class="material-icons">expand_more</span>
+            </div>
+          </div>
+          <p class="placeholder-msg">Poslednje transakcije — dostupno uskoro.</p>
+        </div>
+
+        <!-- Menjačnica — placeholder -->
+        <div class="card card--exchange">
+          <div class="card__head">
+            <span class="card__label">MENJAČNICA</span>
+          </div>
+          <p class="placeholder-msg">Kalkulator menjačnice — dostupno uskoro.</p>
+        </div>
+
+        <!-- Brzo plaćanje — placeholder -->
+        <div class="card card--quick">
+          <div class="card__head">
+            <span class="card__label">BRZO PLAĆANJE</span>
+          </div>
+          <p class="placeholder-msg">Brzo plaćanje — dostupno uskoro.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

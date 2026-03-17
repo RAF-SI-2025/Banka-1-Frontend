@@ -1,0 +1,19 @@
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <span class="sidebar__brand-icon">🏦</span>
+    <span class="sidebar__brand-name">Banka</span>
+  </div>
+
+  <nav class="sidebar__nav">
+    <a
+      *ngFor="let link of navLinks"
+      [routerLink]="link.route"
+      routerLinkActive="sidebar__link--active"
+      class="sidebar__link"
+    >
+      <span class="material-icons sidebar__link-icon">{{ link.icon }}</span>
+      <span class="sidebar__link-label">{{ link.label }}</span>
+      <span class="material-icons sidebar__link-arrow">chevron_right</span>
+    </a>
+  </nav>
+</aside>

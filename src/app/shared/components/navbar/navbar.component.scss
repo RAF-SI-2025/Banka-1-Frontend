@@ -1,0 +1,56 @@
+$green-lite: #22c55e;
+$green:      #16a34a;
+$sidebar-bg: #1a1a1a;
+
+.sidebar {
+  width: 220px;
+  background: $sidebar-bg;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 200;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 22px 20px;
+    border-bottom: 1px solid #2a2a2a;
+
+    &-icon { font-size: 22px; }
+    &-name { font-size: 17px; font-weight: 700; color: #ffffff; }
+  }
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    flex: 1;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+
+    &:hover { color: #ffffff; background: #242424; }
+
+    &--active {
+      color: $green-lite;
+      background: rgba($green, .15);
+      border-left-color: $green-lite;
+    }
+
+    &-icon  { font-size: 18px; flex-shrink: 0; }
+    &-label { flex: 1; }
+    &-arrow { font-size: 16px; opacity: .35; }
+  }
+}
