@@ -24,7 +24,7 @@ const routes: Routes = [
   // F2 — Lista računa klijenta
   {
     path: 'accounts',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/client/client.module').then(m => m.ClientModule)
   },
