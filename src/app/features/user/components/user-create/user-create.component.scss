@@ -1,0 +1,27 @@
+.user-create {
+  max-width: 520px;
+  margin: 24px auto;
+}
+
+.user-create label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.user-create input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.user-create .actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-create .error {
+  color: #c62828;
+  font-size: 12px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}

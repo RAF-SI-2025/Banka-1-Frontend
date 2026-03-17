@@ -1,0 +1,158 @@
+<div class="account-create">
+
+  <div class="form-card">
+    <h3>Kreiraj račun</h3>
+    <p class="description">Popunite polja kako biste kreirali novi račun</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+    <div *ngIf="step === 1">
+      <h3>Korak 1 - Tip računa</h3>
+
+      <div class="form-group">
+        <label for="kind">Tip računa</label>
+        <select id="kind" formControlName="kind">
+          <option [ngValue]="null">-- odaberi --</option>
+          <option
+            *ngFor="let k of accountKinds; trackBy: trackByOptionValue"
+            [value]="k.value"
+          >
+            {{ k.label }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('kind')">Tip računa je obavezan.</small>
+      </div>
+
+      <div *ngIf="isTekuci" class="form-group">
+        <label for="subtype">Podvrsta tekućeg računa</label>
+        <select id="subtype" formControlName="subtype">
+          <option [ngValue]="null">-- odaberi --</option>
+
+          <optgroup label="Lični">
+            <option
+              *ngFor="let s of tekuciPersonal; trackBy: trackByString"
+              [value]="s"
+            >
+              {{ s }}
+            </option>
+          </optgroup>
+
+          <optgroup label="Poslovni">
+            <option
+              *ngFor="let s of tekuciBusiness; trackBy: trackByString"
+              [value]="s"
+            >
+              {{ s }}
+            </option>
+          </optgroup>
+        </select>
+        <small *ngIf="isInvalid('subtype')">Podvrsta je obavezna.</small>
+      </div>
+
+      <div *ngIf="isDevizni" class="form-group">
+        <label for="currency">Valuta</label>
+        <select id="currency" formControlName="currency">
+          <option [ngValue]="null">-- odaberi --</option>
+          <option
+            *ngFor="let c of currencies; trackBy: trackByString"
+            [value]="c"
+          >
+            {{ c }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('currency')">Valuta je obavezna.</small>
+
+        <label for="currencyOwnerType">Tip računa</label>
+        <select id="currencyOwnerType" formControlName="currencyOwnerType">
+          <option [ngValue]="null">-- odaberi --</option>
+          <option
+            *ngFor="let ownerType of ownerTypes; trackBy: trackByOptionValue"
+            [value]="ownerType.value"
+          >
+            {{ ownerType.label }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('currencyOwnerType')">
+          Tip vlasnika je obavezan.
+        </small>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="next()">Dalje</button>
+      </div>
+    </div>
+
+    <div *ngIf="step === 2">
+      <h3>Korak 2 - Vlasnik</h3>
+
+      <div class="form-group">
+        <label for="ownerId">Vlasnik (postojeći klijent)</label>
+        <select id="ownerId" formControlName="ownerId">
+          <option [ngValue]="null">-- odaberi klijenta --</option>
+          <option
+            *ngFor="let c of clients; trackBy: trackByClientId"
+            [value]="c.id"
+          >
+            {{ c.name }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('ownerId')">Vlasnik je obavezan.</small>
+      </div>
+
+      <div class="new-client-action">
+        <button type="button" class="btn-secondary" (click)="openNewClient()">Novi klijent</button>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="createCard" />
+          Napravi karticu
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="initialBalance">Početno stanje</label>
+        <input
+          id="initialBalance"
+          type="number"
+          formControlName="initialBalance"
+          min="0"
+        />
+        <small *ngIf="isInvalid('initialBalance')">
+          Početno stanje je obavezno i mora biti 0 ili veće.
+        </small>
+      </div>
+
+      <div *ngIf="isBusiness()" class="company-section">
+        <h4>Podaci o firmi</h4>
+
+        <label for="companyName">Naziv firme</label>
+        <input id="companyName" formControlName="companyName" />
+        <small *ngIf="isInvalid('companyName')">Naziv firme je obavezan.</small>
+
+        <label for="companyNumber">Matični broj</label>
+        <input id="companyNumber" formControlName="companyNumber" />
+        <small *ngIf="isInvalid('companyNumber')">Matični broj je obavezan.</small>
+
+        <label for="companyTaxId">PIB</label>
+        <input id="companyTaxId" formControlName="companyTaxId" />
+        <small *ngIf="isInvalid('companyTaxId')">PIB je obavezan.</small>
+
+        <label for="companyActivityCode">Šifra delatnosti</label>
+        <input id="companyActivityCode" formControlName="companyActivityCode" />
+        <small *ngIf="isInvalid('companyActivityCode')">
+          Šifra delatnosti je obavezna.
+        </small>
+
+        <label for="companyAddress">Adresa</label>
+        <input id="companyAddress" formControlName="companyAddress" />
+        <small *ngIf="isInvalid('companyAddress')">Adresa je obavezna.</small>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="prev()">Nazad</button>
+        <button type="submit" class="btn-primary">Kreiraj račun</button>
+      </div>
+    </div>
+    </form>
+  </div>
+</div>

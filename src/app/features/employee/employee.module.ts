@@ -6,6 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { EmployeeListComponent } from './components/employee-list/employee-list.component';
 import { EmployeeCreateComponent } from './components/employee-create/employee-create.component';
 import { EmployeeEditComponent } from './components/employee-edit/employee-edit.component';
+import { AccountCreateComponent } from './components/account-create/account-create.component';
 import {RouterModule} from "@angular/router";
 
 @NgModule({
@@ -13,7 +14,8 @@ import {RouterModule} from "@angular/router";
     // ← ovde, ne u imports
     EmployeeListComponent,
     EmployeeCreateComponent,
-    EmployeeEditComponent
+    EmployeeEditComponent,
+    AccountCreateComponent
   ],
   imports: [
     CommonModule,

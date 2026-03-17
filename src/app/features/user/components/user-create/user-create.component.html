@@ -1,0 +1,26 @@
+<div class="user-create">
+  <h2>Kreiranje korisnika</h2>
+
+  <form #userForm="ngForm" (ngSubmit)="submit(userForm)">
+    <div>
+      <label for="firstName">Ime</label>
+      <input id="firstName" [(ngModel)]="firstName" name="firstName" required />
+      <small class="error" *ngIf="userForm.submitted && !firstName">Ime je obavezno.</small>
+    </div>
+
+    <div>
+      <label for="lastName">Prezime</label>
+      <input id="lastName" [(ngModel)]="lastName" name="lastName" required />
+      <small class="error" *ngIf="userForm.submitted && !lastName">Prezime je obavezno.</small>
+    </div>
+
+    <div>
+      <label for="jmbg">JMBG</label>
+      <input id="jmbg" [(ngModel)]="jmbg" name="jmbg" />
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="submitting">Kreiraj</button>
+    </div>
+  </form>
+</div>

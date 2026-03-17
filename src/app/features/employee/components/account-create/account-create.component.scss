@@ -1,0 +1,94 @@
+.account-create {
+  padding: 32px 24px;
+  background: #f7f8f9;
+  min-height: calc(100vh - 40px);
+}
+
+.form-card {
+  max-width: 720px;
+  margin: 28px auto;
+  background: #e6e6e6;
+  border-radius: 18px;
+  padding: 36px 44px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+}
+
+.form-card h3 {
+  text-align: center;
+  color: #1b7a3a;
+  margin: 0 0 6px 0;
+  font-size: 22px;
+}
+
+.form-card .description {
+  text-align: center;
+  margin: 0 0 18px 0;
+  color: #7a7a7a;
+}
+
+.form-card label {
+  display: block;
+  margin-bottom: 8px;
+  color: #444;
+  font-weight: 500;
+}
+
+.form-card select,
+.form-card input[type="text"],
+.form-card input[type="number"],
+.form-card input[type="email"],
+.form-card input[type="search"],
+.form-card input[type="password"],
+.form-card textarea {
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02);
+}
+
+/* Ensure checkbox inputs are not stretched by the generic input rule */
+.form-card input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  height: auto;
+}
+
+.form-card small {
+  display: block;
+  margin-top: 6px;
+  color: #c62828;
+  font-size: 12px;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.company-section {
+  margin-top: 18px;
+  padding-top: 12px;
+}
+
+.new-client-action { margin-top: 10px; }
+
+.actions { display: flex; gap: 12px; margin-top: 22px; justify-content: flex-end; }
+
+/* Light spacing between logical groups inside the form to avoid a cramped look */
+.form-card form .form-group { margin-bottom: 14px; }
+
+.company-section input { margin-bottom: 8px; }
+
+.actions button, .new-client-action button { padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; }
+
+.btn-secondary { background: #9e9e9e; color: #fff; }
+.btn-primary { background: #1b7a3a; color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,0.06); }
+
+@media (max-width: 700px) { .form-card { padding: 20px; margin: 12px; } .actions { justify-content: center; } }

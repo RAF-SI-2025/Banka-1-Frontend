@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 // Uvozimo komponente i gvarda
 import { EmployeeListComponent } from './features/employee/components/employee-list/employee-list.component';
 import { EmployeeCreateComponent } from './features/employee/components/employee-create/employee-create.component';
+import { AccountCreateComponent } from './features/employee/components/account-create/account-create.component';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
@@ -21,6 +22,18 @@ const routes: Routes = [
     component: EmployeeCreateComponent,
     canActivate: [authGuard, roleGuard],
     data: { permission: 'EMPLOYEE_MANAGE_ALL' }
+  },
+
+  // RUTA ZA KREIRANJE RAČUNA (F7 - Zaposleni)
+  {
+    path: 'employees/accounts/new',
+    component: AccountCreateComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { permission: 'CLIENT_MANAGE' }
+  },
+  {
+    path: 'users',
+    loadChildren: () => import('./features/user/user.module').then((m) => m.UserModule)
   },
 
   // 3. RUTA ZA TABELU (Zaštićena gvardom)
