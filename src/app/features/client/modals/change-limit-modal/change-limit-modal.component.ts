@@ -1,9 +1,9 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { Account, ChangeLimitDto } from '../models/account.model'; // prilagodi putanju ako treba
-import { AccountService } from '../services/account.service'; // prilagodi putanju
-import { ToastService } from '../../../shared/services/toast.service';
+import { Account, ChangeLimitDto } from '../../models/account.model'; // prilagodi putanju ako treba
+import { AccountService } from '../../services/account.service'; // prilagodi putanju
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-change-limit-modal',

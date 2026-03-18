@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Account } from '../../models/account.model';
 import { RenameAccountComponent } from '../../components/rename-account/rename-account.component';
-import { ChangeLimitModalComponent } from '../../modals/change-limit-modal.component';
+import { ChangeLimitModalComponent } from '../change-limit-modal/change-limit-modal.component';
 @Component({
   selector: 'app-account-details-modal',
   templateUrl: './account-details-modal.component.html',
