@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Account } from '../../models/account.model';
 import { RenameAccountComponent } from '../../components/rename-account/rename-account.component';
+import { ChangeLimitModalComponent } from '../../modals/change-limit-modal.component';
 @Component({
   selector: 'app-account-details-modal',
   templateUrl: './account-details-modal.component.html',
   standalone: true,
-  imports: [CommonModule, RenameAccountComponent], // DODATO
+  imports: [CommonModule, RenameAccountComponent, ChangeLimitModalComponent],
   styleUrls: ['./account-details-modal.component.scss']
 })
 export class AccountDetailsModalComponent {
@@ -39,9 +40,30 @@ export class AccountDetailsModalComponent {
     console.log('Open new payment flow');
   }
 
-  // TODO: otvoriti modal za promenu limita (F6)
+  public isChangeLimitModalOpen = false;
+
+  /**
+   * Otvara modal za promenu limita računa
+   */
   public onChangeLimit(): void {
-    console.log('Open change limit flow');
+    this.isChangeLimitModalOpen = true; 
+  }
+
+  /**
+   * Zatvara modal za promenu limita
+   */
+  public closeChangeLimitModal(): void {
+    this.isChangeLimitModalOpen = false;
+  }
+
+  /**
+   * Reaguje kada su limiti uspešno promenjeni
+   */
+  public onLimitUpdated(): void {
+    this.isChangeLimitModalOpen = false;
+    // Zatvaramo i glavni modal da bi se podaci osvežili u parent listi, 
+    // ili možeš da ne zatvaraš nego samo ostaviš emit
+    this.closeModal(); 
   }
 
   public getAccountTypeLabel(): string {

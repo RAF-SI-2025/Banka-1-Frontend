@@ -60,3 +60,8 @@ export interface Account {
   /** Datum isteka */
   expiryDate: string;
 }
+export interface ChangeLimitDto {
+  dailyLimit: number;
+  monthlyLimit: number;
+  verificationCode: string;
+}

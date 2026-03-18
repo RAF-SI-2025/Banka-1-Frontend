@@ -98,3 +98,9 @@
   (closed)="showRenameModal = false"
   (updated)="onNameUpdated($event)"
 ></app-rename-account-modal>
+<app-change-limit-modal
+  *ngIf="isChangeLimitModalOpen && account"
+  [account]="account"
+  (close)="closeChangeLimitModal()"
+  (limitUpdated)="onLimitUpdated()">
+</app-change-limit-modal>

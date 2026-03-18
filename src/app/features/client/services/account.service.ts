@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
 import { map } from 'rxjs/operators'; // Dodato za paginaciju kada pređeš na backend
 import { environment } from '../../../../environments/environment';
-import { Account } from '../models/account.model';
+import { Account, ChangeLimitDto } from '../models/account.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -83,5 +83,16 @@ export class AccountService {
     
     // console.log(`Mock: Menjam limite za račun ${id}`);
     // return of(undefined).pipe(delay(200));
+  }
+  /**
+   * Menja limite računa pozivom odgovarajućeg endpointa na backendu.
+   * @param accountId ID računa koji se ažurira
+   * @param payload Objekat koji sadrži nove limite i verifikacioni kod
+   * @returns Observable koji vraća odgovor sa bekenda
+   */
+  changeAccountLimits(accountId: number, payload: ChangeLimitDto): Observable<void> {
+    const url = `${this.baseUrl}/${accountId}/limits`; 
+    
+    return this.http.put<void>(url, payload);
   }
 }
