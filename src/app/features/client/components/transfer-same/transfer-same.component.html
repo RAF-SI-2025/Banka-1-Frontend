@@ -1,0 +1,215 @@
+<div class="layout">
+  <app-navbar></app-navbar>
+
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <span class="material-icons topbar__page-icon">compare_arrows</span>
+        <h1 class="topbar__title">Prenos</h1>
+      </div>
+      <div class="topbar__right">
+        <button class="topbar__icon-btn" title="Obaveštenja">
+          <span class="material-icons">notifications</span>
+        </button>
+        <button class="topbar__logout" (click)="logout()">
+          <span class="material-icons">logout</span>
+          <span>Odjava</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Hero card -->
+      <div class="hero-card">
+        <div class="hero-decoration">
+          <div class="hero-circle hero-circle--1"></div>
+          <div class="hero-circle hero-circle--2"></div>
+        </div>
+        <div class="hero-body">
+          <div class="hero-icon-wrap">
+            <span class="material-icons">compare_arrows</span>
+          </div>
+          <div>
+            <h2 class="hero-heading">Prenos sredstava</h2>
+            <p class="hero-desc">Prebacite novac između svojih računa iste valute — bez provizije.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="state-card" *ngIf="isLoading">
+        <div class="skel skel--lg"></div>
+        <div class="skel skel--line"></div>
+        <div class="skel skel--line skel--short"></div>
+      </div>
+
+      <!-- STEP 1: Form -->
+      <div class="card" *ngIf="!isLoading && step === 'form'">
+        <div class="card__head">
+          <span class="card__label">DETALJI PRENOSA</span>
+          <span class="card__step">Korak 1 od 2</span>
+        </div>
+
+        <form
+          [formGroup]="transferForm"
+          (ngSubmit)="onContinue()"
+          class="transfer-form"
+          data-cy="transfer-same-form"
+        >
+          <!-- Sa računa -->
+          <div class="form-group">
+            <label class="form-label" for="fromAccount">
+              <span class="material-icons form-label-icon">account_balance</span>
+              Sa računa
+            </label>
+            <select
+              id="fromAccount"
+              class="form-control"
+              formControlName="fromAccountId"
+              (change)="onFromAccountChange()"
+              data-cy="from-account-select"
+            >
+              <option [ngValue]="null" disabled>Izaberite izvorni račun</option>
+              <option *ngFor="let acc of accounts" [value]="acc.id">
+                {{ formatAccountLabel(acc) }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Arrow indicator -->
+          <div class="transfer-arrow" *ngIf="selectedFromAccount">
+            <span class="material-icons">arrow_downward</span>
+          </div>
+
+          <!-- Na račun -->
+          <div class="form-group">
+            <label class="form-label" for="toAccount">
+              <span class="material-icons form-label-icon">account_balance</span>
+              Na račun
+            </label>
+            <select
+              id="toAccount"
+              class="form-control"
+              formControlName="toAccountId"
+              (change)="onToAccountChange()"
+              [attr.disabled]="!selectedFromAccount || filteredToAccounts.length === 0 ? '' : null"
+              data-cy="to-account-select"
+            >
+              <option [ngValue]="null" disabled>Izaberite odredišni račun</option>
+              <option *ngFor="let acc of filteredToAccounts" [value]="acc.id">
+                {{ formatAccountLabel(acc) }}
+              </option>
+            </select>
+            <div class="warning-banner" *ngIf="noMatchMessage" data-cy="no-match-message">
+              <span class="material-icons">warning_amber</span>
+              <span>{{ noMatchMessage }}</span>
+            </div>
+          </div>
+
+          <!-- Iznos -->
+          <div class="form-group">
+            <label class="form-label" for="amount">
+              <span class="material-icons form-label-icon">payments</span>
+              Iznos ({{ selectedFromAccount?.currency || '—' }})
+            </label>
+            <div class="input-wrap">
+              <input
+                id="amount"
+                type="number"
+                class="form-control form-control--amount"
+                formControlName="amount"
+                placeholder="0.00"
+                step="0.01"
+                data-cy="amount-input"
+                [class.has-error]="amountError"
+              />
+              <span class="input-currency" *ngIf="selectedFromAccount">{{ selectedFromAccount.currency }}</span>
+            </div>
+            <div class="error-text" *ngIf="amountError" data-cy="amount-error">
+              <span class="material-icons error-icon">error_outline</span>
+              {{ amountError }}
+            </div>
+            <div class="balance-hint" *ngIf="selectedFromAccount">
+              <span class="material-icons hint-icon">info_outline</span>
+              Raspoloživo: {{ formatCurrency(selectedFromAccount.availableBalance, selectedFromAccount.currency) }}
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="transferForm.invalid || !!noMatchMessage"
+              data-cy="continue-btn"
+            >
+              Nastavi
+              <span class="material-icons btn-icon-right">arrow_forward</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- STEP 2: Confirmation -->
+      <div class="card" *ngIf="step === 'confirm'" data-cy="confirm-section">
+        <div class="card__head">
+          <span class="card__label">POTVRDA PRENOSA</span>
+          <span class="card__step">Korak 2 od 2</span>
+        </div>
+
+        <div class="confirm-visual">
+          <div class="confirm-acc">
+            <span class="confirm-acc-label">Od</span>
+            <span class="confirm-acc-name">{{ selectedFromAccount?.name }}</span>
+            <span class="confirm-acc-num">{{ selectedFromAccount?.accountNumber }}</span>
+          </div>
+          <div class="confirm-arrow-wrap">
+            <span class="material-icons confirm-arrow-icon">arrow_forward</span>
+          </div>
+          <div class="confirm-acc">
+            <span class="confirm-acc-label">Ka</span>
+            <span class="confirm-acc-name">{{ selectedToAccount?.name }}</span>
+            <span class="confirm-acc-num">{{ selectedToAccount?.accountNumber }}</span>
+          </div>
+        </div>
+
+        <div class="confirm-amount-card">
+          <span class="confirm-amount-label">Iznos prenosa</span>
+          <span class="confirm-amount-value">{{ formatCurrency(transferForm.value.amount, selectedFromAccount?.currency || 'RSD') }}</span>
+          <span class="confirm-amount-note">Bez provizije</span>
+        </div>
+
+        <div class="confirm-actions">
+          <button type="button" class="btn-secondary" (click)="onBack()" data-cy="back-btn">
+            <span class="material-icons btn-icon-left">arrow_back</span>
+            Nazad
+          </button>
+          <button type="button" class="btn-primary" (click)="onConfirm()" [disabled]="isSubmitting" data-cy="confirm-btn">
+            {{ isSubmitting ? 'Obrada...' : 'Potvrdi prenos' }}
+            <span class="material-icons btn-icon-right" *ngIf="!isSubmitting">check</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Success -->
+      <div class="card card--success" *ngIf="step === 'success'" data-cy="success-section">
+        <div class="success-body">
+          <div class="success-check">
+            <span class="material-icons">check</span>
+          </div>
+          <h2 class="success-title">Prenos uspešan!</h2>
+          <p class="success-text">
+            Sredstva u iznosu od
+            <strong>{{ formatCurrency(transferForm.value.amount, selectedFromAccount?.currency || 'RSD') }}</strong>
+            su uspešno prebačena.
+          </p>
+          <button type="button" class="btn-primary" (click)="onNewTransfer()" data-cy="new-transfer-btn">
+            <span class="material-icons btn-icon-left">add</span>
+            Novi prenos
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
