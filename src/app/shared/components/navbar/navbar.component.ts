@@ -14,7 +14,7 @@ export class NavbarComponent {
     { label: 'Računi',     route: '/accounts',            icon: 'account_balance' },
     { label: 'Klijenti',   route: '/clients',             icon: 'person' },
     { label: 'Plaćanja',   route: '/payments',            icon: 'payments' },
-    { label: 'Transferi',  route: '/transfers',           icon: 'swap_horiz' },
+    { label: 'Transfer',   route: '/transfers/different',  icon: 'currency_exchange' },
     { label: 'Menjačnica', route: '/exchange',            icon: 'currency_exchange' },
     { label: 'Kartice',    route: '/cards',               icon: 'credit_card' },
     { label: 'Krediti',    route: '/loans',               icon: 'account_balance_wallet' },
