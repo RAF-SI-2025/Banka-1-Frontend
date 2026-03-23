@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { of, delay } from 'rxjs'; 
+import { of, delay } from 'rxjs';
+import { PaymentRecipient } from '../models/account.model';
 
 export interface ClientDto {
   id: string | number;
@@ -68,7 +69,7 @@ export class ClientService {
     return this.http
       .get<ClientPageResponse>(this.base, { params })
       .pipe(map((response) => this.normalizePageResponse(response, page, size)));
-      
+
   }
 
   getClientById(id: string): Observable<ClientDto> {
@@ -109,5 +110,22 @@ export class ClientService {
       number: Array.isArray(response) ? page : response.number ?? page,
       size: resolvedSize
     };
+  }
+  //Primaoci placanja
+
+  getAllRecipients(): Observable<PaymentRecipient[]> {
+    return this.http.get<PaymentRecipient[]>(`${environment.apiUrl}/payment-recipients`);
+  }
+
+  createRecipient(name: string, accountNumber: string): Observable<PaymentRecipient> {
+    return this.http.post<PaymentRecipient>(`${environment.apiUrl}/payment-recipients`, { name, accountNumber });
+  }
+
+  updateRecipient(id: number, name: string, accountNumber: string): Observable<PaymentRecipient> {
+    return this.http.put<PaymentRecipient>(`${environment.apiUrl}/payment-recipients/${id}`, { name, accountNumber });
+  }
+
+  deleteRecipient(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/payment-recipients/${id}`);
   }
 }

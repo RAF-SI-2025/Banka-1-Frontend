@@ -20,5 +20,6 @@ export class NavbarComponent {
     { label: 'Kartice',    route: '/cards',               icon: 'credit_card' },
     { label: 'Krediti',    route: '/loans',               icon: 'account_balance_wallet' },
     {label: 'Upravljanje računima',route: '/account-management',icon: 'account_balance'},
+    { label: 'Primaoci plaćanja', route: '/payments/recipients', icon: 'people' },
   ];
 }

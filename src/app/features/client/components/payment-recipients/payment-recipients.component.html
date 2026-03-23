@@ -1,0 +1,108 @@
+<div class="page-wrapper">
+  <app-navbar></app-navbar>
+
+  <main class="content">
+    <h1 class="page-title">PRIMAOCI PLAĆANJA</h1>
+
+    <!-- Loading -->
+    <div class="state-box" *ngIf="isLoading">
+      <p>Učitavanje podataka...</p>
+    </div>
+
+    <div class="panel" *ngIf="!isLoading">
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar__search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Pretraži šablone"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearch()"
+          />
+        </div>
+        <button class="btn-add" type="button" (click)="openAddForm()">
+          DODAJ +
+        </button>
+      </div>
+
+      <!-- Forma -->
+      <div class="form-section" *ngIf="formMode">
+        <h3 class="form-title">
+          {{ formMode === 'add' ? 'Dodaj primaoca' : 'Izmeni primaoca' }}
+        </h3>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label">Naziv</label>
+            <input
+              class="form-input"
+              type="text"
+              placeholder="Ime primaoca"
+              [(ngModel)]="formName"
+            />
+          </div>
+          <div class="form-col">
+            <label class="form-label">Broj računa</label>
+            <input
+              class="form-input"
+              type="text"
+              placeholder="265000000000000000"
+              [(ngModel)]="formAccountNumber"
+            />
+          </div>
+        </div>
+
+        <span class="error-msg" *ngIf="formError">{{ formError }}</span>
+
+        <div class="form-btns">
+          <button type="button" class="btn-cancel" (click)="closeForm()" [disabled]="formLoading">
+            Poništi
+          </button>
+          <button type="button" class="btn-submit" (click)="saveRecipient()" [disabled]="formLoading">
+            {{ formLoading ? 'Čuvanje...' : 'POTVRDI' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Prazna lista -->
+      <div class="state-box" *ngIf="filteredRecipients.length === 0 && !formMode">
+        <p>Nema primaoca plaćanja.</p>
+      </div>
+
+      <!-- Tabela -->
+      <table class="table" *ngIf="filteredRecipients.length > 0">
+        <thead>
+        <tr>
+          <th>NAZIV</th>
+          <th>BROJ RAČUNA</th>
+          <th>OPCIJE</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let recipient of filteredRecipients">
+          <td class="td-name">{{ recipient.name }}</td>
+          <td class="td-account">{{ recipient.accountNumber }}</td>
+          <td class="td-actions">
+            <button class="btn-edit" type="button" (click)="openEditForm(recipient)">Izmeni</button>
+            <button class="btn-delete" type="button" (click)="deleteRecipient(recipient)">Obriši</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="filteredRecipients.length > 0">
+        <span class="pagination-info">
+          Prikazuje se 1 do {{ totalCount }} od {{ totalCount }} stavke
+        </span>
+        <button class="page-btn active" type="button">1</button>
+      </div>
+
+    </div>
+  </main>
+</div>

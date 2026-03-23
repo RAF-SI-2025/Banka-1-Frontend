@@ -16,6 +16,7 @@ import { ForbiddenComponent } from './shared/components/forbidden/forbidden.comp
 import { NewPaymentComponent } from './features/client/components/new-payment/new-payment.component';
 import { AccountManagementComponent } from './features/employee/account-management/account-management.component';
 import { AccountCardsPlaceholderComponent } from './features/employee/account-cards-placeholder/account-cards-placeholder.component';
+import { PaymentRecipientsComponent } from './features/client/components/payment-recipients/payment-recipients.component';
 
 const routes: Routes = [
   {
@@ -39,14 +40,14 @@ const routes: Routes = [
   {
     path: 'clients',
     component: ClientListComponent,
-    canActivate: [authGuard, roleGuard], 
+    canActivate: [authGuard, roleGuard],
     data: { permission: 'CLIENT_MANAGE' }
   },
   {
     path: 'clients/:id',
     component: ClientDetailComponent,
     canActivate: [authGuard, roleGuard],
-    data: { permission: 'CLIENT_MANAGE' } 
+    data: { permission: 'CLIENT_MANAGE' }
   },
   {
     path: 'users',
@@ -80,19 +81,19 @@ const routes: Routes = [
   canActivate: [authGuard, roleGuard],
   data: { permission: 'CLIENT_MANAGE' }
 },
-  
+
   {
   path: 'transfers/different',
   component: TransferDiffComponent,
   canActivate: [authGuard]
   },
-    
+
   {
   path: 'transfers/same',
   component: TransferSameComponent,
   canActivate: [authGuard]
   },
-    
+
   {
     path: '403',
     component: ForbiddenComponent
@@ -101,6 +102,11 @@ const routes: Routes = [
     path: '',
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule)
+  },
+  {
+    path: 'payments/recipients',
+    component: PaymentRecipientsComponent,
+    canActivate: [authGuard]
   },
   {
     path: '**',

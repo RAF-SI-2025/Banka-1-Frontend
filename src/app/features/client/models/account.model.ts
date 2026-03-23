@@ -77,3 +77,8 @@ export interface ChangeLimitDto {
   monthlyLimit: number;
   verificationCode: string;
 }
+export interface PaymentRecipient {
+  id: number;
+  name: string;
+  accountNumber: string;
+}
