@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { ClientDto, ClientFilters, ClientPageResponse, ClientService } from '../../services/client.service';
 
@@ -29,7 +29,7 @@ export class ClientListComponent implements OnInit, OnDestroy {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private readonly clientService: ClientService) {}
+  constructor(private readonly clientService: ClientService, private readonly router: Router) {}
 
   public ngOnInit(): void {
     this.loadClients();
@@ -87,8 +87,8 @@ export class ClientListComponent implements OnInit, OnDestroy {
     return client.brojTelefona?.trim() || client.brojTelefona?.trim() || '-';
   }
 
-  public getDetailsLink(client: ClientDto): (string | number)[] {
-    return ['/clients', client.id];
+  public openClientDetail(client: ClientDto): void {
+    this.router.navigate(['/clients', client.id], { state: { client } });
   }
 
   public getLastItem(): number {

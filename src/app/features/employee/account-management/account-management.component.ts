@@ -1,13 +1,18 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Account } from '../../client/models/account.model';
 import { AccountService } from '../../client/services/account.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-account-management',
   templateUrl: './account-management.component.html',
+  standalone: true,
+  imports: [CommonModule, FormsModule, NavbarComponent],
   styleUrls: ['./account-management.component.scss']
 })
 export class AccountManagementComponent implements OnInit {
@@ -19,39 +24,6 @@ export class AccountManagementComponent implements OnInit {
 
   showConfirmModal = false;
   selectedAccount: Account | null = null;
-
-  // MOCK PODACI ZA LOKALNO TESTIRANJE
-  // Zakomentarisati/ukloniti kada backend bude potpuno spreman.
-  private readonly mockAccounts: Account[] = [
-    {
-      id: 1,
-      accountNumber: '160-123456-78',
-      ownerName: 'Ana Anic',
-      subtype: 'CURRENT',
-      status: 'ACTIVE'
-    } as unknown as Account,
-    {
-      id: 2,
-      accountNumber: '265-987654-12',
-      ownerName: 'Marko Markovic',
-      subtype: 'FOREIGN_PERSONAL',
-      status: 'INACTIVE'
-    } as unknown as Account,
-    {
-      id: 3,
-      accountNumber: '170-555444-33',
-      ownerName: 'Petar Petrovic',
-      subtype: 'DOO',
-      status: 'ACTIVE'
-    } as unknown as Account,
-    {
-      id: 4,
-      accountNumber: '325-222111-99',
-      ownerName: 'Jelena Jovanovic',
-      subtype: 'FOREIGN_BUSINESS',
-      status: 'INACTIVE'
-    } as unknown as Account
-  ];
 
   constructor(
     private readonly accountService: AccountService,
@@ -128,17 +100,7 @@ export class AccountManagementComponent implements OnInit {
         this.isLoading = false;
         this.toastService.error(err.error?.message || 'Greška pri učitavanju računa.');
       }
-    });
-
-    /*
-    ZA LOKALNO TESTIRANJE BEZ BACKEND-A:
-    
-    this.accounts = [...this.mockAccounts];
-    this.sortByLastName();
-    this.applyFilters();
-    this.isLoading = false;
-    */
-    
+    });    
   }
 
   getOwnershipType(account: Account): string {

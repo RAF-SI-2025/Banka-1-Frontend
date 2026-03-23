@@ -14,14 +14,14 @@ import { AccountCardsPlaceholderComponent } from './account-cards-placeholder/ac
     EmployeeListComponent,
     EmployeeCreateComponent,
     EmployeeEditComponent,
-    AccountManagementComponent,
     AccountCardsPlaceholderComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    AccountManagementComponent
   ]
 })
 export class EmployeeModule { }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -8,12 +8,20 @@ import { Transaction, TransactionPage } from '../models/transaction.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
-  private readonly baseUrl = `${environment.apiUrl}/client/accounts`;
+  private readonly baseUrl = `${environment.apiUrl}/accounts/client/accounts`;
 
   constructor(private http: HttpClient) {}
 
   getMyAccounts(): Observable<Account[]> {
-    return this.http.get<any>(this.baseUrl).pipe(map(res => res.content));
+    const page = 0;
+    const size = 10;
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http
+      .get<{ content: Account[] }>(this.baseUrl, { params })
+      .pipe(map(res => res.content));
   }
 
   getAccountById(id: number): Observable<Account> {

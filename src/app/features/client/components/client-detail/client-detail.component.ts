@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ClientService } from '../../services/client.service';
+import { ClientDto, ClientService } from '../../services/client.service';
 
 @Component({
   selector: 'app-client-detail',
@@ -30,7 +30,6 @@ export class ClientDetailComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       brojTelefona: ['', Validators.required],
       adresa: ['', Validators.required],
-      jmbg: [{ value: '', disabled: true }]
     });
   }
 
@@ -38,29 +37,25 @@ export class ClientDetailComponent implements OnInit {
   ngOnInit(): void {
     this.clientId = this.route.snapshot.paramMap.get('id');
     if (this.clientId) {
-      this.fetchClientDetails();
+      // Check if client data was passed via navigation state
+      const history = window.history.state;
+      const passedClient = history?.client;
+      
+      if (passedClient) {
+        this.patchFormWithClient(passedClient);
+      } 
     }
   }
 
-fetchClientDetails(): void {
-  if (!this.clientId) return;
-
-  this.isLoading = true;
-  this.errorMessage = null;
-
-  this.clientService.getClientById(this.clientId).subscribe({
-    next: (client: any) => {
-      console.log('Podaci stigli:', client);
-      this.clientForm.patchValue(client);
-      this.isLoading = false;
-    },
-    error: (err: any) => {
-      console.error('Servis je vratio grešku:', err);
-      this.errorMessage = 'Neuspešno učitavanje podataka klijenta.';
-      this.isLoading = false;
-    }
-  });
-}
+  private patchFormWithClient(client: any): void {
+    this.clientForm.patchValue({
+      ime: client.name || client.ime,
+      prezime: client.lastName || client.prezime,
+      email: client.email,
+      brojTelefona: client.brojTelefona,
+      adresa: client.adresa
+    });
+  }
 
 onSubmit(): void {
   if (this.clientForm.valid && this.clientId) {

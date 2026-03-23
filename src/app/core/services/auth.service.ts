@@ -35,7 +35,7 @@ export class AuthService {
    */
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, {email, password})
+      .post<LoginResponse>(`${environment.apiUrl}/employees/auth/login`, {email, password})
       .pipe(
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.jwt);
@@ -69,7 +69,7 @@ export class AuthService {
    * @returns Observable with text response message
    */
   public forgotPassword(email: string): Observable<string> {
-    return this.http.post<string>(`${environment.apiUrl}/auth/forgot-password`,
+    return this.http.post<string>(`${environment.apiUrl}/employees/auth/forgot-password`,
       { email },
       { responseType: 'text' as 'json' }
     );
@@ -81,7 +81,7 @@ export class AuthService {
    */
   public checkResetPasswordToken(confirmationToken: string): Observable<number> {
     return this.http.get<number>(
-      `${environment.apiUrl}/auth/checkResetPassword`,
+      `${environment.apiUrl}/employees/auth/checkResetPassword`,
       {
         params: { confirmationToken }
       }
@@ -99,7 +99,7 @@ export class AuthService {
     confirmationToken: string,
     password: string
   ): Observable<string> {
-    return this.http.post<string>(`${environment.apiUrl}/auth/resetPassword`, {
+    return this.http.post<string>(`${environment.apiUrl}/employees/auth/resetPassword`, {
       id,
       confirmationToken,
       password
@@ -114,7 +114,7 @@ export class AuthService {
    */
   public checkActivateToken(confirmationToken: string): Observable<number> {
     return this.http.get<number>(
-      `${environment.apiUrl}/auth/checkActivate`,
+      `${environment.apiUrl}/employees/auth/checkActivate`,
       {
         params: { confirmationToken }
       }
@@ -132,7 +132,7 @@ export class AuthService {
     confirmationToken: string,
     password: string
   ): Observable<string> {
-    return this.http.post<string>(`${environment.apiUrl}/auth/activate`, {
+    return this.http.post<string>(`${environment.apiUrl}/employees/auth/activate`, {
       id,
       confirmationToken,
       password

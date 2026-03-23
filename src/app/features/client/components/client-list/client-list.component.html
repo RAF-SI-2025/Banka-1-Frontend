@@ -84,9 +84,9 @@
               <td>{{ client.email || '-' }}</td>
               <td>{{ getPhoneNumber(client) }}</td>
               <td class="actions-cell">
-                <a class="btn-details" [routerLink]="getDetailsLink(client)">
+                <button type="button" class="btn-details" (click)="openClientDetail(client)">
                   Detalji
-                </a>
+                </button>
               </td>
             </tr>
           </tbody>
