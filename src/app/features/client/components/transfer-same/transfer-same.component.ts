@@ -8,13 +8,14 @@ import { TransferService } from '../../services/transfer.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
+import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 
 type Step = 'form' | 'confirm' | 'success';
 
 @Component({
   selector: 'app-transfer-same',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent],
   templateUrl: './transfer-same.component.html',
   styleUrls: ['./transfer-same.component.scss']
 })
@@ -22,6 +23,7 @@ export class TransferSameComponent implements OnInit {
   accounts: Account[] = [];
   filteredToAccounts: Account[] = [];
   transferForm!: FormGroup;
+  public showVerificationModal = false;
 
   step: Step = 'form';
   isLoading = true;
@@ -120,6 +122,17 @@ export class TransferSameComponent implements OnInit {
   }
 
   onConfirm(): void {
+    this.showVerificationModal = true;
+  }
+
+  handleVerification(success: boolean): void {
+    this.showVerificationModal = false;
+    if (success) {
+      this.executeTransfer();
+    }
+  }
+
+  private executeTransfer(): void {
     this.isSubmitting = true;
 
     const payload = {

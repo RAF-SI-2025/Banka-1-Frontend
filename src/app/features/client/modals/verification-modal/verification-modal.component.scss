@@ -1,0 +1,168 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 1100; // Malo iznad običnih modala ako zatreba
+  display: block;
+}
+
+// Ponovo koristimo tvoje animacije za konzistentnost
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.2); // Tvoja tamna nijansa
+  backdrop-filter: blur(6px); // Malo jači blur za fokus na sigurnost
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  animation: overlayFadeIn 0.25s ease-out;
+}
+
+.modal-shell {
+  position: relative;
+  width: 100%;
+  max-width: 420px; // Uži modal za verifikaciju
+  animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1;
+}
+
+.modal-header {
+  padding: 24px 24px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a24;
+    margin: 0;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #7a7a9a;
+    cursor: pointer;
+    transition: color 0.2s;
+    &:hover { color: #1a1a24; }
+  }
+}
+
+.modal-body {
+  padding: 0 24px 24px;
+
+  .instruction-text {
+    color: #7a7a9a;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .form-group {
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #1a1a24;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 4px; // Razmak za cifre koda
+      text-align: center;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #24d16d; // Tvoja zelena
+        box-shadow: 0 0 0 4px rgba(36, 209, 109, 0.1);
+      }
+    }
+  }
+
+  .attempts-badge {
+    margin-top: 16px;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #fff5f5;
+    color: #e74c3c;
+  }
+}
+
+.modal-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+
+  button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cancel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    &:hover { background: #f1f5f9; }
+  }
+
+  .btn-confirm {
+    background: linear-gradient(135deg, #24d16d 0%, #16a34a 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(22, 163, 74, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+  }
+}

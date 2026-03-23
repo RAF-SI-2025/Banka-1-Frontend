@@ -42,55 +42,49 @@
   border-radius: 12px;
   padding: 2.5rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0,0,0,0.05);
 }
 
+// Stilovi za formu
 .form-row {
   display: flex;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
 
-  @media (max-width: 768px) {
+  .form-group {
+    display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-  }
-}
 
-.form-group {
-  display: flex;
-  flex-direction: column;
+    &.full-width { flex: 1; }
+    &.half-width { flex: 1; }
 
-  &.full-width { flex: 1; }
-  &.half-width { flex: 1; }
-
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #7a7a9a;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .form-control {
-    padding: 0.85rem 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    color: #333;
-    background-color: #fafafa;
-    transition: all 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: #24d16d; 
-      background-color: white;
-      box-shadow: 0 0 0 3px rgba(36, 209, 109, 0.15);
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1a1a24;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    &.is-invalid {
-      border-color: #e74c3c;
-      background-color: #fffaf9;
+    .form-control {
+      padding: 0.8rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s;
+      font-family: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #24d16d; 
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(36, 209, 109, 0.15);
+      }
+
+      &.is-invalid {
+        border-color: #e74c3c;
+        background-color: #fffaf9;
+      }
     }
   }
 
@@ -128,41 +122,130 @@
   gap: 1.5rem;
   margin-top: 3rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #f1f5f9;
+}
 
-  .btn-cancel {
-    background: transparent;
-    border: none;
-    color: #7a7a9a;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 0.95rem;
+// Dugmad
+.btn-cancel {
+  background: none;
+  border: none;
+  color: #7a7a9a;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.8rem 1rem;
+  transition: color 0.2s;
 
-    &:hover {
-      color: #333;
-      text-decoration: underline;
+  &:hover {
+    color: #1a1a24;
+  }
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #24d16d 0%, #16a34a 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(22, 163, 74, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+}
+
+// ==========================================================================
+// NOVE STVARI: SUCCESS STATE & RECIPIENT OFFER
+// ==========================================================================
+
+.success-container {
+  text-align: center;
+  padding: 1.5rem 0;
+  animation: fadeInModal 0.4s ease-out;
+
+  .success-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #24d16d 0%, #16a34a 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 16px rgba(22, 163, 74, 0.2);
+
+    .check-mark {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: bold;
     }
   }
 
-  .btn-submit {
-    background-color: #24d16d;
-    color: white;
-    border: none;
-    padding: 0.85rem 2rem;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    letter-spacing: 0.5px;
+  .recipient-offer-box {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    transition: all 0.3s ease;
 
-    &:hover:not(:disabled) {
-      background-color: #1eb960;
+    p {
+      color: #475569;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
     }
 
-    &:disabled {
-      background-color: #a0dcb9;
-      cursor: not-allowed;
+    .btn-add-recipient {
+      background: white;
+      border: 2px solid #24d16d;
+      color: #16a34a;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #24d16d;
+        color: white;
+        box-shadow: 0 4px 10px rgba(36, 209, 109, 0.2);
+      }
     }
   }
+
+  .post-actions {
+    margin-top: 1rem;
+    .btn-submit {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.state-box {
+  text-align: center;
+  padding: 3rem;
+  color: #7a7a9a;
 }

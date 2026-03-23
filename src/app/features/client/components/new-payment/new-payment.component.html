@@ -4,8 +4,10 @@
   <main class="content centered-content">
     <div class="payment-page">
       <div class="page-header">
-        <h1 class="page-title">NOVO PLAĆANJE</h1>
-        <p class="page-subtitle">Popunite detalje za prenos sredstava</p>
+        <h1 class="page-title">{{ transactionSuccess ? 'UPLATA USPEŠNA' : 'NOVO PLAĆANJE' }}</h1>
+        <p class="page-subtitle">
+          {{ transactionSuccess ? 'Vaša transakcija je uspešno procesuirana.' : 'Popunite detalje za prenos sredstava' }}
+        </p>
       </div>
 
       <div class="state-box" *ngIf="isLoading">
@@ -13,7 +15,8 @@
       </div>
 
       <div class="panel form-panel" *ngIf="!isLoading">
-        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+        
+        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" *ngIf="!transactionSuccess">
           
           <div class="form-row">
             <div class="form-group full-width">
@@ -28,16 +31,15 @@
 
           <div class="form-row">
             <div class="form-group half-width">
-              <label>Ime primaoca</label>
-              <input type="text" formControlName="receiverName" class="form-control" placeholder="Ime i prezime ili naziv firme" [class.is-invalid]="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched">
+              <label>Primalac (Ime ili Naziv)</label>
+              <input type="text" formControlName="receiverName" class="form-control" placeholder="Unesite ime primaoca" [class.is-invalid]="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched">
               <span class="error-msg" *ngIf="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched">Ime primaoca je obavezno.</span>
             </div>
 
             <div class="form-group half-width">
               <label>Račun primaoca</label>
-              <input type="text" formControlName="receiverAccount" class="form-control" placeholder="18 cifara, bez razmaka i crtica" [class.is-invalid]="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">
-              <span class="error-msg" *ngIf="paymentForm.get('receiverAccount')?.errors?.['required'] && paymentForm.get('receiverAccount')?.touched">Račun primaoca je obavezan.</span>
-              <span class="error-msg" *ngIf="paymentForm.get('receiverAccount')?.errors?.['pattern'] && paymentForm.get('receiverAccount')?.touched">Račun mora imati tačno 18 cifara.</span>
+              <input type="text" formControlName="receiverAccount" class="form-control" placeholder="Npr. 265000000123456789" [class.is-invalid]="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">
+              <span class="error-msg" *ngIf="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">Unesite ispravan broj računa (18 cifara).</span>
             </div>
           </div>
 
@@ -48,7 +50,7 @@
                 <input type="number" formControlName="amount" class="form-control" placeholder="0.00" [class.is-invalid]="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">
                 <span class="currency-badge">RSD</span>
               </div>
-              <span class="error-msg" *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">Unesite validan iznos.</span>
+              <span class="error-msg" *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">Unesite validan iznos veći od 0.</span>
             </div>
 
             <div class="form-group half-width">
@@ -85,9 +87,32 @@
             <button type="button" class="btn-cancel" (click)="onCancel()">Nazad na listu</button>
             <button type="submit" class="btn-submit" [disabled]="paymentForm.invalid">POTVRDI PLAĆANJE &rsaquo;</button>
           </div>
-
         </form>
+
+        <div class="success-container" *ngIf="transactionSuccess">
+          <div class="success-icon-wrapper">
+             <span class="check-mark">✓</span>
+          </div>
+          
+          <div class="recipient-offer-box" *ngIf="isNewRecipient">
+            <p>Ovaj primalac nije u vašoj listi sačuvanih plaćanja. Želite li da ga dodate?</p>
+            <button type="button" class="btn-add-recipient" (click)="saveToRecipients()">
+               + DODAJ U LISTU PRIMALACA
+            </button>
+          </div>
+
+          <div class="post-actions">
+            <button type="button" class="btn-submit" (click)="onCancel()">NAZAD NA LISTU RAČUNA</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </main>
 </div>
+
+<app-verification-modal 
+  *ngIf="showVerificationModal"
+  (confirmed)="handleVerification($event)"
+  (closed)="showVerificationModal = false">
+</app-verification-modal>

@@ -8,13 +8,13 @@ import { TransferService, TransferPreview } from '../../services/transfer.servic
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
-
+import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 type Step = 'form' | 'confirm' | 'success';
 
 @Component({
   selector: 'app-transfer-diff',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent],
   templateUrl: './transfer-diff.component.html',
   styleUrls: ['./transfer-diff.component.scss']
 })
@@ -22,6 +22,7 @@ export class TransferDiffComponent implements OnInit {
   accounts: Account[] = [];
   filteredToAccounts: Account[] = [];
   transferForm!: FormGroup;
+  public showVerificationModal = false;
 
   step: Step = 'form';
   isLoading = true;
@@ -134,6 +135,17 @@ export class TransferDiffComponent implements OnInit {
   }
 
   onConfirm(): void {
+    this.showVerificationModal = true;
+  }
+
+  handleVerification(success: boolean): void {
+    this.showVerificationModal = false;
+    if (success) {
+      this.executeTransfer();
+    }
+  }
+
+  private executeTransfer(): void {
     this.isSubmitting = true;
 
     const payload = {

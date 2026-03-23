@@ -16,7 +16,8 @@ import { NewPaymentComponent } from './components/new-payment/new-payment.compon
     FormsModule,
     ClientRoutingModule,
     AccountListComponent,
-    AccountDetailsModalComponent
+    AccountDetailsModalComponent,
+    NewPaymentComponent
   ]
 })
 export class ClientModule {}

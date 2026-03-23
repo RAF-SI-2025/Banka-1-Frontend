@@ -5,18 +5,22 @@ import { Router } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { Account } from '../../models/account.model';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
+import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 
 @Component({
   selector: 'app-new-payment',
   templateUrl: './new-payment.component.html',
   styleUrls: ['./new-payment.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
+  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
 })
 export class NewPaymentComponent implements OnInit {
   public paymentForm!: FormGroup;
   public myAccounts: Account[] = [];
   public isLoading = true;
+  public showVerificationModal = false;
+  public transactionSuccess = false;
+  public isNewRecipient = false;
 
   constructor(
     private fb: FormBuilder,
@@ -78,15 +82,37 @@ export class NewPaymentComponent implements OnInit {
    */
   public onSubmit(): void {
     if (this.paymentForm.valid) {
-      console.log('Slanje uplate spremno!', this.paymentForm.value);
-      // TODO: U sledećem sprintu ovde povezujemo sa PaymentService
-      
-      alert('Plaćanje uspešno procesuirano! (Mock)');
-      this.router.navigate(['/accounts']);
+      this.showVerificationModal = true;
     } else {
-      // Prikazujemo sve greške ako je korisnik pokušao da submituje praznu formu
       this.paymentForm.markAllAsTouched();
     }
+  }
+
+  public handleVerification(success: boolean): void {
+      this.showVerificationModal = false;
+      if (success) {
+        this.executeTransaction();
+      }
+    }
+
+    private executeTransaction(): void {
+    const receiverAcc = this.paymentForm.get('receiverAccount')?.value;
+
+    // SIMULACIJA: Ovde bi inače išao poziv ka servisu da proveri listu primalaca
+    // Za sada simuliramo da račun NIJE u listi ako se ne završava na "000"
+    this.isNewRecipient = !receiverAcc.endsWith('000');
+    
+    this.transactionSuccess = true;
+    // Napomena: Ne radimo router.navigate odmah da bi korisnik video opciju za dodavanje
+  }
+  public saveToRecipients(): void {
+    const name = this.paymentForm.get('receiverName')?.value;
+    const acc = this.paymentForm.get('receiverAccount')?.value;
+    
+    console.log('Čuvanje primaoca:', { name, acc });
+    alert(`Primalac ${name} je dodat u vašu listu!`);
+    
+    this.isNewRecipient = false; // Sakrivamo dugme nakon klika
   }
 /**
    * Pokreće se klikom na dugme "Odustani" ili "Nazad na listu".

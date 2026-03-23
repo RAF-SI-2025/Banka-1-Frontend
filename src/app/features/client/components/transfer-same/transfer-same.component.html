@@ -213,3 +213,8 @@
     </div>
   </div>
 </div>
+<app-verification-modal 
+  *ngIf="showVerificationModal"
+  (confirmed)="handleVerification($event)"
+  (closed)="showVerificationModal = false">
+</app-verification-modal>

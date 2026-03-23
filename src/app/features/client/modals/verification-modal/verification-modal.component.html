@@ -1,0 +1,41 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-shell" (click)="$event.stopPropagation()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4 class="modal-title">Verifikacija transakcije</h4>
+        <button type="button" class="close-button" (click)="onClose()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <p class="instruction-text">Verifikacioni kod je poslat na vaš uređaj (Mock: 1234).</p>
+        <div class="form-group">
+          <label for="code">Unesite kod</label>
+          <input 
+            type="text" 
+            id="code" 
+            class="form-control" 
+            [(ngModel)]="verificationCode" 
+            placeholder="0000"
+            maxlength="4"
+            (keyup.enter)="verificationCode.length === 4 && onConfirm()"
+          >
+        </div>
+        <div *ngIf="attempts > 0" class="attempts-badge">
+          Pokušaji: {{ attempts }} / {{ maxAttempts }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="onClose()">Odustani</button>
+        <button 
+          type="button" 
+          class="btn-confirm" 
+          (click)="onConfirm()" 
+          [disabled]="verificationCode.length < 4"
+        >
+          Potvrdi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
