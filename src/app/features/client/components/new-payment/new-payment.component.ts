@@ -6,6 +6,7 @@ import { AccountService } from '../../services/account.service';
 import { Account } from '../../models/account.model';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
+import { PaymentRecipientsService } from '../../services/payment-recipients.service';
 
 @Component({
   selector: 'app-new-payment',
@@ -21,10 +22,13 @@ export class NewPaymentComponent implements OnInit {
   public showVerificationModal = false;
   public transactionSuccess = false;
   public isNewRecipient = false;
+  public recipientSaved = false;    
+  public isSavingRecipient = false; 
 
   constructor(
     private fb: FormBuilder,
     private accountService: AccountService,
+    private recipientsService: PaymentRecipientsService,
     private router: Router
   ) {}
 
@@ -95,24 +99,42 @@ export class NewPaymentComponent implements OnInit {
       }
     }
 
-    private executeTransaction(): void {
-    const receiverAcc = this.paymentForm.get('receiverAccount')?.value;
+  private executeTransaction(): void {
+    const receiverAccount = this.paymentForm.get('receiverAccount')?.value;
 
-    // SIMULACIJA: Ovde bi inače išao poziv ka servisu da proveri listu primalaca
-    // Za sada simuliramo da račun NIJE u listi ako se ne završava na "000"
-    this.isNewRecipient = !receiverAcc.endsWith('000');
-    
-    this.transactionSuccess = true;
-    // Napomena: Ne radimo router.navigate odmah da bi korisnik video opciju za dodavanje
+    // Proveri da li primalac već postoji
+    this.recipientsService.getRecipients().subscribe({
+      next: (recipients) => {
+        const exists = recipients.some(r => r.accountNumber === receiverAccount);
+        this.isNewRecipient = !exists;
+        this.transactionSuccess = true;
+      },
+      error: () => {
+        // Ako poziv ne uspe, prikaži success bez ponude za dodavanje
+        this.isNewRecipient = false;
+        this.transactionSuccess = true;
+      }
+    });
   }
+
+  
   public saveToRecipients(): void {
     const name = this.paymentForm.get('receiverName')?.value;
-    const acc = this.paymentForm.get('receiverAccount')?.value;
-    
-    console.log('Čuvanje primaoca:', { name, acc });
-    alert(`Primalac ${name} je dodat u vašu listu!`);
-    
-    this.isNewRecipient = false; // Sakrivamo dugme nakon klika
+    const accountNumber = this.paymentForm.get('receiverAccount')?.value;
+
+    this.isSavingRecipient = true;
+
+    this.recipientsService.addRecipient({ name, accountNumber }).subscribe({
+      next: () => {
+        this.isSavingRecipient = false;
+        this.recipientSaved = true;   // prikaži potvrdu
+        this.isNewRecipient = false;  // sakrij dugme
+      },
+      error: () => {
+        this.isSavingRecipient = false;
+        alert('Greška pri dodavanju primaoca. Pokušajte ponovo.');
+      }
+    });
   }
 /**
    * Pokreće se klikom na dugme "Odustani" ili "Nazad na listu".
