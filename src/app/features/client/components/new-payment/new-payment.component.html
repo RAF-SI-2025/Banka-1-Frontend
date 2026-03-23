@@ -91,14 +91,24 @@
 
         <div class="success-container" *ngIf="transactionSuccess">
           <div class="success-icon-wrapper">
-             <span class="check-mark">✓</span>
+            <span class="check-mark">✓</span>
           </div>
-          
+
+          <!-- Ponuda za dodavanje primaoca -->
           <div class="recipient-offer-box" *ngIf="isNewRecipient">
             <p>Ovaj primalac nije u vašoj listi sačuvanih plaćanja. Želite li da ga dodate?</p>
-            <button type="button" class="btn-add-recipient" (click)="saveToRecipients()">
-               + DODAJ U LISTU PRIMALACA
+            <button 
+              type="button" 
+              class="btn-add-recipient" 
+              (click)="saveToRecipients()"
+              [disabled]="isSavingRecipient">
+              {{ isSavingRecipient ? 'Čuvanje...' : '+ DODAJ U LISTU PRIMALACA' }}
             </button>
+          </div>
+
+          <div class="recipient-saved-box" *ngIf="recipientSaved">
+            <span class="saved-icon">✓</span>
+            <p>Primalac je uspešno sačuvan u vašoj listi!</p>
           </div>
 
           <div class="post-actions">
