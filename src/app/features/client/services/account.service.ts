@@ -3,12 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Account, ChangeLimitDto } from '../models/account.model';
+import { Account, ChangeLimitDto, PaymentRecipient } from '../models/account.model';
 import { Transaction, TransactionPage } from '../models/transaction.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
   private readonly baseUrl = `${environment.apiUrl}/accounts/client/accounts`;
+  private readonly recipientsUrl = `${environment.apiUrl}/clients/payment-recipients`;
+
 
   constructor(private http: HttpClient) {}
 
@@ -67,5 +69,13 @@ export class AccountService {
     return this.http.patch<void>(`${environment.apiUrl}/accounts/${id}/status`, {
       status
     });
+  }
+
+  getRecipients(): Observable<PaymentRecipient[]> {
+    return this.http.get<PaymentRecipient[]>(this.recipientsUrl);
+  }
+
+  addRecipient(recipient: Omit<PaymentRecipient, 'id'>): Observable<PaymentRecipient> {
+    return this.http.post<PaymentRecipient>(this.recipientsUrl, recipient);
   }
 }
