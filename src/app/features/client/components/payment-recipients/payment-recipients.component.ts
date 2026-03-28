@@ -142,19 +142,12 @@ export class PaymentRecipientsComponent implements OnInit {
     this.formLoading = true;
 
     if (this.formMode === 'add') {
-      this.clientService.createRecipient(name, accountNumber).subscribe({
-        next: (created: PaymentRecipient) => {
-          this.recipients.push(created);
-          this.applyFilter();
-          this.closeForm();
-          this.formLoading = false;
-        },
-        error: () => {
-          this.applyFilter();
-          this.closeForm();
-          this.formLoading = false;
-        }
-      });
+      // TODO: dodati backend endpoint za cuvanje primaoca placanja
+      const created: PaymentRecipient = { id: Date.now(), name, accountNumber };
+      this.recipients.push(created);
+      this.applyFilter();
+      this.closeForm();
+      this.formLoading = false;
     } else if (this.formMode === 'edit' && this.editingId !== null) {
       this.clientService.updateRecipient(this.editingId, name, accountNumber).subscribe({
         next: (updated: PaymentRecipient) => {

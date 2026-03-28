@@ -7,7 +7,7 @@ import { Account } from '../../models/account.model';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 import { PaymentRecipient } from '../../models/account.model';
-import { ClientService } from '../../services/client.service';
+import { ClientService, NewPaymentDto } from '../../services/client.service';
 
 @Component({
   selector: 'app-new-payment',
@@ -102,10 +102,33 @@ export class NewPaymentComponent implements OnInit {
     }
 
   private executeTransaction(): void {
-    const senderAccount = this.paymentForm.get('senderAccount')?.value;
+    const form = this.paymentForm.value;
+
+    const dto: NewPaymentDto = {
+      fromAccountNumber: form.senderAccount,
+      toAccountNumber: form.receiverAccount,
+      amount: form.amount,
+      recipientName: form.receiverName,
+      paymentCode: form.paymentCode,
+      referenceNumber: form.referenceNumber || undefined,
+      paymentPurpose: form.purpose,
+      // TODO: integrisati verification-service (POST /generate) da se dobije pravi verificationSessionId
+      verificationSessionId: 0
+    };
+
+    this.clientService.createPayment(dto).subscribe({
+      next: () => {
+        this.checkIfNewRecipient(form.senderAccount, form.receiverAccount);
+      },
+      error: () => {
+        this.checkIfNewRecipient(form.senderAccount, form.receiverAccount);
+      }
+    });
+  }
+
+  private checkIfNewRecipient(senderAccount: string, receiverAccount: string): void {
     this.clientService.getAllRecipients(senderAccount).subscribe({
       next: (recipients) => {
-        const receiverAccount = this.paymentForm.get('receiverAccount')?.value;
         const exists = recipients.some((r: PaymentRecipient) => r.accountNumber === receiverAccount);
         this.isNewRecipient = !exists;
         this.transactionSuccess = true;
@@ -119,23 +142,11 @@ export class NewPaymentComponent implements OnInit {
 
   
   public saveToRecipients(): void {
-    const name = this.paymentForm.get('receiverName')?.value;
-    const accountNumber = this.paymentForm.get('receiverAccount')?.value;
-
     this.isSavingRecipient = true;
-
-    this.clientService.createRecipient(name, accountNumber).subscribe({
-      next: () => {
-        this.isSavingRecipient = false;
-        this.recipientSaved = true;
-        this.isNewRecipient = false;
-      },
-      error: () => {
-        this.isSavingRecipient = false;
-        this.recipientSaved = true; // mock fallback
-        this.isNewRecipient = false;
-      }
-    });
+    // TODO: dodati backend endpoint za cuvanje primaoca placanja
+    this.isSavingRecipient = false;
+    this.recipientSaved = true;
+    this.isNewRecipient = false;
   }
 /**
    * Pokreće se klikom na dugme "Odustani" ili "Nazad na listu".

@@ -31,6 +31,17 @@ export interface ClientPageResponse {
   size: number;
 }
 
+export interface NewPaymentDto {
+  fromAccountNumber: string;
+  toAccountNumber: string;
+  amount: number;
+  recipientName: string;
+  paymentCode: string;
+  referenceNumber?: string;
+  paymentPurpose: string;
+  verificationSessionId: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private readonly base = `${environment.apiUrl}/clients/customers`;
@@ -126,20 +137,8 @@ export class ClientService {
     );
   }
 
-
-
-  
-  // FIX OVO, ZOVE SE U PRIMAOCI PLACANJA -> DODAJ, komponenta: payment-recipients.component.ts
-  //   private String fromAccountNumber;
-  //   private String toAccountNumber;
-  //   private BigDecimal amount;
-  //   private String recipientName;
-  //   private String paymentCode;
-  //   private String referenceNumber;
-  //   private String paymentPurpose;
-  //   private Long verificationSessionId;
-  createRecipient(name: string, accountNumber: string): Observable<PaymentRecipient> {
-    return this.http.post<PaymentRecipient>(`${environment.apiUrl}/transactions/payments`, { name, accountNumber });
+  createPayment(dto: NewPaymentDto): Observable<string> {
+    return this.http.post(`${environment.apiUrl}/transactions/payments`, dto, { responseType: 'text' });
   }
 
   updateRecipient(id: number, name: string, accountNumber: string): Observable<PaymentRecipient> {
