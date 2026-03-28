@@ -27,7 +27,10 @@
         url.includes('/auth/login') ||
         url.includes('/auth/forgot-password') ||
         url.includes('/auth/resetPassword') ||
-        url.includes('/auth/activate')
+        url.includes('/auth/activate') ||
+        url.includes('/auth/reset-password') ||
+        url.includes('/auth/check-activate') ||
+        url.includes('/auth/resend-activation')
       );
     }
 

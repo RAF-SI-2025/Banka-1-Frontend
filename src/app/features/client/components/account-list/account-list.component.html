@@ -90,9 +90,44 @@
         <span class="text-xs text-muted-foreground font-medium">{{ selectedAccount.name }}</span>
       </div>
 
-      <div class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm">
-        <p>Transakcije za ovaj račun biće prikazane ovde.</p>
+      <div *ngIf="transactionsLoading" class="py-6 text-center">
+        <svg class="w-6 h-6 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
       </div>
+
+      <div *ngIf="!transactionsLoading && transactions.length === 0"
+           class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm">
+        <p>Nema transakcija za ovaj račun.</p>
+      </div>
+
+      <table *ngIf="!transactionsLoading && transactions.length > 0" class="z-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Primalac</th>
+            <th>Iznos</th>
+            <th>Valuta</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of transactions">
+            <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(tx.createdAt) }}</td>
+            <td class="font-medium">{{ tx.recipientName }}</td>
+            <td class="font-semibold">{{ formatAmount(tx.amount) }} </td>
+            <td>{{ tx.currency }}</td>
+            <td>
+              <span class="z-badge" [ngClass]="{
+                'z-badge-green': tx.status === 'COMPLETED',
+                'z-badge-gray': tx.status === 'PENDING',
+                'z-badge-red': tx.status === 'FAILED',
+                'z-badge-yellow': tx.status === 'CANCELLED'
+              }">{{ getStatusLabel(tx.status) }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

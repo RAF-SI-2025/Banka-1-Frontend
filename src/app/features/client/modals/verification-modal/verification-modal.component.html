@@ -6,21 +6,36 @@
     </div>
 
     <div class="z-modal-body space-y-4">
-      <p class="text-sm text-muted-foreground">Verifikacioni kod je poslat na vaš uređaj (Mock: 1234).</p>
-      <div>
+      <p class="text-sm text-muted-foreground">
+        Verifikacioni kod je poslat na vaš email.
+        <span class="text-xs text-muted-foreground/70 block mt-1">(Za testiranje koristite kod: 1234)</span>
+      </p>
+
+      <div *ngIf="isSendingCode" class="flex justify-center py-4">
+        <svg class="w-6 h-6 animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <div *ngIf="!isSendingCode">
         <label for="code" class="z-label">Unesite kod</label>
         <input type="text" id="code" class="z-input text-center tracking-[0.5em] text-lg font-semibold"
                [(ngModel)]="verificationCode" placeholder="0000" maxlength="4"
                (keyup.enter)="verificationCode.length === 4 && onConfirm()" />
       </div>
+
       <div *ngIf="attempts > 0">
         <span class="z-badge z-badge-yellow text-xs">Pokušaji: {{ attempts }} / {{ maxAttempts }}</span>
       </div>
+
+      <button type="button" class="text-xs text-primary hover:underline" (click)="sendVerificationCode()" [disabled]="isSendingCode">
+        Pošalji ponovo
+      </button>
     </div>
 
     <div class="z-modal-footer">
       <button type="button" class="z-btn-outline" (click)="onClose()">Odustani</button>
-      <button type="button" class="z-btn-primary" (click)="onConfirm()" [disabled]="verificationCode.length < 4">Potvrdi</button>
+      <button type="button" class="z-btn-primary" (click)="onConfirm()" [disabled]="verificationCode.length < 4 || isSendingCode">Potvrdi</button>
     </div>
   </div>
 </div>

@@ -44,7 +44,9 @@ export class ClientDetailComponent implements OnInit {
       
       if (passedClient) {
         this.patchFormWithClient(passedClient);
-      } 
+      } else {
+        this.loadClient(this.clientId);
+      }
     }
   }
 
@@ -81,6 +83,20 @@ onSubmit(): void {
     });
   }
 }
+
+  private loadClient(id: string): void {
+    this.isLoading = true;
+    this.clientService.getClientById(id).subscribe({
+      next: (client) => {
+        this.patchFormWithClient(client);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Greška pri učitavanju podataka klijenta.';
+        this.isLoading = false;
+      }
+    });
+  }
 
   onCancel(): void {
     this.router.navigate(['/clients']);

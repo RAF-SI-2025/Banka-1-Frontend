@@ -29,25 +29,36 @@ export class LoginComponent {
     const trimmedPassword = this.password.trim();
 
     if (!trimmedEmail || !trimmedPassword) {
-      this.errorMessage = 'Email and password are required.';
+      this.errorMessage = 'Email i lozinka su obavezni.';
       return;
     }
 
     this.isLoading = true;
 
-    this.authService.login(trimmedEmail, trimmedPassword).subscribe({
+    // Prvo pokušaj kao klijent, pa ako ne uspe kao zaposleni
+    this.authService.loginClient(trimmedEmail, trimmedPassword).subscribe({
       next: () => {
         this.isLoading = false;
-        this.toastService.success('Successfully signed in.');
-        this.router.navigate(['/employees']);
+        this.toastService.success('Uspešna prijava.');
+        this.router.navigate(['/home']);
       },
-      error: (error: HttpErrorResponse) => {
-        this.isLoading = false;
-        this.errorMessage =
-          error.error?.message ||
-          error.error?.error ||
-          'Login failed. Please check your credentials.';
-        this.toastService.error(this.errorMessage);
+      error: () => {
+        // Klijentski login nije uspeo, pokušaj kao zaposleni
+        this.authService.login(trimmedEmail, trimmedPassword).subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.toastService.success('Uspešna prijava.');
+            this.router.navigate(['/employees']);
+          },
+          error: (error: HttpErrorResponse) => {
+            this.isLoading = false;
+            this.errorMessage =
+              error.error?.message ||
+              error.error?.error ||
+              'Prijava neuspešna. Proverite vaše podatke.';
+            this.toastService.error(this.errorMessage);
+          }
+        });
       }
     });
   }

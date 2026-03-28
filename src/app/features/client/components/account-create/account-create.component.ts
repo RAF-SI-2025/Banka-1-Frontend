@@ -476,7 +476,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
         next: (items: ClientDto[]) => {
           this.clients = items.map((client) => ({
             id: String(client.id),
-            name: client.ime ?? `${client.ime ?? ''} ${client.prezime  ?? ''}`.trim()
+            name: `${client.ime ?? ''} ${client.prezime ?? ''}`.trim() || `Klijent #${client.id}`
           }));
         },
         error: (err: unknown) => {

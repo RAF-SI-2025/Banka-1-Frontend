@@ -57,7 +57,7 @@
     <button class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors" title="Obaveštenja">
       <span class="material-icons text-xl">notifications</span>
     </button>
-    <span class="text-sm text-white/80 whitespace-nowrap">Dobro došli</span>
+    <span class="text-sm text-white/80 whitespace-nowrap">{{ userName || 'Dobro došli' }}</span>
     <button class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors" routerLink="/profile" title="Profil">
       <span class="material-icons text-xl">account_circle</span>
     </button>

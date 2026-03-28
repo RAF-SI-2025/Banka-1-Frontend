@@ -42,6 +42,41 @@
         </div>
       </div>
 
+      <!-- Limits section -->
+      <div class="space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Limiti i potrošnja</p>
+        <div class="divide-y divide-border rounded-lg border border-border overflow-hidden">
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Dnevni limit</span>
+            <span class="text-sm font-medium">{{ formatAmount(account.dailyLimit) }} {{ account.currency }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Dnevna potrošnja</span>
+            <span class="text-sm font-medium">{{ formatAmount(account.dailySpending) }} {{ account.currency }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Mesečni limit</span>
+            <span class="text-sm font-medium">{{ formatAmount(account.monthlyLimit) }} {{ account.currency }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Mesečna potrošnja</span>
+            <span class="text-sm font-medium">{{ formatAmount(account.monthlySpending) }} {{ account.currency }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Naknada za održavanje</span>
+            <span class="text-sm font-medium">{{ formatAmount(account.maintenanceFee) }} {{ account.currency }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card">
+            <span class="text-sm text-muted-foreground">Datum kreiranja</span>
+            <span class="text-sm font-medium">{{ account.createdAt | date:'dd.MM.yyyy' }}</span>
+          </div>
+          <div class="flex justify-between items-center px-4 py-2.5 bg-card" *ngIf="account.expiryDate">
+            <span class="text-sm text-muted-foreground">Datum isteka</span>
+            <span class="text-sm font-medium">{{ account.expiryDate | date:'dd.MM.yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Company section -->
       <div *ngIf="isBusinessAccount()" class="space-y-2">
         <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Podaci o firmi</p>

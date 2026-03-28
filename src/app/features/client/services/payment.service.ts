@@ -40,8 +40,10 @@ export class PaymentService {
     if (filters.status) {
       params = params.set('status', filters.status);
     }
-    
-    
+    if (filters.type) {
+      params = params.set('type', filters.type);
+    }
+
     return this.http.get<PaymentPage>(this.baseUrl, { params });
   }
 

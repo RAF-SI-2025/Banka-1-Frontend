@@ -11,14 +11,18 @@
       Nazad na listu
     </button>
 
-    <h1 class="text-2xl font-bold text-foreground mb-6">Detalji klijenta: {{ clientForm.get('firstName')?.value }}</h1>
+    <h1 class="text-2xl font-bold text-foreground mb-6">Detalji klijenta: {{ clientForm.get('ime')?.value }}</h1>
 
     <div class="z-card p-6">
-      <div *ngIf="errorMessage" class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+      </div>
+
+      <div *ngIf="errorMessage && !isLoading" class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
         {{ errorMessage }}
       </div>
 
-      <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+      <form *ngIf="!isLoading" [formGroup]="clientForm" (ngSubmit)="onSubmit()">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="z-label">Ime</label>
@@ -30,7 +34,9 @@
           </div>
           <div>
             <label class="z-label">Email</label>
-            <input type="email" formControlName="email" class="z-input" />
+            <input type="email" formControlName="email" class="z-input" [class.border-red-500]="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" />
+            <p *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched" class="text-xs text-red-500 mt-1">Unesite validan email.</p>
+            <p *ngIf="backendEmailError" class="text-xs text-red-500 mt-1">{{ backendEmailError }}</p>
           </div>
           <div>
             <label class="z-label">Broj telefona</label>

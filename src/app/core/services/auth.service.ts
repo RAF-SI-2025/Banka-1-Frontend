@@ -11,6 +11,9 @@ type LoginResponse = {
   role: string;
   permissions: string[];
 };
+type ClientLoginResponse = {
+  token: string;
+};
 type RefreshResponse = {
   jwt: string;
   refreshToken: string;
@@ -27,11 +30,7 @@ export class AuthService {
   }
 
   /**
-   * Prijavljuje korisnika sa email-om i lozinkom.
-   * Nakon uspešnog logina, JWT token i podaci o korisniku se čuvaju u localStorage.
-   * @param email - Email adresa korisnika
-   * @param password - Lozinka korisnika
-   * @returns Observable sa JWT tokenom i listom permisija
+   * Prijavljuje zaposlenog sa email-om i lozinkom.
    */
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http
@@ -50,6 +49,51 @@ export class AuthService {
           );
         })
       );
+  }
+
+  /**
+   * Prijavljuje klijenta sa email-om i lozinkom.
+   */
+  loginClient(email: string, password: string): Observable<ClientLoginResponse> {
+    return this.http
+      .post<ClientLoginResponse>(`${environment.apiUrl}/clients/auth/login`, {email, password})
+      .pipe(
+        tap(res => {
+          localStorage.setItem(this.TOKEN_KEY, res.token);
+
+          // Izvuci ulogu iz JWT tokena
+          let role = 'CLIENT';
+          try {
+            const payload = JSON.parse(atob(res.token.split('.')[1]));
+            role = payload.roles ?? 'CLIENT';
+          } catch (_) {}
+
+          localStorage.setItem(
+            this.USER_KEY,
+            JSON.stringify({
+              email,
+              role,
+              permissions: ['BANKING_BASIC']
+            })
+          );
+        })
+      );
+  }
+
+  /**
+   * Vraća ulogu korisnika.
+   */
+  getUserRole(): string {
+    const user = this.getLoggedUser();
+    return (user as any)?.role ?? '';
+  }
+
+  /**
+   * Da li je ulogovani korisnik klijent.
+   */
+  isClient(): boolean {
+    const role = this.getUserRole().toUpperCase();
+    return role.startsWith('CLIENT');
   }
 
   /**

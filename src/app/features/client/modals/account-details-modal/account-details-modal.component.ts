@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Account } from '../../models/account.model';
 import { RenameAccountComponent } from '../../components/rename-account/rename-account.component';
 import { ChangeLimitModalComponent } from '../change-limit-modal/change-limit-modal.component';
@@ -22,6 +23,8 @@ export class AccountDetailsModalComponent {
 
     return ['DOO', 'AD', 'FOUNDATION', 'FOREIGN_BUSINESS'].includes(this.account.subtype);
   }
+
+  constructor(private router: Router) {}
 
   public getModalSubtitle(): string {
     return this.isBusinessAccount()
@@ -50,9 +53,10 @@ export class AccountDetailsModalComponent {
     this.showRenameModal = false;
   }
 
-  // TODO: navigate na stranicu za novo placanje (sledeci sprint)
+  // Navigate to new payment page
   public onNewPayment(): void {
-    console.log('Open new payment flow');
+    this.closeModal();
+    this.router.navigate(['/accounts/payment/new']);
   }
 
   public isChangeLimitModalOpen = false;

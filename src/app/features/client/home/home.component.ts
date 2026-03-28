@@ -206,4 +206,14 @@ export class HomeComponent implements OnInit {
     };
     return map[status] ?? status;
   }
+
+  getTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      PAYMENT: 'Plaćanje',
+      TRANSFER: 'Transfer',
+      DEPOSIT: 'Uplata',
+      WITHDRAWAL: 'Isplata'
+    };
+    return map[type] ?? type;
+  }
 }
