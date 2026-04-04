@@ -45,10 +45,15 @@ export class LoginComponent {
       error: () => {
         // Klijentski login nije uspeo, pokušaj kao zaposleni
         this.authService.login(trimmedEmail, trimmedPassword).subscribe({
-          next: () => {
+          next: (res) => {
             this.isLoading = false;
             this.toastService.success('Uspešna prijava.');
-            this.router.navigate(['/employees']);
+            const perms = res.permissions || [];
+            if (perms.includes('EMPLOYEE_MANAGE_ALL')) {
+              this.router.navigate(['/employees']);
+            } else {
+              this.router.navigate(['/clients']);
+            }
           },
           error: (error: HttpErrorResponse) => {
             this.isLoading = false;

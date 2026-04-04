@@ -16,6 +16,7 @@ import { ForbiddenComponent } from './shared/components/forbidden/forbidden.comp
 import { NewPaymentComponent } from './features/client/components/new-payment/new-payment.component';
 import { AccountManagementComponent } from './features/employee/account-management/account-management.component';
 import { AccountCardsPlaceholderComponent } from './features/employee/account-cards-placeholder/account-cards-placeholder.component';
+import { ActuaryManagementComponent } from './features/employee/components/actuary-management/actuary-management.component';
 import { PaymentRecipientsComponent } from './features/client/components/payment-recipients/payment-recipients.component';
 import { PaymentHistoryComponent } from './features/client/components/payment-history/payment-history.component';
 
@@ -81,6 +82,12 @@ const routes: Routes = [
   component: AccountCardsPlaceholderComponent,
   canActivate: [authGuard, roleGuard],
   data: { permission: 'CLIENT_MANAGE' }
+},
+{
+  path: 'actuary-management',
+  component: ActuaryManagementComponent,
+  canActivate: [authGuard, roleGuard],
+  data: { permission: 'FUND_AGENT_MANAGE' }
 },
 
   {

@@ -38,6 +38,10 @@ export class NavbarComponent implements OnInit {
     { label: 'Upravljanje računima', route: '/account-management', icon: 'account_balance' },
   ];
 
+  private readonly supervisorLinks: NavLink[] = [
+    { label: 'Upravljanje aktuarima', route: '/actuary-management', icon: 'supervisor_account' },
+  ];
+
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
@@ -48,7 +52,11 @@ export class NavbarComponent implements OnInit {
     if (this.isClient()) {
       this.navLinks = this.clientLinks;
     } else {
-      this.navLinks = this.employeeLinks;
+      const permissions: string[] = (user as any)?.permissions ?? [];
+      this.navLinks = [
+        ...this.employeeLinks,
+        ...(permissions.includes('FUND_AGENT_MANAGE') ? this.supervisorLinks : [])
+      ];
     }
   }
 
