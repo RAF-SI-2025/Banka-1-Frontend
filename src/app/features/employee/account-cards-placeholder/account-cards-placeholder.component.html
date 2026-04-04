@@ -1,69 +1,225 @@
+<app-navbar></app-navbar>
+
 <div class="page-layout">
   <div class="page-content">
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <button type="button" class="z-btn z-btn-ghost z-btn-sm" (click)="goBack()">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <div class="flex items-center gap-3 mb-8">
+      <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors" (click)="goBack()">
+        <svg class="w-5 h-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
-      <h1 class="text-2xl font-bold">Kartice vezane za račun</h1>
+      <h1 class="text-xl font-semibold">KARTICE RAČUNA</h1>
     </div>
 
-    <!-- Account Info -->
-    <div class="z-card mb-6">
-      <h2 class="text-base font-semibold mb-4">Informacije o računu</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div>
-          <p class="text-xs text-muted-foreground mb-1">Broj računa</p>
-          <p class="text-sm font-medium font-mono">{{ accountNumber }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-muted-foreground mb-1">Vlasnik</p>
-          <p class="text-sm font-medium">{{ ownerName }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-muted-foreground mb-1">Tip vlasništva</p>
-          <p class="text-sm font-medium">{{ ownershipType }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-muted-foreground mb-1">Tip računa</p>
-          <p class="text-sm font-medium">{{ accountType }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-muted-foreground mb-1">Status računa</p>
-          <p class="text-sm font-medium">{{ status }}</p>
-        </div>
-      </div>
-    </div>
+    <!-- Main Content Card -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <!-- Top Section -->
+      <div class="flex flex-col lg:flex-row gap-12">
+        <!-- Left: Account Details -->
+        <div class="lg:w-2/5">
+          <h2 class="text-sm font-semibold text-primary mb-2">{{ accountType?.toUpperCase() || 'TRANSAKCIONI' }} RAČUN</h2>
+          <p class="text-xl font-mono font-medium mb-8">{{ accountNumber }}</p>
 
-    <!-- Cards Table -->
-    <div class="z-card p-0 overflow-hidden">
-      <div class="px-5 py-4 border-b border-border">
-        <h2 class="text-base font-semibold">Spisak kartica</h2>
-      </div>
-      <table class="z-table">
-        <thead>
-          <tr>
-            <th>Broj kartice</th>
-            <th>Vlasnik kartice</th>
-            <th>Email adresa</th>
-            <th>Status kartice</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let card of cards; trackBy: trackByCard">
-            <td class="font-mono text-sm">{{ card.cardNumber }}</td>
-            <td class="font-medium">{{ card.ownerName }}</td>
-            <td>{{ card.ownerEmail }}</td>
-            <td>
-              <span
-                [class]="card.status === 'Aktivna' ? 'z-badge-green' : card.status === 'Blokirana' ? 'z-badge-red' : 'z-badge-gray'"
-              >
-                {{ card.status }}
+          <div class="space-y-4">
+            <div class="border border-gray-200 rounded-xl p-4">
+              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Vlasnik</p>
+              <p class="text-base font-medium text-gray-900">{{ ownerName }}</p>
+            </div>
+
+            <div class="border border-gray-200 rounded-xl p-4">
+              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Povezani računi</p>
+              <p class="text-base font-mono text-gray-900">{{ accountNumber }}</p>
+            </div>
+
+            <div class="border border-gray-200 rounded-xl p-4">
+              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Status</p>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    [ngClass]="status === 'Aktivan' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                {{ status || 'Aktivan' }}
               </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Cards Preview -->
+        <div class="lg:w-3/5 lg:border-l lg:pl-12 border-gray-100">
+          <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-6">Vezane kartice</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoading" class="text-center py-12 text-gray-400">Učitavanje kartica...</div>
+
+          <!-- Empty -->
+          <div *ngIf="!isLoading && !hasError && cards.length === 0" class="text-center py-12 text-gray-400">
+            Nema kartica vezanih za ovaj račun.
+          </div>
+
+          <!-- Cards -->
+          <div *ngIf="!isLoading && !hasError && cards.length > 0" class="space-y-4">
+            <div *ngFor="let card of cards; let i = index" class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
+              <div class="flex items-center gap-4">
+                <!-- Card Image with gradient -->
+                <div class="w-16 h-10 rounded-lg shadow-md flex items-center justify-center overflow-hidden"
+                     [style.background]="getCardGradient(i)">
+                  <svg class="w-6 h-6 text-white/90" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">{{ card.cardName }}</p>
+                  <p class="text-xs text-gray-400 font-mono">**** {{ card.cardNumber.slice(-4) }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-base font-semibold text-gray-900">{{ card.balance | number:'1.2-2' }}</p>
+                <p class="text-xs text-gray-400">{{ card.currency }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-gray-100 my-8"></div>
+
+      <!-- Card Management Table -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-6">Upravljanje karticama</h2>
+
+        <!-- Loading -->
+        <div *ngIf="isLoading" class="text-center py-12 text-gray-400">Učitavanje...</div>
+
+        <!-- Error -->
+        <div *ngIf="!isLoading && hasError" class="text-center py-12">
+          <p class="text-red-500 mb-4">{{ errorMessage }}</p>
+          <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90" (click)="loadCards()">Pokušaj ponovo</button>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="!isLoading && !hasError && cards.length === 0" class="text-center py-12 text-gray-400">
+          Nema kartica za upravljanje.
+        </div>
+
+        <!-- Table -->
+        <div *ngIf="!isLoading && !hasError && cards.length > 0" class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Broj kartice</th>
+                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Vlasnik</th>
+                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Email</th>
+                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Status</th>
+                <th class="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Akcije</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let card of cards; trackBy: trackByCard" class="border-b border-gray-50 last:border-0">
+                <td class="py-5 font-mono text-sm text-gray-900">{{ card.cardNumber }}</td>
+                <td class="py-5 font-semibold text-sm text-gray-900 uppercase">{{ getCardOwnerFullName(card) }}</td>
+                <td class="py-5 text-sm text-gray-500">{{ card.ownerEmail }}</td>
+                <td class="py-5">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                        [ngClass]="{
+                          'bg-green-100 text-green-700': card.status === 'AKTIVNA',
+                          'bg-red-100 text-red-700': card.status === 'BLOKIRANA',
+                          'bg-gray-100 text-gray-500': card.status === 'DEAKTIVIRANA'
+                        }">
+                    {{ getStatusLabel(card.status) }}
+                  </span>
+                </td>
+                <td class="py-5 text-right">
+                  <div class="flex items-center justify-end gap-3" *ngIf="hasAnyAction(card)">
+                    <button
+                      *ngIf="canBlock(card)"
+                      type="button"
+                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                      (click)="openConfirmModal(card, 'BLOCK')"
+                    >Blokiraj</button>
+
+                    <button
+                      *ngIf="canUnblock(card)"
+                      type="button"
+                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors"
+                      (click)="openConfirmModal(card, 'UNBLOCK')"
+                    >Deblokiraj</button>
+
+                    <button
+                      *ngIf="canDeactivate(card)"
+                      type="button"
+                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                      (click)="openConfirmModal(card, 'DEACTIVATE')"
+                    >Deaktiviraj</button>
+                  </div>
+                  <span *ngIf="!hasAnyAction(card)" class="text-xs text-gray-400">-</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div *ngIf="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeConfirmModal()">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between p-6 border-b border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-900">{{ getModalTitle() }}</h3>
+          <button type="button" class="text-gray-400 hover:text-gray-600" (click)="closeConfirmModal()">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="p-6">
+          <p class="text-sm text-gray-600 mb-6">{{ getModalMessage() }}</p>
+
+          <div class="bg-gray-50 rounded-xl p-4 mb-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Broj kartice</p>
+                <p class="font-mono text-sm font-medium text-gray-900">{{ selectedCard?.cardNumber }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Tip kartice</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedCard?.cardName }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Vlasnik</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedCard ? getCardOwnerFullName(selectedCard) : '' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Email</p>
+                <p class="text-sm text-gray-900">{{ selectedCard?.ownerEmail }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="pendingAction === 'DEACTIVATE'" class="bg-red-50 border border-red-100 rounded-xl p-4 mb-4">
+            <p class="text-sm text-red-700">
+              <strong>Upozorenje:</strong> Deaktivacija kartice je trajna i ne može se poništiti.
+            </p>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p class="text-sm text-blue-700 flex items-center gap-2">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Vlasnik kartice će dobiti obaveštenje putem emaila.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-100">
+          <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors" (click)="closeConfirmModal()" [disabled]="isProcessing">
+            Otkaži
+          </button>
+          <button type="button" class="px-5 py-2.5 text-sm font-medium text-white rounded-xl transition-colors"
+                  [ngClass]="pendingAction === 'UNBLOCK' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
+                  (click)="confirmAction()" [disabled]="isProcessing">
+            {{ isProcessing ? 'Obrada...' : 'Potvrdi' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
