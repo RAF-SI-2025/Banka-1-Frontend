@@ -29,6 +29,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Transfer',   route: '/transfers/different', icon: 'currency_exchange' },
     { label: 'Menjačnica', route: '/exchange',            icon: 'currency_exchange' },
     { label: 'Primaoci plaćanja', route: '/payments/recipients', icon: 'people' },
+    { label: 'Krediti',    route: '/home/loans',          icon: 'card_giftcard' },
   ];
 
   private readonly employeeLinks: NavLink[] = [

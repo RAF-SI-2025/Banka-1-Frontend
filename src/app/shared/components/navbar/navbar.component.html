@@ -18,6 +18,15 @@
     <span class="text-lg font-bold text-white tracking-tight">Banka 1</span>
   </a>
 
+  <!-- Credits Link (Client Only) -->
+  <div *ngIf="isClient()" class="relative z-10 px-3 py-2">
+    <a [routerLink]="'/home/loans'" 
+       routerLinkActive="active-link"
+       class="nav-link group flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 transition-all hover:bg-sidebar-accent hover:text-white no-underline">
+      <span class="material-icons text-[22px] opacity-80 group-hover:opacity-100 transition-opacity">card_giftcard</span>
+    </a>
+  </div>
+
   <!-- Navigation -->
   <nav class="relative z-10 flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3">
     <a *ngFor="let link of navLinks"
