@@ -1,0 +1,127 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <!-- Header -->
+    <h1 class="text-xl font-bold text-gray-900 mb-6">DETALJI KREDITA</h1>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
+      Učitavanje...
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="!isLoading && hasError" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+      <p class="text-red-500 mb-4">{{ errorMessage }}</p>
+      <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90" (click)="goBack()">Nazad</button>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!isLoading && !hasError && loan" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <!-- Loan Type Title -->
+      <h2 class="text-lg font-bold text-gray-900 mb-8">{{ getLoanTypeLabel(loan.loanType).toUpperCase() }}</h2>
+
+      <!-- Loan Info - Three Column Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6 mb-10">
+        <!-- Column 1 -->
+        <div class="space-y-5">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Broj kredita:</p>
+            <p class="text-sm font-medium text-gray-900">{{ loan.loanNumber }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Vrsta kredita:</p>
+            <p class="text-sm font-medium text-gray-900">{{ getLoanTypeLabel(loan.loanType) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Ukupni iznos kredita:</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatCurrency(loan.totalAmount, loan.currency) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Valuta:</p>
+            <p class="text-sm font-medium text-gray-900">{{ loan.currency }}</p>
+          </div>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="space-y-5">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Period otplate:</p>
+            <p class="text-sm font-medium text-gray-900">{{ loan.repaymentPeriod }} meseci</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Nominalna kamatna stopa(početna):</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatPercent(loan.nominalInterestRate) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Efektivna kamatna stopa(trenutna):</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatPercent(loan.effectiveInterestRate) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Datum ugovaranja:</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatDate(loan.contractDate) }}</p>
+          </div>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="space-y-5">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Datum dospeća kredita:</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatDate(loan.dueDate) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Iznos sledeće rate:</p>
+            <p class="text-sm font-medium text-primary">{{ formatCurrency(loan.nextInstallmentAmount, loan.currency) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Datum sledeće rate:</p>
+            <p class="text-sm font-medium text-primary">{{ formatDate(loan.nextInstallmentDate) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Preostalo dugovanje:</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatCurrency(loan.remainingDebt, loan.currency) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Installments History Table -->
+      <div>
+        <h3 class="text-base font-bold text-gray-900 mb-6">Istorija rata</h3>
+
+        <!-- Empty state -->
+        <div *ngIf="installments.length === 0" class="text-center py-12 text-gray-400">
+          Nema podataka o ratama.
+        </div>
+
+        <!-- Table -->
+        <div *ngIf="installments.length > 0" class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Očekivani datum dospeća</th>
+                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Stvarni datum</th>
+                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Iznos rate</th>
+                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Kamatna stopa</th>
+                <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let installment of installments" class="border-b border-gray-100 last:border-0">
+                <td class="py-4 text-sm text-gray-900">{{ formatDate(installment.expectedDueDate) }}</td>
+                <td class="py-4 text-sm text-primary font-medium">{{ formatDate(installment.actualPaymentDate) }}</td>
+                <td class="py-4 text-sm text-primary font-medium">{{ formatCurrency(installment.amount, installment.currency) }}</td>
+                <td class="py-4 text-sm text-gray-900">{{ formatPercent(installment.interestRateAtPayment) }}</td>
+                <td class="py-4 text-right">
+                  <span class="inline-flex items-center px-3 py-1 rounded text-xs font-semibold"
+                        [ngClass]="getStatusBadgeClass(installment.status)">
+                    {{ getInstallmentStatusLabel(installment.status) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
