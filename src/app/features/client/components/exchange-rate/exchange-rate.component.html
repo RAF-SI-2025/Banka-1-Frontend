@@ -1,0 +1,101 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+
+    <!-- Tab navigation -->
+    <div class="flex items-center gap-0 border-b border-border mb-6">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab === 'rates'"
+        (click)="setTab('rates')"
+      >
+        Kursna lista
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab === 'calculator'"
+        (click)="setTab('calculator')"
+      >
+        Proveri ekvivalentnost
+      </button>
+    </div>
+
+    <!-- TAB 1: Kursna lista -->
+    <div *ngIf="activeTab === 'rates'">
+
+      <div *ngIf="isLoading" class="z-card p-6">
+        <div class="z-skeleton h-5 w-48 mb-6 rounded"></div>
+        <div *ngFor="let i of [1,2,3,4,5,6,7]" class="flex gap-4 py-3 border-b border-border last:border-0">
+          <div class="z-skeleton h-4 w-1/4 rounded"></div>
+          <div class="z-skeleton h-4 w-1/6 rounded"></div>
+          <div class="z-skeleton h-4 w-1/5 rounded"></div>
+          <div class="z-skeleton h-4 w-1/5 rounded"></div>
+          <div class="z-skeleton h-4 w-1/5 rounded"></div>
+        </div>
+      </div>
+
+      <div *ngIf="error && !isLoading" class="z-card p-8 text-center">
+        <p class="text-sm text-red-500 mb-4">{{ error }}</p>
+        <button class="z-btn-primary" (click)="loadRates()">Pokušaj ponovo</button>
+      </div>
+
+      <div *ngIf="!isLoading && !error" class="z-card overflow-hidden">
+        <div class="px-6 py-4 border-b border-border">
+          <p class="text-sm text-foreground">
+            Važeći kursevi na dan
+            <strong *ngIf="lastUpdated">{{ lastUpdated | date:'dd.MM.yyyy.' }}</strong>:
+          </p>
+        </div>
+
+        <table class="z-table">
+          <thead>
+          <tr>
+            <th>Valuta</th>
+            <th>Država</th>
+            <th>ISO Oznaka</th>
+            <th>Kupovni kurs</th>
+            <th>Prodajni kurs</th>
+            <th>Srednji kurs</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let rate of rates">
+            <td class="font-medium text-foreground">{{ rate.name }}</td>
+            <td><span class="text-2xl leading-none">{{ rate.flag }}</span></td>
+            <td class="font-mono font-semibold text-foreground">{{ rate.currency }}</td>
+            <td class="font-mono text-foreground">{{ formatRate(rate.buyRate) }}RSD</td>
+            <td class="font-mono text-foreground">{{ formatRate(rate.sellRate) }}RSD</td>
+            <td class="font-mono text-foreground">{{ formatRate(rate.middleRate) }}RSD</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <div class="px-6 py-3 border-t border-border bg-muted/30">
+          <p class="text-xs text-muted-foreground">Kursevi se ažuriraju jednom dnevno.</p>
+          <p *ngIf="lastUpdated" class="text-xs text-muted-foreground mt-0.5">
+            Poslednje ažuriranje: {{ formatDateTime(lastUpdated) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Proveri ekvivalentnost -->
+    <div *ngIf="activeTab === 'calculator'" class="flex justify-center">
+      <div class="z-card w-full max-w-2xl">
+        <div class="px-6 pt-5 pb-0" *ngIf="lastUpdated">
+          <p class="text-sm text-foreground">
+            Važeći kursevi na dan <strong>{{ lastUpdated | date:'dd.MM.yyyy.' }}</strong>:
+          </p>
+        </div>
+        <app-currency-calculator
+          [rates]="rates"
+          [lastUpdated]="lastUpdated"
+        ></app-currency-calculator>
+      </div>
+    </div>
+
+  </div>
+</div>

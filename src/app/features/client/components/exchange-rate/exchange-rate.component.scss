@@ -1,0 +1,18 @@
+.tab-btn {
+  @apply relative px-5 py-3 text-sm font-medium text-muted-foreground
+  transition-colors cursor-pointer bg-transparent border-0
+  hover:text-foreground;
+
+  &::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-transparent transition-all;
+  }
+
+  &--active {
+    @apply text-foreground;
+
+    &::after {
+      @apply bg-primary;
+    }
+  }
+}

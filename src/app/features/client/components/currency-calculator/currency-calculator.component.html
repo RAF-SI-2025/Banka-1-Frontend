@@ -1,0 +1,110 @@
+<div class="p-6">
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="space-y-4 py-4">
+    <div class="z-skeleton h-12 w-full rounded-lg"></div>
+    <div class="z-skeleton h-12 w-full rounded-lg"></div>
+    <div class="z-skeleton h-10 w-full rounded-lg"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !isLoading" class="text-sm text-red-500 py-4">
+    {{ error }}
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!isLoading && !error">
+
+    <!-- Iz valute -->
+    <div class="mb-2">
+      <label class="z-label">Iz valute</label>
+      <div class="flex gap-2">
+        <input
+          type="number"
+          class="z-input flex-1"
+          [(ngModel)]="amount"
+          placeholder="100"
+          min="0"
+          (ngModelChange)="result = null"
+        />
+        <select
+          class="z-select w-28"
+          [(ngModel)]="fromCurrency"
+          (ngModelChange)="onFromCurrencyChange()"
+        >
+          <option *ngFor="let c of allCurrencies" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Swap -->
+    <div class="flex justify-center my-3">
+      <button
+        type="button"
+        class="flex items-center gap-1 text-primary hover:text-green-700 transition-colors"
+        (click)="swap()"
+        title="Zameni valute"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="17" x2="12" y2="3"></line>
+          <polyline points="6 11 12 17 18 11"></polyline>
+        </svg>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="7" x2="12" y2="21"></line>
+          <polyline points="18 13 12 7 6 13"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- U valutu -->
+    <div class="mb-2">
+      <label class="z-label">U valutu</label>
+      <div class="flex gap-2">
+        <input
+          type="text"
+          class="z-input flex-1 bg-muted text-muted-foreground cursor-default"
+          [value]="result !== null ? formatResult(result) : ''"
+          placeholder=""
+          readonly
+        />
+        <select
+          class="z-select w-28"
+          [(ngModel)]="toCurrency"
+          (ngModelChange)="onToCurrencyChange()"
+        >
+          <option *ngFor="let c of allCurrencies" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Kurs info -->
+    <div class="flex justify-between items-center mt-1 mb-4 min-h-[20px]" *ngIf="rateLabel">
+      <span class="text-sm font-medium text-primary">Prodajni kurs</span>
+      <span class="text-sm text-muted-foreground">{{ rateLabel }}</span>
+    </div>
+
+    <!-- Dugme -->
+    <button
+      type="button"
+      class="z-btn-primary z-btn-full mb-4"
+      [disabled]="!canCalculate"
+      (click)="calculate()"
+    >
+      Izračunaj
+    </button>
+
+    <!-- Rezultat -->
+    <div *ngIf="result !== null" class="text-center py-2">
+      <p class="text-xl font-bold text-foreground">
+        {{ formatResult(amount!) }} {{ fromCurrency }} = <span class="text-primary">{{ formatResult(result) }} {{ toCurrency }}</span>
+      </p>
+      <div class="h-0.5 bg-primary w-48 mx-auto mt-1 rounded-full"></div>
+    </div>
+
+    <!-- Napomena -->
+    <p class="text-xs text-muted-foreground mt-5">
+      Prikazana vrednost je informativnog karaktera. Primenjuje se prodajni kurs banke.
+    </p>
+
+  </div>
+</div>

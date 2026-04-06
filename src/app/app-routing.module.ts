@@ -24,6 +24,7 @@ import { SecurityDetailComponent } from './features/securities/components/securi
 import { StockDetailComponent } from './features/securities/components/stock-detail/stock-detail.component';
 import { LoanListComponent } from './features/client/components/loan-list/loan-list.component';
 import { LoanDetailsComponent } from './features/client/components/loan-details/loan-details.component';
+import { ExchangeRateComponent } from './features/client/components/exchange-rate/exchange-rate.component';
 
 const routes: Routes = [
   {
@@ -157,6 +158,11 @@ const routes: Routes = [
     component: SecurityDetailComponent,
     canActivate: [authGuard],
     data: { securityType: 'forex' }
+  },
+  {
+    path: 'exchange',
+    component: ExchangeRateComponent,
+    canActivate: [authGuard]
   },
   {
     path: '**',
