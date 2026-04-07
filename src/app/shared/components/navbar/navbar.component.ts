@@ -39,6 +39,8 @@ export class NavbarComponent implements OnInit {
     { label: 'Klijenti',   route: '/clients',             icon: 'person' },
     { label: 'Kreiraj račun', route: '/accounts/new',     icon: 'add_card' },
     { label: 'Upravljanje računima', route: '/account-management', icon: 'account_balance' },
+    { label: 'Zahtevi za kredite', route: '/loan-request-management', icon: 'request_quote' },
+    { label: 'Svi krediti', route: '/loan-management', icon: 'credit_score' },
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
   ];
 

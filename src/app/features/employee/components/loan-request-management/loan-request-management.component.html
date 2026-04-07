@@ -1,0 +1,357 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <div class="flex justify-between items-start mb-6 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Upravljanje kreditnim zahtevima</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregledajte sve zahteve za kredite, filtrirajte ih i odobrite ili odbijte zahtev.
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card p-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+
+          <select [(ngModel)]="filterLoanType" (change)="onFilterChange()" class="z-input pl-10 appearance-none">
+            <option *ngFor="let opt of loanTypeOptions" [ngValue]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+
+          <input type="text" placeholder="Pretraga po broju računa..." [(ngModel)]="filterAccountNumber"
+            (input)="onFilterChange()" class="z-input pl-10" />
+        </div>
+      </div>
+    </div>
+
+    <div class="z-card overflow-hidden">
+      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <div *ngIf="!isLoading && loanRequests.length === 0" class="text-center p-12 text-muted-foreground text-sm">
+        <svg class="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <p>Nema pronađenih zahteva za kredite.</p>
+      </div>
+
+      <div *ngIf="!isLoading && loanRequests.length > 0" class="overflow-x-auto">
+        <table class="z-table min-w-[1500px]">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Vrsta kredita</th>
+              <th>Tip kamate</th>
+              <th class="text-right">Iznos</th>
+              <th>Valuta</th>
+              <th>Rok otplate</th>
+              <th>Svrha</th>
+              <th class="text-right">Mesečna plata</th>
+              <th>Status zaposlenja</th>
+              <th>Period zaposlenja</th>
+              <th>Broj računa</th>
+              <th>Telefon</th>
+              <th>Status</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of loanRequests; trackBy: trackById"
+              class="cursor-pointer hover:bg-muted/40 transition-colors" (click)="openDetail(request)">
+              <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(request.submittedAt) }}</td>
+              <td class="font-medium">{{ loanTypeLabels[request.loanType] || request.loanType }}</td>
+              <td>{{ interestRateTypeLabels[request.interestRateType] }}</td>
+              <td class="text-right font-medium whitespace-nowrap">{{ formatCurrency(request.amount, request.currency)
+                }}</td>
+              <td>{{ request.currency }}</td>
+              <td>{{ request.repaymentPeriodMonths }} mes.</td>
+              <td class="max-w-[220px] truncate" [title]="request.purpose">{{ request.purpose || '-' }}</td>
+              <td class="text-right whitespace-nowrap">{{ formatCurrency(request.monthlySalary, request.currency) }}
+              </td>
+              <td>{{ request.employmentStatus || '-' }}</td>
+              <td>{{ request.employmentPeriodMonths }} mes.</td>
+              <td class="font-mono text-sm">{{ request.accountNumber }}</td>
+              <td>{{ request.contactPhone || '-' }}</td>
+              <td>
+                <span class="z-badge" [ngClass]="getRequestStatusClass(request.status)">
+                  {{ requestStatusLabels[request.status] }}
+                </span>
+              </td>
+              <td>
+                <div class="flex gap-1 justify-end" *ngIf="request.status === 'PENDING'">
+                  <button (click)="promptApprove(request, $event)" title="Odobri zahtev" class="z-btn-primary z-btn-sm">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Odobri
+                  </button>
+                  <button (click)="promptReject(request, $event)" title="Odbij zahtev"
+                    class="z-btn-destructive z-btn-sm">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    Odbij
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="totalElements > 0"
+        class="flex justify-between items-center px-5 py-3 border-t border-border gap-3 flex-wrap">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+          <span>Redova po stranici:</span>
+          <select [(ngModel)]="pageSize" (change)="onPageSizeChange()"
+            class="px-2 py-1 border border-border rounded-md text-sm text-foreground bg-card cursor-pointer outline-none">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+          </select>
+          <span class="ml-0 md:ml-3 font-medium">
+            {{ currentPage * pageSize + 1 }}–{{ getLastItem() }} od {{ totalElements }}
+          </span>
+        </div>
+
+        <div class="flex gap-1">
+          <button [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)"
+            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+
+          <button [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)"
+            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="selectedLoanRequest" class="z-overlay">
+  <div class="z-modal max-w-4xl w-full" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div>
+        <h3 class="text-lg font-semibold text-foreground">Detalji zahteva za kredit</h3>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Podnet: {{ formatDate(selectedLoanRequest.submittedAt) }} &nbsp;·&nbsp;
+          <span class="z-badge" [ngClass]="getRequestStatusClass(selectedLoanRequest.status)">
+            {{ requestStatusLabels[selectedLoanRequest.status] }}
+          </span>
+        </p>
+      </div>
+
+      <button (click)="closeDetail()"
+        class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="z-modal-body space-y-5">
+      <div>
+        <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Podaci koje je klijent uneo
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <div>
+            <span class="text-muted-foreground">Vrsta kredita</span>
+            <p class="font-medium mt-0.5">{{ loanTypeLabels[selectedLoanRequest.loanType] ||
+              selectedLoanRequest.loanType }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Tip kamate</span>
+            <p class="font-medium mt-0.5">{{ interestRateTypeLabels[selectedLoanRequest.interestRateType] }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Iznos</span>
+            <p class="font-medium mt-0.5">{{ formatCurrency(selectedLoanRequest.amount, selectedLoanRequest.currency) }}
+            </p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Valuta</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.currency }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Rok otplate</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.repaymentPeriodMonths }} meseci</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Broj računa</span>
+            <p class="font-mono font-medium mt-0.5">{{ selectedLoanRequest.accountNumber }}</p>
+          </div>
+          <div class="md:col-span-2">
+            <span class="text-muted-foreground">Svrha kredita</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.purpose || '-' }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Mesečna plata</span>
+            <p class="font-medium mt-0.5">{{ formatCurrency(selectedLoanRequest.monthlySalary,
+              selectedLoanRequest.currency) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Status zaposlenja</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.employmentStatus || '-' }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Period zaposlenja</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.employmentPeriodMonths }} meseci</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Kontakt telefon</span>
+            <p class="font-medium mt-0.5">{{ selectedLoanRequest.contactPhone || '-' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedLoanRequest.housingStatus" class="rounded-xl border border-border bg-muted/30 p-4 text-sm">
+        <span class="text-muted-foreground">Dodatni podatak</span>
+        <p class="font-medium mt-0.5">Status stanovanja: {{ selectedLoanRequest.housingStatus }}</p>
+      </div>
+    </div>
+
+    <div class="z-modal-footer">
+      <button (click)="closeDetail()" class="z-btn-outline">Zatvori</button>
+      <ng-container *ngIf="selectedLoanRequest.status === 'PENDING'">
+        <button (click)="promptReject(selectedLoanRequest)" class="z-btn-destructive">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Odbij zahtev
+        </button>
+        <button (click)="promptApprove(selectedLoanRequest)" class="z-btn-primary">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Odobri zahtev
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="confirmAction" class="z-overlay">
+  <div class="z-modal max-w-sm" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <h3 class="text-lg font-semibold text-foreground">
+        {{ confirmAction.type === 'approve' ? 'Odobri zahtev' : 'Odbij zahtev' }}
+      </h3>
+
+      <button (click)="cancelConfirm()"
+        class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="z-modal-body">
+      <div class="flex items-start gap-3">
+        <div *ngIf="confirmAction.type === 'approve'"
+          class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+
+        <div *ngIf="confirmAction.type === 'reject'"
+          class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+
+        <p class="text-sm text-foreground">
+          <ng-container *ngIf="confirmAction.type === 'approve'">
+            Da li ste sigurni da želite da <strong>odobrite</strong> zahtev za
+            <strong>{{ loanTypeLabels[confirmAction.request.loanType] || confirmAction.request.loanType }}</strong>
+            kredit
+            u iznosu <strong>{{ formatCurrency(confirmAction.request.amount, confirmAction.request.currency)
+              }}</strong>?
+          </ng-container>
+
+          <ng-container *ngIf="confirmAction.type === 'reject'">
+            Da li ste sigurni da želite da <strong>odbijete</strong> zahtev za
+            <strong>{{ loanTypeLabels[confirmAction.request.loanType] || confirmAction.request.loanType }}</strong>
+            kredit
+            u iznosu <strong>{{ formatCurrency(confirmAction.request.amount, confirmAction.request.currency)
+              }}</strong>?
+          </ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="z-modal-footer">
+      <button (click)="cancelConfirm()" class="z-btn-outline" [disabled]="isActioning">Odustani</button>
+
+      <button *ngIf="confirmAction.type === 'approve'" (click)="executeAction()" class="z-btn-primary"
+        [disabled]="isActioning">
+        <svg *ngIf="isActioning" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        Odobri
+      </button>
+
+      <button *ngIf="confirmAction.type === 'reject'" (click)="executeAction()" class="z-btn-destructive"
+        [disabled]="isActioning">
+        <svg *ngIf="isActioning" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        Odbij
+      </button>
+    </div>
+  </div>
+</div>

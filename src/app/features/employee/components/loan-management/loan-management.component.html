@@ -1,0 +1,289 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <div class="flex justify-between items-start mb-6 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Upravljanje kreditima</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregledajte sve aktivne kredite, filtrirajte ih i pregledajte detalje i rate.
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card p-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          <select [(ngModel)]="filterLoanType" (change)="onFilterChange()" class="z-input pl-10 appearance-none">
+            <option *ngFor="let opt of loanTypeOptions" [ngValue]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <input type="text" placeholder="Pretraga po broju računa..." [(ngModel)]="filterAccountNumber"
+            (input)="onFilterChange()" class="z-input pl-10" />
+        </div>
+
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <select [(ngModel)]="filterStatus" (change)="onFilterChange()" class="z-input pl-10 appearance-none">
+            <option *ngFor="let opt of statusOptions" [ngValue]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="z-card overflow-hidden">
+      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <div *ngIf="!isLoading && loans.length === 0" class="text-center p-12 text-muted-foreground text-sm">
+        <svg class="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <p>Nema pronađenih kredita.</p>
+      </div>
+
+      <div *ngIf="!isLoading && loans.length > 0" class="overflow-x-auto">
+        <table class="z-table min-w-[1400px]">
+          <thead>
+            <tr>
+              <th>Vrsta kredita</th>
+              <th>Tip kamate</th>
+              <th>Datum ugovaranja</th>
+              <th>Period otplate</th>
+              <th>Broj računa</th>
+              <th class="text-right">Iznos kredita</th>
+              <th class="text-right">Preostalo dugovanje</th>
+              <th>Valuta</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let loan of loans; trackBy: trackById"
+              class="cursor-pointer hover:bg-muted/40 transition-colors" (click)="openDetail(loan)">
+              <td class="font-medium">{{ loanTypeLabels[getLoanType(loan)] || getLoanType(loan) }}</td>
+              <td>{{ loan.interestRateType ? (interestRateTypeLabels[loan.interestRateType] || loan.interestRateType) : '-' }}</td>
+              <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(loan.contractDate) }}</td>
+              <td>{{ getRepaymentPeriodMonths(loan) }} mes.</td>
+              <td class="font-mono text-sm">{{ loan.accountNumber || '-' }}</td>
+              <td class="text-right font-medium whitespace-nowrap">{{ formatCurrency(loan.amount, loan.currency) }}</td>
+              <td class="text-right whitespace-nowrap">{{ formatCurrency(loan.remainingDebt, loan.currency) }}</td>
+              <td>{{ loan.currency }}</td>
+              <td>
+                <span class="z-badge" [ngClass]="getLoanStatusClass(loan.status)">
+                  {{ getLoanStatusLabel(loan.status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="totalElements > 0"
+        class="flex justify-between items-center px-5 py-3 border-t border-border gap-3 flex-wrap">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+          <span>Redova po stranici:</span>
+          <select [(ngModel)]="pageSize" (change)="onPageSizeChange()"
+            class="px-2 py-1 border border-border rounded-md text-sm text-foreground bg-card cursor-pointer outline-none">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+          </select>
+          <span class="ml-0 md:ml-3 font-medium">
+            {{ currentPage * pageSize + 1 }}–{{ getLastItem() }} od {{ totalElements }}
+          </span>
+        </div>
+
+        <div class="flex gap-1">
+          <button [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)"
+            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+
+          <button [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)"
+            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="selectedLoan" class="z-overlay">
+  <div class="z-modal max-w-4xl w-full" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div>
+        <h3 class="text-lg font-semibold text-foreground">Detalji kredita</h3>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Broj: {{ getLoanNumber(selectedLoan) }} &nbsp;·&nbsp;
+          <span class="z-badge" [ngClass]="getLoanStatusClass(selectedLoan.status)">
+            {{ getLoanStatusLabel(selectedLoan.status) }}
+          </span>
+        </p>
+      </div>
+
+      <button (click)="closeDetail()"
+        class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="z-modal-body space-y-5">
+      <div *ngIf="isDetailLoading" class="flex justify-center items-center p-8">
+        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <div *ngIf="detailError"
+        class="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+        {{ detailError }}
+      </div>
+
+      <div *ngIf="!isDetailLoading && !detailError">
+        <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Podaci o kreditu</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <div>
+            <span class="text-muted-foreground">Vrsta kredita</span>
+            <p class="font-medium mt-0.5">{{ loanTypeLabels[getLoanType(selectedLoan)] || getLoanType(selectedLoan) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Broj računa</span>
+            <p class="font-mono font-medium mt-0.5">{{ selectedLoan.accountNumber || '-' }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Iznos</span>
+            <p class="font-medium mt-0.5">{{ formatCurrency(selectedLoan.amount, selectedLoan.currency) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Preostali dug</span>
+            <p class="font-medium mt-0.5">{{ formatCurrency(selectedLoan.remainingDebt, selectedLoan.currency) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Datum ugovora</span>
+            <p class="font-medium mt-0.5">{{ formatDate(selectedLoan.contractDate) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Datum dospeća</span>
+            <p class="font-medium mt-0.5">{{ formatDate(selectedLoan.maturityDate || selectedLoan.dueDate) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Rok otplate</span>
+            <p class="font-medium mt-0.5">{{ getRepaymentPeriodMonths(selectedLoan) }} mes.</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Iznos sledeće rate</span>
+            <p class="font-medium mt-0.5">
+              {{ formatCurrency(getInstallmentAmount(selectedLoan), selectedLoan.currency) }}
+            </p>
+          </div>
+          <div *ngIf="selectedLoan.nextInstallmentDate">
+            <span class="text-muted-foreground">Datum sledeće rate</span>
+            <p class="font-medium mt-0.5">{{ formatDate(selectedLoan.nextInstallmentDate) }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Valuta</span>
+            <p class="font-medium mt-0.5">{{ selectedLoan.currency }}</p>
+          </div>
+          <div *ngIf="selectedLoan.nominalInterestRate != null">
+            <span class="text-muted-foreground">Nominalna kamatna stopa</span>
+            <p class="font-medium mt-0.5">{{ formatPercent(selectedLoan.nominalInterestRate) }}</p>
+          </div>
+          <div *ngIf="selectedLoan.effectiveInterestRate != null">
+            <span class="text-muted-foreground">Efektivna kamatna stopa</span>
+            <p class="font-medium mt-0.5">{{ formatPercent(selectedLoan.effectiveInterestRate) }}</p>
+          </div>
+          <div *ngIf="selectedLoan.clientName">
+            <span class="text-muted-foreground">Klijent</span>
+            <p class="font-medium mt-0.5">{{ selectedLoan.clientName }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isDetailLoading && !detailError && selectedInstallments.length > 0">
+        <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Rate</p>
+        <div class="overflow-x-auto rounded-xl border border-border">
+          <table class="z-table w-full">
+            <thead>
+              <tr>
+                <th>Br.</th>
+                <th>Datum dospeća</th>
+                <th>Datum plaćanja</th>
+                <th class="text-right">Iznos</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let inst of selectedInstallments; trackBy: trackInstallment">
+                <td class="text-muted-foreground">{{ inst.installmentNumber || '-' }}</td>
+                <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(inst.expectedDueDate) }}</td>
+                <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(inst.actualPaymentDate) }}</td>
+                <td class="text-right font-medium whitespace-nowrap">{{ formatCurrency(inst.amount, inst.currency) }}</td>
+                <td>
+                  <span class="z-badge" [ngClass]="getInstallmentStatusClass(inst.status)">
+                    {{ getInstallmentStatusLabel(inst.status) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div *ngIf="!isDetailLoading && !detailError && selectedInstallments.length === 0"
+        class="text-center p-6 text-muted-foreground text-sm border border-border rounded-xl">
+        Nema dostupnih rata za ovaj kredit.
+      </div>
+    </div>
+
+    <div class="z-modal-footer">
+      <button (click)="closeDetail()" class="z-btn-outline">Zatvori</button>
+    </div>
+  </div>
+</div>
