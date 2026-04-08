@@ -6,40 +6,19 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { CardService, AccountDto } from '../../services/card.service';
 import { Card } from '../../models/card.model';
+import { BlockCardDialogComponent } from '../../modals/block-card-dialog/block-card-dialog.component';
+import {RouterModule} from "@angular/router";
 
-/**
- * Interfejs za grupisanje kartica po računu.
- * Svaka grupa sadrži naziv i broj računa, kao i listu kartica vezanih za taj račun.
- */
 export interface CardGroup {
   accountName: string;
   accountNumber: string;
   cards: Card[];
 }
 
-/**
- * Komponenta za prikaz svih kartica ulogovanog klijenta.
- * <p>
- * Prikazuje kartice grupisane po računu za koji su vezane.
- * Za svaku karticu prikazuje:
- * - naziv i vrstu kartice
- * - maskiran broj kartice u formatu: XXXX **** **** XXXX
- * - status badge (Aktivna / Blokirana / Deaktivirana) sa odgovarajućim bojama
- * - akcijska dugmad u zavisnosti od statusa kartice:
- *   - ACTIVE: Blokiraj + Deaktiviraj
- *   - BLOCKED: Deblokiraj + Deaktiviraj
- *   - EXPIRED/CANCELLED: nema akcija
- * <p>
- * Tok učitavanja:
- * 1. Dohvata sve račune klijenta via GET /client/accounts
- * 2. Za svaki račun dohvata detalje via GET /client/api/accounts/{brojRacuna}
- *    koji već sadrži listu kartica u AccountDetailsResponseDto.cards
- * 3. Grupiše kartice po računu za prikaz
- */
 @Component({
   selector: 'app-card-list',
   standalone: true,
-  imports: [CommonModule, NavbarComponent],
+  imports: [CommonModule, NavbarComponent, BlockCardDialogComponent, RouterModule],
   templateUrl: './card-list.component.html',
   styles: [`:host { display: block; }
 
@@ -56,19 +35,12 @@ export interface CardGroup {
   `]
 })
 export class CardListComponent implements OnInit {
-
   groupedCards: CardGroup[] = [];
   isLoading = true;
   errorMessage = '';
 
-  // ── Dialog state ─────────────────────────────────────────────
   showBlockDialog = false;
-  showUnblockDialog = false;
-  showDeactivateDialog = false;
-
   cardToBlock: Card | null = null;
-  cardToUnblock: Card | null = null;
-  cardToDeactivate: Card | null = null;
 
   constructor(private readonly cardService: CardService) {}
 
@@ -76,17 +48,6 @@ export class CardListComponent implements OnInit {
     this.loadAllCards();
   }
 
-  /**
-   * Dohvata sve kartice klijenta grupisane po računu.
-   * <p>
-   * Korak 1: GET /client/accounts — lista računa klijenta (sadrži brojRacuna)
-   * Korak 2: GET /client/api/accounts/{brojRacuna} — detalji računa koji
-   *          već sadrže listu kartica (AccountDetailsResponseDto.cards)
-   * Korak 3: Grupisanje kartica po računu za prikaz u UI
-   * <p>
-   * Napomena: AccountResponseDto ne sadrži ID računa, pa koristimo brojRacuna
-   * kao ključ za dohvatanje detalja — endpoint to podržava.
-   */
   public loadAllCards(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -97,14 +58,12 @@ export class CardListComponent implements OnInit {
         const accounts = accountPage.content ?? [];
         if (accounts.length === 0) return of([]);
 
-        // Za svaki račun dohvatamo detalje koji uključuju kartice
         const detailRequests = accounts.map((acc: AccountDto) =>
           this.cardService.getAccountDetails(acc.brojRacuna).pipe(
             catchError(() => of(null)),
             switchMap(details => {
               if (!details || !details.cards?.length) return of(null);
 
-              // Mapiramo kartice i dodajemo naziv i broj računa
               const group: CardGroup = {
                 accountName: acc.nazivRacuna,
                 accountNumber: acc.brojRacuna,
@@ -114,6 +73,7 @@ export class CardListComponent implements OnInit {
                   accountNumber: acc.brojRacuna
                 }))
               };
+
               return of(group);
             })
           )
@@ -131,7 +91,6 @@ export class CardListComponent implements OnInit {
       })
     ).subscribe({
       next: (results: any) => {
-        // Filtriramo null rezultate (računi bez kartica)
         this.groupedCards = (results as (CardGroup | null)[])
           .filter((g): g is CardGroup => g !== null);
         this.isLoading = false;
@@ -146,24 +105,15 @@ export class CardListComponent implements OnInit {
     });
   }
 
-  // ── Akcije — blokiranje ───────────────────────────────────────
-
-  /**
-   * Otvara confirmation dialog za blokiranje kartice (F5).
-   * Dugme je vidljivo samo za kartice sa statusom ACTIVE.
-   */
   public onBlockCard(card: Card): void {
     this.cardToBlock = card;
     this.showBlockDialog = true;
   }
 
-  /**
-   * Potvrđuje blokiranje kartice.
-   * Nakon uspešnog blokiranja osvežava listu kartica.
-   */
   public onConfirmBlock(): void {
     if (!this.cardToBlock) return;
-    this.cardService.blockCard(this.cardToBlock.id).subscribe({
+
+    this.cardService.blockCard(this.cardToBlock.cardNumber).subscribe({
       next: () => {
         this.onCancelAction();
         this.loadAllCards();
@@ -176,92 +126,16 @@ export class CardListComponent implements OnInit {
     });
   }
 
-  // ── Akcije — deblokiranje ─────────────────────────────────────
-
-  /**
-   * Otvara confirmation dialog za deblokiranje kartice.
-   * Dugme je vidljivo samo za kartice sa statusom BLOCKED.
-   */
-  public onUnblockCard(card: Card): void {
-    this.cardToUnblock = card;
-    this.showUnblockDialog = true;
-  }
-
-  /**
-   * Potvrđuje deblokiranje kartice.
-   * Nakon uspešnog deblokiranja osvežava listu kartica.
-   */
-  public onConfirmUnblock(): void {
-    if (!this.cardToUnblock) return;
-    this.cardService.unblockCard(this.cardToUnblock.id).subscribe({
-      next: () => {
-        this.onCancelAction();
-        this.loadAllCards();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.errorMessage =
-          err.error?.message || 'Greška pri deblokiranju kartice.';
-        this.onCancelAction();
-      }
-    });
-  }
-
-  // ── Akcije — deaktiviranje ────────────────────────────────────
-
-  /**
-   * Otvara confirmation dialog za deaktiviranje kartice.
-   * Dugme je vidljivo za kartice sa statusom ACTIVE i BLOCKED.
-   * Napomena: jednom deaktivirana kartica ne može biti reaktivirana.
-   */
-  public onDeactivateCard(card: Card): void {
-    this.cardToDeactivate = card;
-    this.showDeactivateDialog = true;
-  }
-
-  /**
-   * Potvrđuje deaktiviranje kartice.
-   * Nakon uspešnog deaktiviranja osvežava listu kartica.
-   */
-  public onConfirmDeactivate(): void {
-    if (!this.cardToDeactivate) return;
-    this.cardService.deactivateCard(this.cardToDeactivate.id).subscribe({
-      next: () => {
-        this.onCancelAction();
-        this.loadAllCards();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.errorMessage =
-          err.error?.message || 'Greška pri deaktiviranju kartice.';
-        this.onCancelAction();
-      }
-    });
-  }
-
-  /**
-   * Zatvara sve confirmation dialoge i resetuje stanje.
-   */
   public onCancelAction(): void {
     this.showBlockDialog = false;
-    this.showUnblockDialog = false;
-    this.showDeactivateDialog = false;
     this.cardToBlock = null;
-    this.cardToUnblock = null;
-    this.cardToDeactivate = null;
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
 
-  /**
-   * Maskira broj kartice u format: XXXX **** **** XXXX
-   * Primer: "5798123456785571" → "5798 **** **** 5571"
-   */
   public maskCardNumber(cardNumber: string): string {
     return this.cardService.maskCardNumber(cardNumber);
   }
 
-  /**
-   * Vraća human-readable naziv statusa kartice.
-   */
   public getStatusLabel(status: string): string {
     const map: Record<string, string> = {
       ACTIVE: 'Aktivna',
@@ -272,9 +146,6 @@ export class CardListComponent implements OnInit {
     return map[status] ?? status;
   }
 
-  /**
-   * Vraća CSS klasu za status badge na osnovu statusa kartice.
-   */
   public getStatusBadgeClass(status: string): string {
     const map: Record<string, string> = {
       ACTIVE: 'z-badge-green',
@@ -285,9 +156,6 @@ export class CardListComponent implements OnInit {
     return map[status] ?? 'z-badge-gray';
   }
 
-  /**
-   * Vraća human-readable naziv vrste kartice.
-   */
   public getCardTypeLabel(cardType: string): string {
     const map: Record<string, string> = {
       DEBIT: 'Debitna',
@@ -297,13 +165,6 @@ export class CardListComponent implements OnInit {
     return map[cardType] ?? cardType;
   }
 
-  /**
-   * Određuje brend kartice na osnovu prvih cifara broja kartice (MII/IIN standard).
-   * - Visa: počinje sa 4
-   * - Mastercard: počinje sa 51-55 ili 2221-2720
-   * - DinaCard: počinje sa 9891
-   * - American Express: počinje sa 34 ili 37
-   */
   public getCardBrand(card: Card): string {
     const num = card.cardNumber.replace(/\D/g, '');
     if (num.startsWith('4')) return 'VISA';
@@ -313,14 +174,6 @@ export class CardListComponent implements OnInit {
     return card.cardType.slice(0, 4);
   }
 
-  /**
-   * Vraća CSS klasu za gradijent thumbnail-a kartice na osnovu brenda.
-   * - Visa: plavo-ljubičasto
-   * - Mastercard: narandžasto
-   * - DinaCard: crveno
-   * - American Express: indigo
-   * - Ostalo: teal
-   */
   public getCardGradient(card: Card): string {
     const num = card.cardNumber.replace(/\D/g, '');
     if (num.startsWith('4')) return 'thumb--blue';

@@ -3,15 +3,17 @@
 <div class="page-layout">
   <div class="page-content">
 
-    <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-foreground">Kartice</h1>
         <p class="text-sm text-muted-foreground mt-1">Pregled svih vaših platnih kartica</p>
       </div>
+
+      <a routerLink="/home/cards/request" class="z-btn-primary z-btn-sm">
+        Zatraži novu karticu
+      </a>
     </div>
 
-    <!-- Loading -->
     <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
       <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2">
@@ -20,13 +22,11 @@
       <p class="mt-3 text-sm">Učitavanje kartica...</p>
     </div>
 
-    <!-- Error -->
     <div *ngIf="errorMessage && !isLoading"
          class="z-card p-8 text-center text-red-500 text-sm">
       <p>{{ errorMessage }}</p>
     </div>
 
-    <!-- Empty -->
     <div *ngIf="!isLoading && !errorMessage && groupedCards.length === 0"
          class="z-card p-12 text-center text-muted-foreground text-sm italic">
       <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-secondary flex items-center justify-center">
@@ -35,10 +35,8 @@
       <p>Nemate nijednu karticu.</p>
     </div>
 
-    <!-- Kartice grupisane po računu -->
     <div *ngFor="let group of groupedCards" class="z-card p-5 mb-4">
 
-      <!-- Račun header -->
       <div class="flex items-center gap-3 mb-4 pb-4 border-b border-border">
         <div class="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center thumb--blue">
           <span class="material-icons text-white text-lg">account_balance</span>
@@ -49,24 +47,20 @@
         </div>
       </div>
 
-      <!-- Lista kartica za taj račun -->
       <div class="flex flex-col gap-2">
         <div *ngFor="let card of group.cards"
              class="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary transition-all">
 
-          <!-- Card thumbnail -->
           <div class="w-14 h-10 rounded-lg flex-shrink-0 flex items-center justify-center shadow-inner"
                [ngClass]="getCardGradient(card)">
             <span class="text-[10px] font-bold text-white/90 tracking-wider">{{ getCardBrand(card) }}</span>
           </div>
 
-          <!-- Naziv i vrsta -->
           <div class="flex-1 min-w-0">
             <span class="text-[15px] font-semibold text-foreground block">{{ card.cardType }}</span>
             <span class="text-xs text-muted-foreground">{{ getCardTypeLabel(card.cardType) }}</span>
           </div>
 
-          <!-- Broj kartice -->
           <div class="flex-shrink-0 text-center">
             <span class="block text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Broj kartice</span>
             <span class="text-sm font-mono font-semibold text-foreground tracking-widest">
@@ -74,40 +68,21 @@
             </span>
           </div>
 
-          <!-- Status badge -->
           <div class="flex-shrink-0">
             <span class="z-badge" [ngClass]="getStatusBadgeClass(card.status)">
               {{ getStatusLabel(card.status) }}
             </span>
           </div>
 
-          <!-- Akcije -->
           <div class="flex items-center gap-2 flex-shrink-0">
-
-            <!-- ACTIVE: Blokiraj + Deaktiviraj -->
             <ng-container *ngIf="card.status === 'ACTIVE'">
               <button type="button" (click)="onBlockCard(card)" class="z-btn-destructive z-btn-sm">
                 Blokiraj
               </button>
-              <button type="button" (click)="onDeactivateCard(card)" class="z-btn-secondary z-btn-sm">
-                Deaktiviraj
-              </button>
             </ng-container>
 
-            <!-- BLOCKED: Deblokiraj + Deaktiviraj -->
-            <ng-container *ngIf="card.status === 'BLOCKED'">
-              <button type="button" (click)="onUnblockCard(card)" class="z-btn-primary z-btn-sm">
-                Deblokiraj
-              </button>
-              <button type="button" (click)="onDeactivateCard(card)" class="z-btn-secondary z-btn-sm">
-                Deaktiviraj
-              </button>
-            </ng-container>
-
-            <!-- EXPIRED/CANCELLED: nema akcija -->
-            <span *ngIf="card.status !== 'ACTIVE' && card.status !== 'BLOCKED'"
+            <span *ngIf="card.status !== 'ACTIVE'"
                   class="text-xs text-muted-foreground italic">—</span>
-
           </div>
         </div>
       </div>
@@ -116,119 +91,14 @@
   </div>
 </div>
 
-<!-- F5 Confirmation Dialog — Blokiranje -->
-<div *ngIf="showBlockDialog && cardToBlock" class="z-overlay" (click)="onCancelAction()">
-  <div class="z-modal max-w-md" (click)="$event.stopPropagation()">
-    <div class="z-modal-header">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-          <span class="material-icons text-red-600 text-lg">block</span>
-        </div>
-        <h2 class="text-base font-bold text-foreground">Blokiranje kartice</h2>
-      </div>
-      <button type="button" (click)="onCancelAction()"
-              class="w-7 h-7 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center hover:bg-muted transition-colors">
-        <span class="material-icons text-muted-foreground text-base">close</span>
-      </button>
-    </div>
-    <div class="z-modal-body">
-      <p class="text-sm text-muted-foreground mb-4">
-        Da li ste sigurni da želite da <strong>blokirate</strong> sledeću karticu?
-      </p>
-      <div class="bg-secondary rounded-lg p-4 border border-border flex flex-col gap-1.5">
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Vrsta:</span>
-          <span class="font-medium">{{ getCardTypeLabel(cardToBlock.cardType) }}</span>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Broj:</span>
-          <span class="font-mono font-medium">{{ maskCardNumber(cardToBlock.cardNumber) }}</span>
-        </div>
-      </div>
-      <p class="text-xs text-muted-foreground mt-3 italic">
-        Blokirana kartica se može odblokirati samo uz pomoć zaposlenog banke.
-      </p>
-    </div>
-    <div class="z-modal-footer">
-      <button type="button" (click)="onCancelAction()" class="z-btn-outline z-btn-sm">Otkaži</button>
-      <button type="button" (click)="onConfirmBlock()" class="z-btn-destructive z-btn-sm">Potvrdi blokiranje</button>
-    </div>
-  </div>
-</div>
+<!-- F5 shared modal -->
+<app-block-card-dialog
+  *ngIf="showBlockDialog && cardToBlock"
+  [card]="cardToBlock"
+  [maskedCardNumber]="maskCardNumber(cardToBlock.cardNumber)"
+  [cardTypeLabel]="getCardTypeLabel(cardToBlock.cardType)"
+  (cancel)="onCancelAction()"
+  (confirm)="onConfirmBlock()">
+</app-block-card-dialog>
 
-<!-- Confirmation Dialog — Deaktiviranje -->
-<div *ngIf="showDeactivateDialog && cardToDeactivate" class="z-overlay" (click)="onCancelAction()">
-  <div class="z-modal max-w-md" (click)="$event.stopPropagation()">
-    <div class="z-modal-header">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-          <span class="material-icons text-gray-600 text-lg">do_not_disturb</span>
-        </div>
-        <h2 class="text-base font-bold text-foreground">Deaktiviranje kartice</h2>
-      </div>
-      <button type="button" (click)="onCancelAction()"
-              class="w-7 h-7 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center hover:bg-muted transition-colors">
-        <span class="material-icons text-muted-foreground text-base">close</span>
-      </button>
-    </div>
-    <div class="z-modal-body">
-      <p class="text-sm text-muted-foreground mb-4">
-        Da li ste sigurni da želite da <strong>deaktivirate</strong> sledeću karticu?
-      </p>
-      <div class="bg-secondary rounded-lg p-4 border border-border flex flex-col gap-1.5">
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Vrsta:</span>
-          <span class="font-medium">{{ getCardTypeLabel(cardToDeactivate.cardType) }}</span>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Broj:</span>
-          <span class="font-mono font-medium">{{ maskCardNumber(cardToDeactivate.cardNumber) }}</span>
-        </div>
-      </div>
-      <p class="text-xs text-red-500 mt-3 italic">
-        Pažnja: jednom deaktivirana kartica ne može biti ponovo aktivirana.
-      </p>
-    </div>
-    <div class="z-modal-footer">
-      <button type="button" (click)="onCancelAction()" class="z-btn-outline z-btn-sm">Otkaži</button>
-      <button type="button" (click)="onConfirmDeactivate()" class="z-btn-secondary z-btn-sm">Potvrdi deaktiviranje</button>
-    </div>
-  </div>
-</div>
 
-<!-- Confirmation Dialog — Deblokiranje -->
-<div *ngIf="showUnblockDialog && cardToUnblock" class="z-overlay" (click)="onCancelAction()">
-  <div class="z-modal max-w-md" (click)="$event.stopPropagation()">
-    <div class="z-modal-header">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-          <span class="material-icons text-green-600 text-lg">check_circle</span>
-        </div>
-        <h2 class="text-base font-bold text-foreground">Deblokiranje kartice</h2>
-      </div>
-      <button type="button" (click)="onCancelAction()"
-              class="w-7 h-7 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center hover:bg-muted transition-colors">
-        <span class="material-icons text-muted-foreground text-base">close</span>
-      </button>
-    </div>
-    <div class="z-modal-body">
-      <p class="text-sm text-muted-foreground mb-4">
-        Da li ste sigurni da želite da <strong>deblokirate</strong> sledeću karticu?
-      </p>
-      <div class="bg-secondary rounded-lg p-4 border border-border flex flex-col gap-1.5">
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Vrsta:</span>
-          <span class="font-medium">{{ getCardTypeLabel(cardToUnblock.cardType) }}</span>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-muted-foreground">Broj:</span>
-          <span class="font-mono font-medium">{{ maskCardNumber(cardToUnblock.cardNumber) }}</span>
-        </div>
-      </div>
-    </div>
-    <div class="z-modal-footer">
-      <button type="button" (click)="onCancelAction()" class="z-btn-outline z-btn-sm">Otkaži</button>
-      <button type="button" (click)="onConfirmUnblock()" class="z-btn-primary z-btn-sm">Potvrdi deblokiranje</button>
-    </div>
-  </div>
-</div>

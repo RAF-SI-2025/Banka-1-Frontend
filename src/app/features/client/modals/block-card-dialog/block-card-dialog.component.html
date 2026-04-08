@@ -1,0 +1,44 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="warning-icon">
+          <span class="material-icons">warning_amber</span>
+        </div>
+        <h2 class="modal-title">Blokiraj karticu?</h2>
+      </div>
+
+      <button type="button" class="close-btn" (click)="onCancel()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-text">
+        Da li ste sigurni da želite da blokirate ovu karticu?
+      </p>
+
+      <div class="card-preview">
+        <div class="card-preview-row">
+          <span class="card-preview-label">Vrsta</span>
+          <span class="card-preview-value">{{ cardTypeLabel }}</span>
+        </div>
+
+        <div class="card-preview-row">
+          <span class="card-preview-label">Broj</span>
+          <span class="card-preview-value card-preview-value--mono">{{ maskedCardNumber }}</span>
+        </div>
+      </div>
+
+      <p class="warning-note">
+        Nakon blokiranja kartica ne može samostalno da se odblokira.
+        Za odblokiranje je potrebno da kontaktirate zaposlenog u banci.
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="onCancel()">Odustani</button>
+      <button type="button" class="btn-confirm" (click)="onConfirm()">Potvrdi blokiranje</button>
+    </div>
+  </div>
+</div>
