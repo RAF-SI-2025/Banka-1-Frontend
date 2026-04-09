@@ -10,7 +10,7 @@ import { AccountService } from '../../services/account.service';
 import {
   LoanRequestDto,
   LoanRequestResponse,
-  LoanTypeOption,
+  LoanType,
   LoanTypeLabels,
   LoanRepaymentTerms,
   InterestRateType,
@@ -44,12 +44,12 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
   loanResponse: LoanRequestResponse | null = null;
 
   // Opcije za dropdowns
-  loanTypeOptions: SelectOption<LoanTypeOption>[] = [
-    { value: LoanTypeOption.PERSONAL, label: LoanTypeLabels[LoanTypeOption.PERSONAL] },
-    { value: LoanTypeOption.MORTGAGE, label: LoanTypeLabels[LoanTypeOption.MORTGAGE] },
-    { value: LoanTypeOption.AUTO, label: LoanTypeLabels[LoanTypeOption.AUTO] },
-    { value: LoanTypeOption.REFINANCING, label: LoanTypeLabels[LoanTypeOption.REFINANCING] },
-    { value: LoanTypeOption.STUDENT, label: LoanTypeLabels[LoanTypeOption.STUDENT] }
+  loanTypeOptions: SelectOption<LoanType>[] = [
+    { value: LoanType.PERSONAL, label: LoanTypeLabels[LoanType.PERSONAL] },
+    { value: LoanType.MORTGAGE, label: LoanTypeLabels[LoanType.MORTGAGE] },
+    { value: LoanType.AUTO, label: LoanTypeLabels[LoanType.AUTO] },
+    { value: LoanType.REFINANCING, label: LoanTypeLabels[LoanType.REFINANCING] },
+    { value: LoanType.STUDENT, label: LoanTypeLabels[LoanType.STUDENT] }
   ];
 
   interestRateOptions: SelectOption<InterestRateType>[] = [
@@ -173,7 +173,7 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
   /**
    * Ažuriraj periode otplate na osnovu tipa kredita
    */
-  private updateRepaymentTerms(loanType: LoanTypeOption): void {
+  private updateRepaymentTerms(loanType: LoanType): void {
     const terms = LoanRepaymentTerms[loanType] || [];
     this.repaymentTermOptions = terms;
   }
@@ -282,7 +282,7 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
   /**
    * Trackby funkcije za *ngFor
    */
-  trackByLoanType = (index: number, item: SelectOption<LoanTypeOption>) => item.value;
+  trackByLoanType = (index: number, item: SelectOption<LoanType>) => item.value;
   trackByInterestRate = (index: number, item: SelectOption<InterestRateType>) => item.value;
   trackByCurrency = (index: number, item: SelectOption<Currency>) => item.value;
   trackByEmploymentStatus = (index: number, item: SelectOption<EmploymentStatus>) => item.value;

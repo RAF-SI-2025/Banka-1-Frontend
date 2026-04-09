@@ -28,6 +28,7 @@ import { LoanDetailsComponent } from './features/client/components/loan-details/
 import { ExchangeRateComponent } from './features/client/components/exchange-rate/exchange-rate.component';
 import { LoanRequestManagementComponent } from './features/employee/components/loan-request-management/loan-request-management.component';
 import { LoanManagementComponent } from './features/employee/components/loan-management/loan-management.component';
+import { LoanRequestComponent } from './features/client/components/loan-request/loan-request.component';
 
 
 const routes: Routes = [

@@ -12,8 +12,6 @@ export type LoanRequestStatus =
   | 'APPROVED'
   | 'REJECTED';
 
-export type InterestRateType = 'FIXED' | 'VARIABLE';
-
 export enum LoanType {
   MORTGAGE = 'MORTGAGE',
   PERSONAL = 'PERSONAL',
@@ -24,27 +22,32 @@ export enum LoanType {
   BUSINESS = 'BUSINESS'
 }
 
+// Tip za opcije kredita (bez BUSINESS)
+export type LoanTypeOption = Exclude<LoanType, LoanType.BUSINESS>;
+
 /**
  * Labele za vrste kredita
  */
-export const LoanTypeLabels: Record<LoanTypeOption | 'BUSINESS', string> = {
-  [LoanTypeOption.PERSONAL]: 'Keš kredit',
-  [LoanTypeOption.MORTGAGE]: 'Stambeni kredit',
-  [LoanTypeOption.AUTO]: 'Auto kredit',
-  [LoanTypeOption.STUDENT]: 'Studentski kredit',
-  [LoanTypeOption.REFINANCING]: 'Refinansirajući kredit',
-  'BUSINESS': 'Poslovni kredit'
+export const LoanTypeLabels: Record<string, string> = {
+  [LoanType.PERSONAL]: 'Gotovinski kredit',
+  [LoanType.CASH]: 'Gotovinski kredit',
+  [LoanType.MORTGAGE]: 'Stambeni kredit',
+  [LoanType.AUTO]: 'Auto kredit',
+  [LoanType.STUDENT]: 'Studentski kredit',
+  [LoanType.REFINANCING]: 'Refinansirajući kredit',
+  [LoanType.BUSINESS]: 'Poslovni kredit'
 };
 
 /**
  * Periodi otplate za različite vrste kredita (u mesecima)
  */
-export const LoanRepaymentTerms: Record<LoanTypeOption, number[]> = {
-  [LoanTypeOption.PERSONAL]: [12, 24, 36, 48, 60, 72, 84],
-  [LoanTypeOption.AUTO]: [12, 24, 36, 48, 60, 72, 84],
-  [LoanTypeOption.MORTGAGE]: [60, 120, 180, 240, 300, 360],
-  [LoanTypeOption.STUDENT]: [12, 24, 36, 48, 60, 72, 84],
-  [LoanTypeOption.REFINANCING]: [12, 24, 36, 48, 60, 72, 84]
+export const LoanRepaymentTerms: Record<string, number[]> = {
+  [LoanType.PERSONAL]: [12, 24, 36, 48, 60, 72, 84],
+  [LoanType.CASH]: [12, 24, 36, 48, 60, 72, 84],
+  [LoanType.AUTO]: [12, 24, 36, 48, 60, 72, 84],
+  [LoanType.MORTGAGE]: [60, 120, 180, 240, 300, 360],
+  [LoanType.STUDENT]: [12, 24, 36, 48, 60, 72, 84],
+  [LoanType.REFINANCING]: [12, 24, 36, 48, 60, 72, 84]
 };
 
 /**
@@ -58,15 +61,11 @@ export enum InterestRateType {
 /**
  * Labele za tip kamatne stope
  */
-export const InterestRateTypeLabels: Record<InterestRateType, string> = {
+export const InterestRateTypeLabels: Record<string, string> = {
   [InterestRateType.FIXED]: 'Fiksna',
   [InterestRateType.VARIABLE]: 'Varijabilna'
 };
 
-
-/**
- * Enumeracija za valute
- */
 export enum Currency {
   RSD = 'RSD',
   EUR = 'EUR',
@@ -113,16 +112,6 @@ export const InstallmentStatusLabels: Record<InstallmentStatus, string> = {
   LATE: 'Kasni'
 };
 
-export const LoanTypeLabels: Record<string, string> = {
-  PERSONAL: 'Gotovinski kredit',
-  CASH: 'Gotovinski kredit',
-  MORTGAGE: 'Stambeni kredit',
-  AUTO: 'Auto kredit',
-  STUDENT: 'Studentski kredit',
-  REFINANCING: 'Refinansirajući kredit',
-  BUSINESS: 'Poslovni kredit'
-};
-
 export const LoanStatusLabels: Record<string, string> = {
   APPROVED: 'Odobren',
   ACTIVE: 'Odobren',
@@ -139,10 +128,34 @@ export const LoanRequestStatusLabels: Record<LoanRequestStatus, string> = {
   REJECTED: 'Odbijen'
 };
 
-export const InterestRateTypeLabels: Record<InterestRateType, string> = {
-  FIXED: 'Fiksna',
-  VARIABLE: 'Varijabilna'
-};
+/**
+ * DTO za zahtev za kredit
+ */
+export interface LoanRequestDto {
+  loanType: LoanType | string;
+  interestRateType: InterestRateType | string;
+  amount: number;
+  currency: string;
+  purpose: string;
+  monthlyIncome: number;
+  employmentStatus: string;
+  employmentPeriod: number;
+  accountNumber: string;
+  contactPhone: string;
+  repaymentPeriod?: number;
+  housingStatus?: string;
+}
+
+/**
+ * Response za zahtev za kredit
+ */
+export interface LoanRequestResponse {
+  id: number;
+  requestNumber: string;
+  status: LoanRequestStatus;
+  createdAt: string;
+  message?: string;
+}
 
 export interface Installment {
   id?: number | string;
@@ -168,7 +181,7 @@ export interface Loan {
   creditType?: LoanType | string;
   loanNumber?: string;
   creditNumber?: string;
-  interestRateType?: InterestRateType;
+  interestRateType?: InterestRateType | string;
   maturityDate?: string;
   repaymentPeriodMonths?: number;
   accountNumber?: string;
@@ -188,7 +201,7 @@ export interface Loan {
 export interface LoanRequest {
   id: number;
   loanType: LoanType | string;
-  interestRateType: InterestRateType;
+  interestRateType: InterestRateType | string;
   amount: number;
   currency: string;
   purpose: string;
