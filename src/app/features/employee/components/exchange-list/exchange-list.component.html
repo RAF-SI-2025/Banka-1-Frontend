@@ -1,82 +1,43 @@
-<div class="layout">
-  <div style="width: 260px; min-width: 260px; border-right: 1px solid #ddd; background: white;">
-    <app-navbar></app-navbar>
-  </div>
+<app-navbar></app-navbar>
 
-  <div class="main">
-    <header class="topbar">
-      <div class="topbar__search">
-        <span class="material-icons">search</span>
-        <input type="text" placeholder="Pretražite račune" />
-      </div>
+<div class="flex-1 flex flex-col ml-[240px] mt-[60px]">
+  <div class="p-6">
+    <h1 class="text-2xl font-bold text-foreground mb-4">Berza</h1>
 
-      <div class="topbar__right">
-        <button class="topbar__icon-btn" title="Obaveštenja">
-          <span class="material-icons">notifications</span>
-        </button>
-
-        <button class="topbar__icon-btn" title="Valuta">
-          <span class="material-icons">monetization_on</span>
-        </button>
-
-        <span class="topbar__greeting">Dobro došli</span>
-
-        <button class="topbar__icon-btn" title="Profil">
-          <span class="material-icons">account_circle</span>
-        </button>
-      </div>
-    </header>
-
-    <div class="content">
-      <h1 class="section-label" data-cy="exchange-page-title">BERZE</h1>
-
-      <div class="table-card" data-cy="exchange-table-card">
-        <table class="exchange-table" data-cy="exchange-table">
-          <thead>
-            <tr>
-              <th class="col-name">NAZIV BERZE</th>
-              <th class="col-acronym">AKRONIM</th>
-              <th class="col-mic">MIC KOD</th>
-              <th class="col-country">DRŽAVA</th>
-              <th class="col-currency">VALUTA</th>
-              <th class="col-timezone">VREMENSKA ZONA</th>
-              <th class="col-status">TRENUTNO OTVORENA</th>
-              <th class="col-toggle">RADNO VREME</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr *ngFor="let exchange of exchanges; let i = index" [attr.data-cy]="'exchange-row-' + i">
-              <td class="name-cell" [attr.data-cy]="'exchange-name-' + i">{{ exchange.name }}</td>
-              <td>{{ exchange.acronym }}</td>
-              <td class="muted">{{ exchange.micCode }}</td>
-              <td class="muted country">{{ exchange.polity }}</td>
-              <td class="muted">{{ exchange.currency }}</td>
-              <td class="muted timezone">{{ exchange.timeZone }}</td>
-              <td>
-                <span
-                  class="status-badge"
-                  [attr.data-cy]="'exchange-status-' + i"
-                  [ngClass]="exchange.currentlyOpen ? 'open-badge' : 'closed-badge'"
-                >
-                  {{ exchange.currentlyOpen ? 'DA' : 'NE' }}
-                </span>
-              </td>
-              <td>
-                <label class="switch">
-                  <input
-                    [attr.data-cy]="'exchange-toggle-' + i"
-                    type="checkbox"
-                    [checked]="exchange.workingHoursEnabled"
-                    (change)="onWorkingHoursToggle(exchange)"
-                  />
-                  <span class="slider"></span>
-                </label>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="bg-card rounded-lg shadow overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-muted border-b border-border">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Naziv Berze</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Akronim</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">MIC Kod</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Država</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Valuta</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Vremenska Zona</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Otvorena</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Radno Vreme</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <tr *ngFor="let exchange of exchanges" class="hover:bg-muted/50 transition-colors">
+            <td class="px-6 py-3 text-sm text-foreground font-medium">{{ exchange.exchangeName }}</td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.exchangeAcronym }}</td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.exchangeMICCode }}</td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.polity }}</td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.currency }}</td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.timeZone }}</td>
+            <td class="px-6 py-3 text-sm">
+              <span class="inline-block px-2.5 py-1 rounded text-xs font-semibold"
+                    [ngClass]="exchange.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                {{ exchange.isActive ? 'DA' : 'NE' }}
+              </span>
+            </td>
+            <td class="px-6 py-3 text-sm text-muted-foreground">
+              {{ exchange.openTime }} - {{ exchange.closeTime }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

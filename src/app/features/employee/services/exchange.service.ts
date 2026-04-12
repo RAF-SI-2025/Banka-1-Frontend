@@ -8,11 +8,11 @@ import { environment } from '../../../../environments/environment';
 })
 export class ExchangeService {
 
-  private apiUrl = `${environment.apiUrl}/exchanges`;
+  private apiUrl = `${environment.apiUrl}/stock/api`;
 
   constructor(private http: HttpClient) {}
 
   getExchanges(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+    return this.http.get<any[]>(this.apiUrl + '/stock-exchanges');
   }
 }

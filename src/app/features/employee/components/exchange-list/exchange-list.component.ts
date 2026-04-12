@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NavbarComponent } from '@/shared/components/navbar/navbar.component';
 import { ExchangeService } from '../../services/exchange.service';
 
 @Component({
   selector: 'app-exchange-list',
+  standalone: true,
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './exchange-list.component.html',
   styleUrls: ['./exchange-list.component.css']
 })
@@ -19,19 +23,8 @@ export class ExchangeListComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('API ne radi', err);
-
-    
-        
       }
     });
   }
-
-  onWorkingHoursToggle(exchange: any): void {
-    exchange.workingHoursEnabled = !exchange.workingHoursEnabled;
-
-    // kasnije ovde pozvati api
-    // this.exchangeService.toggleWorkingHours(exchange.id).subscribe()
-  }
-
 
 }

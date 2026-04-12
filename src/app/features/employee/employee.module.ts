@@ -21,7 +21,6 @@ import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.compone
     EmployeeListComponent,
     EmployeeCreateComponent,
     EmployeeEditComponent,
-    ExchangeListComponent,
     ActuaryManagementComponent,
     AccountCardsPlaceholderComponent,
     LoanRequestManagementComponent,
@@ -33,6 +32,7 @@ import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.compone
     FormsModule,
     RouterModule,
     AccountManagementComponent,
+    ExchangeListComponent,
     NavbarComponent
   ]
 })

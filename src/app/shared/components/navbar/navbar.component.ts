@@ -32,6 +32,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Primaoci plaćanja', route: '/payments/recipients', icon: 'people' },
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
     { label: 'Krediti',    route: '/loans',               icon: 'credit_card' },
+    { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
   ];
 
   private readonly employeeLinks: NavLink[] = [
@@ -42,6 +43,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Zahtevi za kredite', route: '/loan-request-management', icon: 'request_quote' },
     { label: 'Svi krediti', route: '/loan-management', icon: 'credit_score' },
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
+    { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
   ];
 
   private readonly supervisorLinks: NavLink[] = [
