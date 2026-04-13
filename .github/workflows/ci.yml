@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript type check
-        run: npx tsc --noEmit
+        run: npx tsc -p tsconfig.app.json --noEmit
 
   # ── Cypress E2E Tests ─────────────────────────────────────────────────────
   cypress:
