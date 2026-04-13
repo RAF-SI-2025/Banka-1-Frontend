@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { Card, CardStatus, CardAction, CardStatusLabels } from '../models/card.model';
+import { forkJoin } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { Card, CardStatus, CardAction, CardStatusLabels, CardDetailDTO } from '../models/card.model';
 import { CardService } from '../services/card.service';
 import { ToastService } from '../../../shared/services/toast.service';
 
@@ -63,7 +66,37 @@ export class AccountCardsPlaceholderComponent implements OnInit {
     this.isLoading = true;
     this.hasError = false;
 
-    this.cardService.getCardsByAccountNumber(this.accountNumber).subscribe({
+    this.cardService.getCardsByAccountNumber(this.accountNumber).pipe(
+      switchMap((cards) => {
+        if (cards.length === 0) {
+          return of([]);
+        }
+        
+        // Fetch full details for each card
+        const detailRequests = cards.map(card =>
+          this.cardService.getCardDetails(card.id).pipe(
+            switchMap(details => 
+              of({
+                ...card,
+                cardType: details.cardType,
+                cardName: details.cardName,
+                status: this.mapStatusToSerbian(details.status)
+              } as Card)
+            ),
+            catchError(() => of(card)) // Fallback to basic card info if detail fetch fails
+          )
+        );
+
+        return forkJoin(detailRequests);
+      }),
+      catchError((err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.errorMessage = err.error?.message || 'Greška pri učitavanju kartica.';
+        this.toastService.error(this.errorMessage);
+        return of([]);
+      })
+    ).subscribe({
       next: (cards) => {
         this.cards = cards;
         this.isLoading = false;
@@ -79,6 +112,19 @@ export class AccountCardsPlaceholderComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  // Map status from backend format to Serbian format
+  private mapStatusToSerbian(status: string): CardStatus {
+    const statusMap: Record<string, CardStatus> = {
+      'ACTIVE': 'AKTIVNA',
+      'BLOCKED': 'BLOKIRANA',
+      'DEACTIVATED': 'DEAKTIVIRANA',
+      'AKTIVNA': 'AKTIVNA',
+      'BLOKIRANA': 'BLOKIRANA',
+      'DEAKTIVIRANA': 'DEAKTIVIRANA'
+    };
+    return statusMap[status] || ('AKTIVNA' as CardStatus);
   }
 
   // Status helpers
@@ -186,7 +232,7 @@ export class AccountCardsPlaceholderComponent implements OnInit {
     if (!this.selectedCard || !this.pendingAction || this.isProcessing) return;
 
     this.isProcessing = true;
-    const cardNumber = this.selectedCard.cardNumber;
+    const cardId = this.selectedCard.id;
 
     let action$;
     let successMessage: string;
@@ -194,17 +240,17 @@ export class AccountCardsPlaceholderComponent implements OnInit {
 
     switch (this.pendingAction) {
       case 'BLOCK':
-        action$ = this.cardService.blockCard(cardNumber);
+        action$ = this.cardService.blockCard(cardId);
         successMessage = 'Kartica je uspešno blokirana. Vlasnik će dobiti obaveštenje putem emaila.';
         newStatus = 'BLOKIRANA';
         break;
       case 'UNBLOCK':
-        action$ = this.cardService.unblockCard(cardNumber);
+        action$ = this.cardService.unblockCard(cardId);
         successMessage = 'Kartica je uspešno deblokirana. Vlasnik će dobiti obaveštenje putem emaila.';
         newStatus = 'AKTIVNA';
         break;
       case 'DEACTIVATE':
-        action$ = this.cardService.deactivateCard(cardNumber);
+        action$ = this.cardService.deactivateCard(cardId);
         successMessage = 'Kartica je trajno deaktivirana. Vlasnik će dobiti obaveštenje putem emaila.';
         newStatus = 'DEAKTIVIRANA';
         break;
@@ -214,7 +260,7 @@ export class AccountCardsPlaceholderComponent implements OnInit {
 
     action$.subscribe({
       next: () => {
-        const card = this.cards.find(c => c.cardNumber === cardNumber);
+        const card = this.cards.find(c => c.id === cardId);
         if (card) {
           card.status = newStatus;
         }

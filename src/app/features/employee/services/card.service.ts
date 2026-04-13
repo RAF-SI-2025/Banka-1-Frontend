@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Card } from '../models/card.model';
+import { map } from 'rxjs/operators';
+import { Card, CardDetailDTO } from '../models/card.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -17,18 +18,27 @@ export class CardService {
   }
 
   getCardsByAccountNumber(accountNumber: string): Observable<Card[]> {
-    return this.http.get<Card[]>(`${this.apiUrl}/account/${accountNumber}`);
+    return this.http.get<any[]>(`${this.apiUrl}/account/${accountNumber}`).pipe(
+      map(cards => cards.map(card => ({
+        ...card,
+        cardNumber: card.maskedCardNumber || card.cardNumber
+      })))
+    );
   }
 
-  blockCard(cardNumber: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${cardNumber}/block`, {});
+  getCardDetails(cardId: number): Observable<CardDetailDTO> {
+    return this.http.get<CardDetailDTO>(`${this.apiUrl}/id/${cardId}`);
   }
 
-  unblockCard(cardNumber: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${cardNumber}/unblock`, {});
+  blockCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/id/${cardId}/block`, {});
   }
 
-  deactivateCard(cardNumber: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${cardNumber}/deactivate`, {});
+  unblockCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/id/${cardId}/unblock`, {});
+  }
+
+  deactivateCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/id/${cardId}/deactivate`, {});
   }
 }

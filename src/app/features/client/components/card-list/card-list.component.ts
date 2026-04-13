@@ -113,7 +113,7 @@ export class CardListComponent implements OnInit {
   public onConfirmBlock(): void {
     if (!this.cardToBlock) return;
 
-    this.cardService.blockCard(this.cardToBlock.cardNumber).subscribe({
+    this.cardService.blockCard(this.cardToBlock.id).subscribe({
       next: () => {
         this.onCancelAction();
         this.loadAllCards();

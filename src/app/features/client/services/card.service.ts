@@ -85,8 +85,8 @@ export class CardService {
     return this.http.get<AccountDetailsDto>(`${this.accountsBase}/api/accounts/${accountNumber}`);
   }
 
-  public blockCard(cardNumber: string): Observable<void> {
-    return this.http.put<void>(`${this.cardsBase}/${cardNumber}/block`, {});
+  public blockCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.cardsBase}/id/${cardId}/block`, {});
   }
 
   public requestPersonalCard(body: ClientCardRequestDto): Observable<CardRequestResponseDto> {

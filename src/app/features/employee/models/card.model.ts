@@ -16,6 +16,18 @@ export interface Card {
   currency: string;
 }
 
+export interface CardDetailDTO {
+  id: number;
+  cardNumber: string;
+  cardType: string;
+  cardName: string;
+  creationDate: string;
+  expirationDate: string;
+  accountNumber: string;
+  cardLimit: number;
+  status: CardStatus;
+}
+
 export const CardStatusLabels: Record<CardStatus, string> = {
   AKTIVNA: 'Aktivna',
   BLOKIRANA: 'Blokirana',
