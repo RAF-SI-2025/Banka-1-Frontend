@@ -15,7 +15,6 @@ export class ExchangeListComponent implements OnInit {
 
   exchanges: any[] = [];
   showOpenOnly = false;
-  useMockData = false;
   loadError = false;
 
   constructor(private exchangeManager: ExchangeManagerService) {}
@@ -31,19 +30,10 @@ export class ExchangeListComponent implements OnInit {
       }
     });
 
-    // Pretplati se na promene mock/live režima
-    this.exchangeManager.useMockData$.subscribe(isMock => {
-      this.useMockData = isMock;
-    });
-
     // Pretplati se na greške pri učitavanju
     this.exchangeManager.loadError$.subscribe(hasError => {
       this.loadError = hasError;
     });
-  }
-
-  toggleMockData(): void {
-    this.exchangeManager.toggleMockData();
   }
 
 }

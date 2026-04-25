@@ -95,6 +95,20 @@
             Osveži
           </button>
 
+          <!-- Mock data toggle -->
+          <label class="flex items-center gap-2 cursor-pointer select-none ml-2">
+            <span class="text-sm text-muted-foreground">{{ useMockData ? 'Mock podaci' : 'Live podaci' }}</span>
+            <div class="relative">
+              <input type="checkbox" class="sr-only" [checked]="useMockData" (change)="toggleMockData()">
+              <div class="w-10 h-6 rounded-full transition-colors"
+                   [ngClass]="useMockData ? 'bg-blue-500' : 'bg-muted-foreground/30'">
+              </div>
+              <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                   [ngClass]="useMockData ? 'translate-x-4' : 'translate-x-0'">
+              </div>
+            </div>
+          </label>
+
           <!-- Filter button -->
           <div class="relative">
             <button

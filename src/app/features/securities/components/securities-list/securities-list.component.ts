@@ -34,6 +34,7 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
   activeTab: SecurityTab = 'stocks';
   isClient = false;
+  useMockData = false;
 
   securities: Security[] = [];
   isLoading = false;
@@ -62,6 +63,14 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isClient = this.authService.isClient();
+    
+    // Pretplati se na promene mock/live režima - automatski učita nove podatke
+    this.exchangeManager.useMockData$.pipe(takeUntil(this.destroy$)).subscribe(isMock => {
+      this.useMockData = isMock;
+      this.currentPage = 0; // Reset na prvu stranicu
+      this.loadSecurities(); // Učitaj podatke
+    });
+    
     this.loadSecurities();
   }
 
@@ -91,6 +100,10 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  toggleMockData(): void {
+    this.exchangeManager.toggleMockData();
   }
 
   loadSecurities(): void {

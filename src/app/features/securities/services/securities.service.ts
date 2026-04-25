@@ -16,13 +16,180 @@ import {
   StockOption,
   SortConfig,
 } from '../models/security.model';
+import { ExchangeManagerService } from '../../employee/services/exchange-manager.service';
 
 @Injectable({ providedIn: 'root' })
 export class SecuritiesService {
   private readonly stocksUrl = `${environment.apiUrl}/stock/api/listings/stocks`;
   private readonly refreshAllUrl = `${environment.apiUrl}/stock/admin/stocks/refresh-all`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly exchangeManager: ExchangeManagerService
+  ) {}
+
+  // ===== MOCK DATA =====
+  private readonly mockStocks: any[] = [
+    { listingId: 1, ticker: 'AAPL', name: 'Apple Inc.', exchangeMICCode: 'XNYS', price: 174.50, change: 2.50, volume: 50000000, initialMarginCost: 15000 },
+    { listingId: 2, ticker: 'MSFT', name: 'Microsoft Corporation', exchangeMICCode: 'XNGS', price: 380.50, change: -1.20, volume: 25000000, initialMarginCost: 30000 },
+    { listingId: 3, ticker: 'GOOGL', name: 'Alphabet Inc.', exchangeMICCode: 'XNGS', price: 140.30, change: 3.10, volume: 18000000, initialMarginCost: 11000 },
+    { listingId: 4, ticker: 'AMZN', name: 'Amazon.com Inc.', exchangeMICCode: 'XNGS', price: 170.85, change: 1.50, volume: 35000000, initialMarginCost: 13000 },
+    { listingId: 5, ticker: 'NVDA', name: 'NVIDIA Corporation', exchangeMICCode: 'XNGS', price: 875.20, change: 5.40, volume: 40000000, initialMarginCost: 70000 },
+    { listingId: 6, ticker: 'VOD.L', name: 'Vodafone Group', exchangeMICCode: 'XLON', price: 68.45, change: -0.50, volume: 15000000, initialMarginCost: 5000 },
+  ];
+
+  private readonly mockFutures: any[] = [
+    { listingId: 101, ticker: 'ESZ23', name: 'E-mini S&P 500', exchangeMICCode: 'XCME', price: 4500.25, change: 125.50, volume: 2000000, initialMarginCost: 10000, settlementDate: '2024-12-20' },
+    { listingId: 102, ticker: 'NQZ23', name: 'E-mini Nasdaq', exchangeMICCode: 'XCME', price: 14500.75, change: 300.25, volume: 1500000, initialMarginCost: 15000, settlementDate: '2024-12-20' },
+    { listingId: 103, ticker: 'CLZ23', name: 'Crude Oil', exchangeMICCode: 'XCME', price: 85.50, change: 1.25, volume: 3000000, initialMarginCost: 5000, settlementDate: '2024-12-20' },
+    { listingId: 104, ticker: 'GCZ23', name: 'Gold', exchangeMICCode: 'XCME', price: 2050.50, change: 25.00, volume: 500000, initialMarginCost: 8000, settlementDate: '2024-12-20' },
+  ];
+
+  private readonly mockForex: any[] = [
+    { listingId: 201, ticker: 'EUR/USD', name: 'Euro vs US Dollar', exchangeMICCode: 'FXEM', price: 1.0850, change: 0.0050, volume: 5000000, initialMarginCost: 1000 },
+    { listingId: 202, ticker: 'GBP/USD', name: 'British Pound vs US Dollar', exchangeMICCode: 'FXEM', price: 1.2650, change: -0.0025, volume: 3000000, initialMarginCost: 1000 },
+    { listingId: 203, ticker: 'USD/JPY', name: 'US Dollar vs Japanese Yen', exchangeMICCode: 'FXEM', price: 149.50, change: 0.75, volume: 4000000, initialMarginCost: 1000 },
+    { listingId: 204, ticker: 'AUD/USD', name: 'Australian Dollar vs US Dollar', exchangeMICCode: 'FXEM', price: 0.6850, change: -0.0010, volume: 2000000, initialMarginCost: 1000 },
+  ];
+
+  // ===== MOCK DATA METHODS =====
+  private getMockStocksPage(filters: SecuritiesFilters = {}, page = 0, size = 10, sort?: SortConfig): SecuritiesPage<Stock> {
+    let stocks = this.mockStocks.map(item => ({
+      id: item.listingId,
+      ticker: item.ticker,
+      name: item.name,
+      exchange: item.exchangeMICCode,
+      price: item.price,
+      currency: 'USD',
+      change: item.change,
+      changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
+      volume: item.volume,
+      maintenanceMargin: 0,
+      initialMarginCost: item.initialMarginCost,
+      type: 'STOCK' as const,
+      lastUpdated: new Date().toISOString(),
+      high: item.price * 1.02,
+      low: item.price * 0.98,
+      open: item.price - item.change,
+      previousClose: item.price - item.change,
+      bid: item.price - 0.01,
+      ask: item.price + 0.01,
+    }));
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      stocks = stocks.filter(s =>
+        s.ticker.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q)
+      );
+    }
+
+    if (sort) {
+      stocks = this.sortArray(stocks, sort);
+    }
+
+    return {
+      content: stocks.slice(page * size, (page + 1) * size),
+      totalElements: stocks.length,
+      totalPages: Math.ceil(stocks.length / size),
+      number: page,
+      size: size,
+    };
+  }
+
+  private getMockFuturesPage(filters: SecuritiesFilters = {}, page = 0, size = 10, sort?: SortConfig): SecuritiesPage<Future> {
+    let futures = this.mockFutures.map(item => ({
+      id: item.listingId,
+      ticker: item.ticker,
+      name: item.name,
+      exchange: item.exchangeMICCode,
+      price: item.price,
+      currency: 'USD',
+      change: item.change,
+      changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
+      volume: item.volume,
+      maintenanceMargin: (item.initialMarginCost || 0) * 0.8,
+      initialMarginCost: item.initialMarginCost,
+      type: 'FUTURE' as const,
+      lastUpdated: new Date().toISOString(),
+      settlementDate: item.settlementDate,
+      contractSize: 1,
+      openInterest: 0,
+      high: item.price * 1.02,
+      low: item.price * 0.98,
+      open: item.price,
+      previousClose: item.price - item.change,
+      bid: item.price - 0.01,
+      ask: item.price + 0.01,
+    }));
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      futures = futures.filter(f =>
+        f.ticker.toLowerCase().includes(q) ||
+        f.name.toLowerCase().includes(q)
+      );
+    }
+
+    if (sort) {
+      futures = this.sortArray(futures, sort);
+    }
+
+    return {
+      content: futures.slice(page * size, (page + 1) * size),
+      totalElements: futures.length,
+      totalPages: Math.ceil(futures.length / size),
+      number: page,
+      size: size,
+    };
+  }
+
+  private getMockForexPage(filters: SecuritiesFilters = {}, page = 0, size = 10, sort?: SortConfig): SecuritiesPage<Forex> {
+    let forexes = this.mockForex.map(item => ({
+      id: item.listingId,
+      ticker: item.ticker,
+      name: item.name,
+      exchange: item.exchangeMICCode,
+      price: item.price,
+      currency: 'USD',
+      change: item.change,
+      changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
+      volume: item.volume,
+      maintenanceMargin: (item.initialMarginCost || 0) * 0.8,
+      initialMarginCost: item.initialMarginCost,
+      type: 'FOREX' as const,
+      lastUpdated: new Date().toISOString(),
+      baseCurrency: item.ticker.split('/')[0],
+      quoteCurrency: item.ticker.split('/')[1],
+      bid: item.price - 0.0001,
+      ask: item.price + 0.0001,
+      spread: 0.0002,
+      high: item.price * 1.01,
+      low: item.price * 0.99,
+      open: item.price,
+      previousClose: item.price - item.change,
+    }));
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      forexes = forexes.filter(f =>
+        f.ticker.toLowerCase().includes(q) ||
+        f.name.toLowerCase().includes(q)
+      );
+    }
+
+    if (sort) {
+      forexes = this.sortArray(forexes, sort);
+    }
+
+    return {
+      content: forexes.slice(page * size, (page + 1) * size),
+      totalElements: forexes.length,
+      totalPages: Math.ceil(forexes.length / size),
+      number: page,
+      size: size,
+    };
+  }
 
   refreshAllStocks(): Observable<any> {
     return this.http.post(`${this.refreshAllUrl}`, {});
@@ -102,6 +269,11 @@ export class SecuritiesService {
     size = 10,
     sort?: SortConfig
   ): Observable<SecuritiesPage<Stock>> {
+    // Check if mock data should be used
+    if (this.exchangeManager['useMockDataSubject']?.value) {
+      return of(this.getMockStocksPage(filters, page, size, sort)).pipe(delay(300));
+    }
+
     const params = this.buildStockParams(filters, page, size);
     return this.http.get<any>(`${this.stocksUrl}`, { params }).pipe(
       map(response => this.mapStocksPage(response, filters, page, size, sort))
@@ -114,6 +286,11 @@ export class SecuritiesService {
     size = 10,
     sort?: SortConfig
   ): Observable<SecuritiesPage<Stock>> {
+    // Check if mock data should be used
+    if (this.exchangeManager['useMockDataSubject']?.value) {
+      return of(this.getMockStocksPage(filters, page, size, sort)).pipe(delay(300));
+    }
+
     const params = this.buildStockParams(filters, page, size);
     return this.http.get<any>(`${this.stocksUrl}`, { params }).pipe(
       map(response => this.mapStocksPage(response, filters, page, size, sort))
@@ -123,9 +300,9 @@ export class SecuritiesService {
   /**
    * Helper method to sort array of stocks
    */
-  private sortArray(stocks: Stock[], sort: SortConfig): Stock[] {
-    return [...stocks].sort((a, b) => {
-      const field = sort.field as keyof Stock;
+  private sortArray<T extends Security>(items: T[], sort: SortConfig): T[] {
+    return [...items].sort((a, b) => {
+      const field = sort.field as keyof Security;
       const aVal = a[field];
       const bVal = b[field];
       
@@ -146,6 +323,11 @@ export class SecuritiesService {
     size = 10,
     sort?: SortConfig
   ): Observable<SecuritiesPage<Future>> {
+    // Check if mock data should be used
+    if (this.exchangeManager['useMockDataSubject']?.value) {
+      return of(this.getMockFuturesPage(filters, page, size, sort)).pipe(delay(300));
+    }
+
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
@@ -228,6 +410,11 @@ export class SecuritiesService {
     size = 10,
     sort?: SortConfig
   ): Observable<SecuritiesPage<Forex>> {
+    // Check if mock data should be used
+    if (this.exchangeManager['useMockDataSubject']?.value) {
+      return of(this.getMockForexPage(filters, page, size, sort)).pipe(delay(300));
+    }
+
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
