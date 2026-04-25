@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '@/shared/components/navbar/navbar.component';
-import { ExchangeService } from '../../services/exchange.service';
+import { ExchangeManagerService } from '../../services/exchange-manager.service';
 
 @Component({
   selector: 'app-exchange-list',
@@ -15,18 +15,35 @@ export class ExchangeListComponent implements OnInit {
 
   exchanges: any[] = [];
   showOpenOnly = false;
+  useMockData = false;
+  loadError = false;
 
-  constructor(private exchangeService: ExchangeService) {}
+  constructor(private exchangeManager: ExchangeManagerService) {}
 
   ngOnInit(): void {
-    this.exchangeService.getExchanges().subscribe({
+    // Pretplati se na promene dostupnih berzi (uključujući promene između mock i live podataka)
+    this.exchangeManager.availableExchanges$.subscribe({
       next: (data) => {
         this.exchanges = data;
       },
       error: (err: any) => {
-        console.error('API ne radi', err);
+        console.error('Greška pri učitavanju berzi', err);
       }
     });
+
+    // Pretplati se na promene mock/live režima
+    this.exchangeManager.useMockData$.subscribe(isMock => {
+      this.useMockData = isMock;
+    });
+
+    // Pretplati se na greške pri učitavanju
+    this.exchangeManager.loadError$.subscribe(hasError => {
+      this.loadError = hasError;
+    });
+  }
+
+  toggleMockData(): void {
+    this.exchangeManager.toggleMockData();
   }
 
 }

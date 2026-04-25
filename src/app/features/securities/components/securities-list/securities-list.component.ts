@@ -2,12 +2,13 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable, Subject, combineLatest } from 'rxjs';
+import { takeUntil, map } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SecuritiesService } from '../../services/securities.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ExchangeManagerService } from '../../../employee/services/exchange-manager.service';
 import {
   Security,
   Stock,
@@ -55,7 +56,8 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     private readonly securitiesService: SecuritiesService,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly toastService: ToastService
+    private readonly toastService: ToastService,
+    private readonly exchangeManager: ExchangeManagerService
   ) {}
 
   ngOnInit(): void {
@@ -135,9 +137,14 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
     request$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (page: SecuritiesPage<Security>) => {
-        this.securities = page.content;
-        this.totalElements = page.totalElements;
-        this.totalPages = page.totalPages;
+        // Filtriraj samo hartije sa validnim berzama
+        const validSecurities = page.content.filter(security =>
+          this.exchangeManager.isExchangeAvailable((security as any).exchange)
+        );
+
+        this.securities = validSecurities;
+        this.totalElements = validSecurities.length;
+        this.totalPages = Math.ceil(validSecurities.length / this.pageSize);
         this.isLoading = false;
       },
       error: (err: Error) => {
