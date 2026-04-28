@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { SecuritiesService } from '../../services/securities.service';
@@ -71,6 +71,11 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       this.ticker = params['ticker'];
       this.loadStock();
     });
+
+    // Auto-refresh every 60 seconds
+    interval(60000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.loadPriceHistory());
   }
 
   ngAfterViewInit(): void {
@@ -382,5 +387,39 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   trackByStrike(index: number, strike: number): number {
     return strike;
+  }
+
+  /**
+   * F8: Buy option button click handler
+   * TODO: When F1 (OrderModal) is implemented, open modal with prepopulated option data:
+   *
+   * onBuyOption(option: StockOption, type: 'CALL' | 'PUT'): void {
+   *   // 1. Check after-hours status first (F11)
+   *   this.exchangeService.checkAfterHoursByMicCode(this.stock.exchange).subscribe(status => {
+   *     if (status.isAfterHours && status.message) {
+   *       this.toastService.warning(status.message);
+   *     }
+   *
+   *     // 2. Open order modal with prepopulated data
+   *     this.dialog.open(OrderModalComponent, {
+   *       data: {
+   *         mode: 'BUY',
+   *         securityType: 'OPTION',
+   *         option: {
+   *           type: type,
+   *           strike: option.strike,
+   *           bid: option.bid,
+   *           ask: option.ask,
+   *           settlementDate: this.selectedSettlementDate,
+   *           underlyingStock: this.stock
+   *         }
+   *       }
+   *     });
+   *   });
+   * }
+   */
+  onBuyOption(option: StockOption, type: 'CALL' | 'PUT'): void {
+    // Placeholder until F1 (OrderModal) is implemented
+    console.log('Buy option clicked:', { type, strike: option.strike, bid: option.bid, ask: option.ask });
   }
 }

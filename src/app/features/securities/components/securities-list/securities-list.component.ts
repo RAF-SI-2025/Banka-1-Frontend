@@ -2,13 +2,14 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, Subject, combineLatest } from 'rxjs';
+import { Observable, Subject, combineLatest, interval } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SecuritiesService } from '../../services/securities.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ExchangeManagerService } from '../../../employee/services/exchange-manager.service';
+import { ExchangeService } from '../../../../shared/services/exchange.service';
 import {
   Security,
   Stock,
@@ -58,12 +59,18 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly toastService: ToastService,
+    private readonly exchangeService: ExchangeService,
     private readonly exchangeManager: ExchangeManagerService
   ) {}
 
   ngOnInit(): void {
     this.isClient = this.authService.isClient();
-    
+
+    // Auto-refresh every 60 seconds
+    interval(60000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.loadSecurities());
+
     // Pretplati se na promene mock/live režima - automatski učita nove podatke
     // BehaviorSubject odmah emituje, što će pozvati loadSecurities() i učitati podatke
     this.exchangeManager.useMockData$.pipe(takeUntil(this.destroy$)).subscribe(isMock => {
@@ -248,10 +255,39 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     return Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
   }
 
+  /**
+   * F1/F8: Buy security button click handler
+   * TODO: When F1 (OrderModal) is implemented, replace console.log with modal open:
+   *
+   * this.dialog.open(OrderModalComponent, {
+   *   data: {
+   *     mode: 'BUY',
+   *     securityType: this.activeTab.toUpperCase(), // 'STOCKS' | 'FUTURES' | 'FOREX'
+   *     security: security,
+   *     afterHoursWarning: status.isAfterHours
+   *   }
+   * });
+   */
   onBuy(security: Security, event: Event): void {
     event.stopPropagation();
-    // TODO: Navigate to buy page or open buy modal
-    console.log('Buy clicked:', security.ticker);
+
+    // Check after-hours status before proceeding (F11)
+    this.exchangeService.checkAfterHoursByMicCode(security.exchange)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (status) => {
+          if (status.isAfterHours && status.message) {
+            this.toastService.warning(status.message);
+          }
+          // TODO: Open OrderModalComponent here (F1)
+          console.log('Buy clicked:', security.ticker, 'After-hours:', status.isAfterHours);
+        },
+        error: (err) => {
+          console.error('Error checking exchange status:', err);
+          // Proceed anyway if status check fails
+          console.log('Buy clicked:', security.ticker);
+        }
+      });
   }
 
   onRowClick(security: Security): void {

@@ -217,6 +217,8 @@ export class SecuritiesService {
       name: item.name ?? '',
       exchange: item.exchangeMICCode ?? '',
       price: item.price ?? 0,
+      // F7 TODO: After backend adds currency to ListingSummaryResponse:
+      // currency: item.currency,
       currency: 'USD',
       change: item.change ?? 0,
       changePercent: item.price > 0 ? ((item.change ?? 0) / item.price) * 100 : 0,
@@ -229,6 +231,9 @@ export class SecuritiesService {
       low: item.price ?? 0,
       open: item.price ?? 0,
       previousClose: item.price ?? 0,
+      // F7 TODO: After backend adds bid/ask to ListingSummaryResponse:
+      // bid: item.bid,
+      // ask: item.ask,
       bid: item.price ?? 0,
       ask: item.price ?? 0,
     };
@@ -320,9 +325,9 @@ export class SecuritiesService {
       const field = sort.field as keyof Security;
       const aVal = a[field];
       const bVal = b[field];
-      
+
       if (aVal === undefined || bVal === undefined) return 0;
-      
+
       const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
       return sort.direction === 'asc' ? comparison : -comparison;
     });
@@ -386,13 +391,15 @@ export class SecuritiesService {
           const price = item.price || 1.0;
           const change = item.change || 0;
           const changePercent = price > 0 ? (change / price) * 100 : 0;
-          
+
           return {
             id: item.listingId,
             ticker: item.ticker,
             name: item.name,
             exchange: item.exchangeMICCode,
             price: price,
+            // F7 TODO: After backend adds currency to ListingSummaryResponse:
+            // currency: item.currency ?? 'USD',
             currency: 'USD',
             change: change,
             changePercent: changePercent,
@@ -408,6 +415,9 @@ export class SecuritiesService {
             low: price * 0.98,
             open: price,
             previousClose: price - change,
+            // F7 TODO: After backend adds bid/ask to ListingSummaryResponse:
+            // bid: item.bid ?? price,
+            // ask: item.ask ?? price,
             bid: price > 0 ? price - 0.01 : 0.99,
             ask: price > 0 ? price + 0.01 : 1.01,
           } as Future;
@@ -471,13 +481,15 @@ export class SecuritiesService {
           const price = item.price || 1.0;
           const change = item.change || 0;
           const changePercent = price > 0 ? (change / price) * 100 : 0;
-          
+
           return {
             id: item.listingId,
             ticker: item.ticker,
             name: item.name,
             exchange: item.exchangeMICCode,
             price: price,
+            // F7 TODO: After backend adds currency to ListingSummaryResponse:
+            // currency: item.currency ?? 'USD',
             currency: 'USD',
             change: change,
             changePercent: changePercent,
@@ -488,6 +500,10 @@ export class SecuritiesService {
             lastUpdated: new Date().toISOString(),
             baseCurrency: item.ticker.split('/')[0] || 'USD',
             quoteCurrency: item.ticker.split('/')[1] || 'USD',
+            // F7 TODO: After backend adds bid/ask to ListingSummaryResponse:
+            // bid: item.bid ?? price,
+            // ask: item.ask ?? price,
+            // spread: (item.ask ?? price) - (item.bid ?? price),
             bid: price > 0 ? price - 0.0001 : 0.9999,
             ask: price > 0 ? price + 0.0001 : 1.0001,
             spread: 0.0002,
@@ -551,7 +567,7 @@ export class SecuritiesService {
         const price = item.price || 1.0;
         const change = item.change || 0;
         const changePercent = price > 0 ? (change / price) * 100 : 0;
-        
+
         return {
           id: item.listingId,
           ticker: item.ticker,
@@ -591,7 +607,7 @@ export class SecuritiesService {
         const price = item.price || 1.0;
         const change = item.change || 0;
         const changePercent = price > 0 ? (change / price) * 100 : 0;
-        
+
         return {
           id: item.listingId,
           ticker: item.ticker,
@@ -664,7 +680,7 @@ export class SecuritiesService {
    */
   getOptionChain(ticker: string, settlementDate: string): Observable<OptionChain> {
     const params = new HttpParams().set('period', 'DAY');
-    
+
     return this.http.get<any>(`${environment.apiUrl}/stock/api/listings/${ticker}`, { params }).pipe(
       map((response: any) => {
         // Extract optionGroups and find matching settlement date
@@ -722,7 +738,7 @@ export class SecuritiesService {
    */
   getOptionSettlementDates(ticker: string): Observable<string[]> {
     const params = new HttpParams().set('period', 'DAY');
-    
+
     return this.http.get<any>(`${environment.apiUrl}/stock/api/listings/${ticker}`, { params }).pipe(
       map((response: any) => {
         const optionGroups = response.optionGroups || [];
