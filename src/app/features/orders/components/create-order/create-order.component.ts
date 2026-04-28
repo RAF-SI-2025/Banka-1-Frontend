@@ -120,6 +120,8 @@ export class CreateOrderComponent implements OnInit {
       return Number(this.stopValue ?? 0);
     }
 
+    const anySecurity = this.security as any;
+
     if (this.direction === 'BUY') {
       return Number(this.security.ask ?? this.security.price);
     }

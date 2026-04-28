@@ -63,7 +63,7 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isClient = this.authService.isClient();
-    
+
     // Pretplati se na promene mock/live režima - automatski učita nove podatke
     // BehaviorSubject odmah emituje, što će pozvati loadSecurities() i učitati podatke
     this.exchangeManager.useMockData$.pipe(takeUntil(this.destroy$)).subscribe(isMock => {
@@ -244,10 +244,9 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   }
 
   onBuy(security: Security, event: Event): void {
-    event.stopPropagation();
-    // TODO: Navigate to buy page or open buy modal
-    console.log('Buy clicked:', security.ticker);
-  }
+  event.stopPropagation();
+  this.router.navigate(['/orders/create', 'BUY', security.id]);
+}
 
   onRowClick(security: Security): void {
     const type = this.activeTab === 'stocks' ? 'stock' : this.activeTab === 'futures' ? 'future' : 'forex';

@@ -197,4 +197,13 @@ export class AccountService {
     }
     return Math.abs(hash);
   }
+
+getBankAccountByCurrency(currency: string): Observable<Account> {
+  return this.http.get<any>(`${this.api}/employee/accounts/bank/${currency}`).pipe(
+    map(item => this.mapToAccountFromClient(item))
+  );
+}
+
+
+
 }
