@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ExchangeService } from './exchange.service';
+import { environment } from 'src/environments/environment.development';
+import { HttpClient } from '@angular/common/http'; 
 
 export interface ExchangeInfo {
   id?: number;
@@ -104,9 +106,12 @@ export class ExchangeManagerService {
     }
   ];
 
-  constructor(private exchangeService: ExchangeService) {
-    this.loadExchanges();
-  }
+constructor(
+  private http: HttpClient, 
+  private exchangeService: ExchangeService
+) {
+  this.loadExchanges(); 
+}
 
   /**
    * Učitava berze sa API-ja ili mock podataka
@@ -179,6 +184,9 @@ export class ExchangeManagerService {
     return this.availableExchanges$;
   }
 
+  toggleExchangeActive(id: number): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/stock/api/stock-exchanges/${id}/toggle-active`, {});
+  }
   /**
    * Vraća trenutni status mock podataka
    */

@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NavbarComponent } from '@/shared/components/navbar/navbar.component';
 import { ExchangeManagerService } from '../../services/exchange-manager.service';
+import { ToastService } from '@/shared/services/toast.service'; 
 
 @Component({
   selector: 'app-exchange-list',
@@ -20,7 +21,10 @@ export class ExchangeListComponent implements OnInit, OnDestroy {
   showOpenOnly = false;
   loadError = false;
 
-  constructor(private exchangeManager: ExchangeManagerService) {}
+  constructor(
+    private exchangeManager: ExchangeManagerService,
+    private toastService: ToastService         
+  ) {}
 
   ngOnInit(): void {
     // Pretplati se na promene dostupnih berzi (uključujući promene između mock i live podataka)
@@ -47,4 +51,22 @@ export class ExchangeListComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  onToggleActive(exchange: any): void {
+    const previousStatus = exchange.isActive;
+    exchange.isActive = !exchange.isActive;
+
+    // Koristimo exchangeManager (jer si ga tako nazvao u konstruktoru), a ne exchangeService
+    this.exchangeManager.toggleExchangeActive(exchange.id).subscribe({
+      next: () => {
+        this.toastService.success(`Status za ${exchange.exchangeName} uspešno promenjen.`);
+      },
+      error: (err: any) => {
+        console.error('Greška:', err);
+        exchange.isActive = previousStatus;
+        this.toastService.error('Greška pri komunikaciji sa serverom.');
+      }
+    });
+  }
+
 }
