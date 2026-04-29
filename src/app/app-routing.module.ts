@@ -29,6 +29,7 @@ import { ExchangeListComponent } from './features/employee/components/exchange-l
 import { LoanRequestManagementComponent } from './features/employee/components/loan-request-management/loan-request-management.component';
 import { LoanManagementComponent } from './features/employee/components/loan-management/loan-management.component';
 import { LoanRequestComponent } from './features/client/components/loan-request/loan-request.component';
+import { TaxTrackingComponent } from './features/employee/components/tax-tracking/tax-tracking.component';
 import { CreateOrderComponent } from './features/orders/components/create-order/create-order.component';
 import { OrdersOverviewComponent } from './features/employee/components/orders-overview/orders-overview.component';
 import { PortfolioComponent } from './features/client/components/portfolio/portfolio.component';
@@ -176,6 +177,13 @@ const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { permission: 'CLIENT_MANAGE' },
   },
+  {
+    path: 'tax-tracking',
+    component: TaxTrackingComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { permission: 'SECURITIES_TRADE_UNLIMITED' }, 
+  },
+
   {
     path: 'securities',
     component: SecuritiesListComponent,
