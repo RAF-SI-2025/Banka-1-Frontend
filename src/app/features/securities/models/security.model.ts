@@ -20,6 +20,8 @@ export interface Security {
   initialMarginCost: number;
   type: SecurityType;
   lastUpdated: string;
+  ask?: number;
+  bid?: number;
 }
 
 /**

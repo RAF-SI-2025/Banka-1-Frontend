@@ -1,0 +1,68 @@
+<app-navbar></app-navbar>
+
+<div class="tax-page-wrapper">
+  <div class="tax-container">
+    
+    <div class="tax-header">
+      <div>
+        <h1>POREZ TRACKING</h1>
+        <p>Pregled dugovanja i manuelno pokretanje naplate poreza na kapitalnu dobit</p>
+      </div>
+      
+      <button (click)="startTaxCalculation()" [disabled]="isProcessing" class="btn-primary">
+        <span class="material-icons">account_balance</span>
+        <span>{{ isProcessing ? 'Obračun u toku...' : 'Pokreni obračun' }}</span>
+      </button>
+    </div>
+
+    <div class="tax-filters">
+      <div class="filter-group flex-1">
+        <label>Pretraga korisnika</label>
+        <div class="input-wrapper">
+          <span class="material-icons search-icon">search</span>
+          <input type="text" [(ngModel)]="searchTerm" (input)="filterData()" placeholder="Unesite ime ili prezime...">
+        </div>
+      </div>
+
+      <div class="filter-group w-64">
+        <label>Tip korisnika</label>
+        <select [(ngModel)]="userTypeFilter" (change)="filterData()">
+          <option value="ALL">Svi korisnici</option>
+          <option value="CLIENT">Klijenti</option>
+          <option value="ACTUARY">Aktuari</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="tax-table">
+        <thead>
+          <tr>
+            <th>Ime i Prezime</th>
+            <th>Tip Korisnika</th>
+            <th>Osnovica (Poslednji obračun)</th>
+            <th>Dugovanje (15% Porez)</th>
+            <th>Valuta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="filteredUsers.length === 0">
+            <td colspan="5" class="empty-state">Nema pronađenih dugovanja za zadati filter.</td>
+          </tr>
+          <tr *ngFor="let user of filteredUsers">
+            <td class="font-medium">{{ user.firstName }} {{ user.lastName }}</td>
+            <td>
+              <span class="badge" [ngClass]="user.type === 'CLIENT' ? 'badge-client' : 'badge-actuary'">
+                {{ user.type === 'CLIENT' ? 'Klijent' : 'Aktuar' }}
+              </span>
+            </td>
+            <td class="text-gray">{{ user.baseAmount | number:'1.2-2' }} RSD</td>
+            <td class="text-danger font-semibold">{{ user.taxDebt | number:'1.2-2' }} RSD</td>
+            <td class="text-gray">RSD (Konvertovano)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

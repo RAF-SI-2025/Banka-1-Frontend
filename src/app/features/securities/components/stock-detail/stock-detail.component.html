@@ -141,9 +141,9 @@
             <table class="options-table">
               <thead>
                 <tr>
-                  <th colspan="6" class="calls-header">CALLS</th>
+                  <th colspan="7" class="calls-header">CALLS</th>
                   <th class="strike-header">STRIKE</th>
-                  <th colspan="6" class="puts-header">PUTS</th>
+                  <th colspan="7" class="puts-header">PUTS</th>
                 </tr>
                 <tr class="subheader">
                   <th>LAST</th>
@@ -153,27 +153,32 @@
                   <th>VOL</th>
                   <th>OI</th>
                   <th></th>
+                  <th></th>
                   <th>LAST</th>
                   <th>THETA</th>
                   <th>BID</th>
                   <th>ASK</th>
                   <th>VOL</th>
                   <th>OI</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let strike of displayedStrikes; trackBy: trackByStrike">
                   <!-- Call data -->
                   <ng-container *ngIf="getCallByStrike(strike) as call">
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ formatOptionPrice(call.last) }}</td>
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ call.theta.toFixed(2) }}</td>
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ formatOptionPrice(call.bid) }}</td>
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ formatOptionPrice(call.ask) }}</td>
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ call.volume }}</td>
-                    <td [class.in-the-money]="call.inTheMoney" [class.out-of-money]="!call.inTheMoney">{{ call.openInterest }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.last) }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.theta.toFixed(2) }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.bid) }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.ask) }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.volume }}</td>
+                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.openInterest }}</td>
+                    <td>
+                      <button type="button" class="z-btn-primary z-btn-sm" (click)="onBuyOption(call, 'CALL')">Kupi</button>
+                    </td>
                   </ng-container>
                   <ng-container *ngIf="!getCallByStrike(strike)">
-                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td>
                   </ng-container>
 
                   <!-- Strike price -->
@@ -181,15 +186,18 @@
 
                   <!-- Put data -->
                   <ng-container *ngIf="getPutByStrike(strike) as put">
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ formatOptionPrice(put.last) }}</td>
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ put.theta.toFixed(2) }}</td>
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ formatOptionPrice(put.bid) }}</td>
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ formatOptionPrice(put.ask) }}</td>
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ put.volume }}</td>
-                    <td [class.in-the-money]="put.inTheMoney" [class.out-of-money]="!put.inTheMoney">{{ put.openInterest }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.last) }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.theta.toFixed(2) }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.bid) }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.ask) }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.volume }}</td>
+                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.openInterest }}</td>
+                    <td>
+                      <button type="button" class="z-btn-primary z-btn-sm" (click)="onBuyOption(put, 'PUT')">Kupi</button>
+                    </td>
                   </ng-container>
                   <ng-container *ngIf="!getPutByStrike(strike)">
-                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td>
                   </ng-container>
                 </tr>
               </tbody>

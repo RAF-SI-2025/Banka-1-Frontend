@@ -1,0 +1,217 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content" *ngIf="!isLoading && security">
+    <h1 class="text-2xl font-bold mb-6">
+      {{ direction === 'BUY' ? 'Kupovina hartije' : 'Prodaja hartije' }}
+    </h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="z-card p-6 lg:col-span-2">
+        <h2 class="text-lg font-semibold mb-4">
+          {{ security.ticker }} - {{ security.name }}
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <div class="text-sm text-muted-foreground">Cena</div>
+            <div class="font-semibold">{{ formatMoney(security.price) }} {{ security.currency }}</div>
+          </div>
+
+          <div>
+            <div class="text-sm text-muted-foreground">Berza</div>
+            <div class="font-semibold">{{ security.exchange }}</div>
+          </div>
+
+          <div>
+            <div class="text-sm text-muted-foreground">Ask</div>
+            <div class="font-semibold">{{ formatMoney(security.ask) }}</div>
+          </div>
+
+          <div>
+            <div class="text-sm text-muted-foreground">Bid</div>
+            <div class="font-semibold">{{ formatMoney(security.bid) }}</div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="z-label">Količina</label>
+            <input class="z-input" type="number" min="1" [(ngModel)]="quantity" />
+          </div>
+
+          <div>
+            <label class="z-label">Limit vrednost</label>
+            <input class="z-input" type="number" min="0" step="0.01" [(ngModel)]="limitValue"
+              placeholder="Prazno = nije limit order" />
+          </div>
+
+          <div>
+            <label class="z-label">Stop vrednost</label>
+            <input class="z-input" type="number" min="0" step="0.01" [(ngModel)]="stopValue"
+              placeholder="Prazno = nije stop order" />
+          </div>
+
+          <p class="text-sm text-muted-foreground">
+            Ako ostavite limit/stop polja prazna, koristi se market order po trenutnoj tržišnoj ceni.
+          </p>
+
+          <div>
+            <label class="z-label">Račun</label>
+            <select class="z-input" [(ngModel)]="selectedAccountId">
+              <option [ngValue]="null" disabled>Izaberite račun</option>
+              <option *ngFor="let account of accounts" [ngValue]="account.accountNumber">
+                {{ account.name || account.accountNumber }} -
+                {{ account.currency }} -
+                {{ formatMoney(account.availableBalance || account.balance) }}
+              </option>
+            </select>
+            <div *ngIf="accounts.length === 0 && !isLoading" class="mt-2 p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 text-sm">
+              Nema dostupnih računa za ovu operaciju.
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" [(ngModel)]="allOrNone" />
+            <span>All or None</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" [(ngModel)]="margin" />
+            <span>Margin order</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="z-card p-6">
+        <h2 class="text-lg font-semibold mb-4">Live prikaz ordera</h2>
+
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span>Order Type</span>
+            <strong>{{ orderType }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>Price per unit</span>
+            <strong>{{ formatMoney(pricePerUnit) }} {{ security.currency }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>Contract Size</span>
+            <strong>{{ contractSize }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>Approximate Price</span>
+            <strong>{{ formatMoney(approximatePrice) }} {{ security.currency }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>Estimated Fee</span>
+            <strong>{{ formatMoney(estimatedFee) }} {{ security.currency }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>AON</span>
+            <strong>{{ allOrNone ? 'Da' : 'Ne' }}</strong>
+          </div>
+
+          <div class="flex justify-between">
+            <span>Margin</span>
+            <strong>{{ margin ? 'Da' : 'Ne' }}</strong>
+          </div>
+        </div>
+
+        <button class="z-btn-primary w-full mt-6" [disabled]="!canSubmit || isSubmitting" (click)="createDraftOrder()">
+          <span *ngIf="!isSubmitting">Nastavi na potvrdu</span>
+          <span *ngIf="isSubmitting" class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            Slanje...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" *ngIf="showConfirmation && draftOrder">
+  <div class="bg-card rounded-xl shadow-xl p-6 w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-4">Potvrda ordera</h2>
+
+    <div *ngIf="draftOrder.exchangeClosed || draftOrder.afterHours"
+      class="p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 mb-4">
+      Berza je trenutno zatvorena ili je order kreiran u after-hours periodu.
+      Ako nastavite, izvršavanje ordera može trajati duže.
+    </div>
+
+    <div class="space-y-3">
+      <div class="flex justify-between">
+        <span>Hartija</span>
+        <strong>{{ security?.ticker }} - {{ security?.name }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Smer</span>
+        <strong>{{ draftOrder.direction }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Tip ordera</span>
+        <strong>{{ draftOrder.orderType }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Smer</span>
+        <strong>{{ draftOrder.direction }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Količina</span>
+        <strong>{{ draftOrder.quantity }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Price per unit</span>
+        <strong>{{ formatMoney(draftOrder.pricePerUnit) }} {{ security?.currency }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Approximate Price</span>
+        <strong>{{ formatMoney(draftOrder.approximatePrice) }} {{ security?.currency }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Fee</span>
+        <strong>{{ formatMoney(draftOrder.fee) }} {{ security?.currency }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>AON</span>
+        <strong>{{ draftOrder.allOrNone ? 'Da' : 'Ne' }}</strong>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Margin</span>
+        <strong>{{ draftOrder.margin ? 'Da' : 'Ne' }}</strong>
+      </div>
+
+      <div class="flex justify-between" *ngIf="selectedAccount">
+        <span>Račun</span>
+        <strong>{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</strong>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <button class="z-btn-outline" [disabled]="isSubmitting" (click)="cancelDraft()">
+        Odustani
+      </button>
+
+      <button class="z-btn-primary" [disabled]="isSubmitting" (click)="confirmOrder()">
+        Potvrdi order
+      </button>
+    </div>
+  </div>
+</div>
