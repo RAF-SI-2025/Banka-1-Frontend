@@ -31,13 +31,14 @@ interface TradingOrder {
 })
 export class OrdersOverviewComponent implements OnInit {
   orders: TradingOrder[] = [];
-  selectedFilter: OrderFilter = 'ALL';
+  selectedFilter: OrderFilter = 'PENDING';
   readonly filterOptions: { value: OrderFilter; label: string }[] = [
     { value: 'ALL', label: 'All' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'APPROVED', label: 'Approved' },
     { value: 'DECLINED', label: 'Declined' },
     { value: 'DONE', label: 'Done' },
+    { value: 'CANCELLED', label: 'Cancelled' },
   ];
   isLoading = false;
   actionOrderId: number | null = null;
@@ -125,6 +126,7 @@ export class OrdersOverviewComponent implements OnInit {
       APPROVED: 'Approved',
       DECLINED: 'Declined',
       DONE: 'Done',
+      CANCELLED: 'Cancelled',
     };
     return map[status];
   }

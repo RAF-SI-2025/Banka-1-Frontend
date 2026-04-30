@@ -1,7 +1,4 @@
 .orders-page {
-  padding: 42px 30px;
-  min-height: 100vh;
-  background: #e9ecef;
   color: #111;
 }
 
@@ -180,6 +177,11 @@ tbody tr:last-child td {
 .status.done {
   background: #dff8e8;
   color: #168244;
+}
+
+.status.cancelled {
+  background: #f3f4f6;
+  color: #4b5563;
 }
 
 .direction.buy {

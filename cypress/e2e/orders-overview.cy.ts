@@ -48,7 +48,7 @@ describe('Orders Overview Component', () => {
 
   describe('kada je korisnik Supervisor', () => {
     beforeEach(() => {
-      cy.intercept('GET', /\/orders(\?.*)?$/, {
+      cy.intercept('GET', /\/order\/orders(\?.*)?$/, {
         statusCode: 200,
         body: {
           content: [],
@@ -80,6 +80,7 @@ describe('Orders Overview Component', () => {
       cy.contains('button', 'Approved').should('be.visible');
       cy.contains('button', 'Declined').should('be.visible');
       cy.contains('button', 'Done').should('be.visible');
+      cy.contains('button', 'Cancelled').should('be.visible');
     });
 
     it('treba da označi izabrani filter kao aktivan', () => {

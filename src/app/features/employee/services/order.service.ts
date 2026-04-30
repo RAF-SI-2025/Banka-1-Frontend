@@ -3,7 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export type OrderStatus = 'PENDING' | 'APPROVED' | 'DECLINED' | 'DONE';
+export type OrderStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'DECLINED'
+  | 'DONE'
+  | 'CANCELLED';
 export type OrderFilter = 'ALL' | OrderStatus;
 export type OrderDirection = 'BUY' | 'SELL';
 
@@ -55,12 +60,12 @@ export function resolveOrderExpiryDate(
   providedIn: 'root',
 })
 export class OrderService {
-  private readonly apiUrl = `${environment.apiUrl}/orders`;
+  private readonly apiUrl = `${environment.apiUrl}/order/orders`;
 
   constructor(private http: HttpClient) {}
 
   getOrders(
-    status: OrderFilter = 'ALL',
+    status: OrderFilter = 'PENDING',
     page = 0,
     size = 10,
   ): Observable<OrderPageResponse> {
