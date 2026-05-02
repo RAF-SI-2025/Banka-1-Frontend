@@ -72,7 +72,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading portfolio:', error);
           this.errorMessage =
-            'Gre�ka pri ucitavanju portfolija. Poku�ajte ponovo.';
+            'Gre�ka pri ucitavanju portfolija. Pokušajte ponovo.';
           this.isLoading = false;
         },
       });
@@ -92,7 +92,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     const holdingId = holding.id;
 
     if (typeof holdingId !== 'number') {
-      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija jo� nije dostupna.');
+      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija još nije dostupna.');
       return;
     }
 
@@ -102,7 +102,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     }
 
     if (value > holding.quantity) {
-      this.toastService.error('Javna kolicina ne mo�e biti veca od ukupne kolicine.');
+      this.toastService.error('Javna kolicina ne može biti veca od ukupne kolicine.');
       return;
     }
 
@@ -113,7 +113,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toastService.success('Javna kolicina je uspe�no a�urirana.');
+          this.toastService.success('Javna kolicina je uspešno ažurirana.');
           holding.publicQuantity = value;
           this.draftPublicQuantities[key] = value;
           this.savingPublicQuantity[key] = false;
@@ -132,7 +132,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     const holdingId = holding.id;
 
     if (typeof holdingId !== 'number') {
-      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija jo� nije dostupna.');
+      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija još nije dostupna.');
       return;
     }
 
@@ -143,7 +143,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toastService.success('Opcija je uspe�no iskori�cena.');
+          this.toastService.success('Opcija je uspešno iskorišćena.');
           this.loadPortfolio();
         },
         error: (error) => {
