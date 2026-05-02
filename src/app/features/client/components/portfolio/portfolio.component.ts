@@ -72,7 +72,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading portfolio:', error);
           this.errorMessage =
-            'Greška pri ucitavanju portfolija. Pokušajte ponovo.';
+            'Greï¿½ka pri ucitavanju portfolija. Pokuï¿½ajte ponovo.';
           this.isLoading = false;
         },
       });
@@ -92,7 +92,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     const holdingId = holding.id;
 
     if (typeof holdingId !== 'number') {
-      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija još nije dostupna.');
+      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija joï¿½ nije dostupna.');
       return;
     }
 
@@ -102,7 +102,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     }
 
     if (value > holding.quantity) {
-      this.toastService.error('Javna kolicina ne može biti veca od ukupne kolicine.');
+      this.toastService.error('Javna kolicina ne moï¿½e biti veca od ukupne kolicine.');
       return;
     }
 
@@ -113,7 +113,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toastService.success('Javna kolicina je uspešno ažurirana.');
+          this.toastService.success('Javna kolicina je uspeï¿½no aï¿½urirana.');
           holding.publicQuantity = value;
           this.draftPublicQuantities[key] = value;
           this.savingPublicQuantity[key] = false;
@@ -132,7 +132,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     const holdingId = holding.id;
 
     if (typeof holdingId !== 'number') {
-      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija još nije dostupna.');
+      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija joï¿½ nije dostupna.');
       return;
     }
 
@@ -143,7 +143,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toastService.success('Opcija je uspešno iskorišcena.');
+          this.toastService.success('Opcija je uspeï¿½no iskoriï¿½cena.');
           this.loadPortfolio();
         },
         error: (error) => {
@@ -210,7 +210,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     return 'text-muted-foreground';
   }
 
-  trackByHolding(index: number, holding: PortfolioHolding): string {
+  trackByHolding = (index: number, holding: PortfolioHolding): string => {
     return this.getHoldingKey(holding, index);
   }
 }
