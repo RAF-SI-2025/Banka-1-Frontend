@@ -167,8 +167,21 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       });
   }
 
-  onSell(): void {
-    // TODO: Povezati F1 Sell modal / Create order flow kada ta implementacija bude dostupna.
+  /**
+   * Otvara Create Order formu u SELL modu za odabranu poziciju iz portfolija.
+   *
+   * GHI #199: ranije je dugme "Prodaj" bilo no-op (TODO komentar) jer
+   * (a) odgovor servera nije sadrzao listingId, pa nije bilo cime se navigirati,
+   * (b) sam handler nije bio povezan sa router-om. Posle backend popravke koja
+   * dodaje listingId u PortfolioResponse, ovde samo nesmetano gradimo url
+   * /orders/create/SELL/{listingId} koji create-order komponenta vec razume.
+   */
+  onSell(holding: PortfolioHolding): void {
+    if (typeof holding?.listingId !== 'number') {
+      this.toastService.error('Hartija nema listingId, prodaja nije dostupna.');
+      return;
+    }
+    this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
   isStock(holding: PortfolioHolding): boolean {

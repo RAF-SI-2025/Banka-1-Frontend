@@ -2,6 +2,12 @@ export type PortfolioListingType = 'STOCK' | 'FUTURES' | 'FOREX' | 'OPTION';
 
 export interface PortfolioHolding {
   id?: number;
+  /**
+   * ID of the underlying listing/security. Required to navigate from "Moj Portfolio"
+   * into the Create Order page in SELL mode (issue #199); previously the response did
+   * not include it, which is why the Sell button did nothing.
+   */
+  listingId: number;
   listingType: PortfolioListingType;
   ticker: string;
   quantity: number;
