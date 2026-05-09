@@ -1,0 +1,197 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <!-- Header sa brojem nepročitanih -->
+    <div class="mb-8 flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Aktivne ponude za pregovore</h1>
+    <div *ngIf="unreadCount > 0" class="inline-block">
+      <span class="inline-flex items-center gap-2 rounded-lg bg-info/10 px-4 py-2 text-sm font-semibold text-info">
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6m0 4v.01"></path>
+        </svg>
+        <span>{{ unreadCount }} nepročitanih ponuda</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Greška -->
+  <div *ngIf="error" class="mb-6 rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+    {{ error }}
+  </div>
+
+  <!-- Učitavanje -->
+  <div *ngIf="loading" class="flex items-center justify-center py-12">
+    <div class="text-muted-foreground">Učitavanje ponuda...</div>
+  </div>
+
+  <!-- Prazna lista -->
+  <div *ngIf="!loading && offers.length === 0" class="rounded-lg border border-border bg-card p-8 text-center">
+    <svg class="mx-auto mb-4 h-12 w-12 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+    <p class="text-muted-foreground">Nema aktivnih ponuda</p>
+  </div>
+
+  <!-- Tabela -->
+  <div *ngIf="!loading && offers.length > 0" class="overflow-hidden rounded-lg border border-border">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border bg-muted/50">
+            <th class="px-6 py-3 text-left text-sm font-semibold">Akcija</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Količina</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Cena/akcija</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Premija</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Settlement Date</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Pregovara sa</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Poslednja izmena</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Akcija</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <tr *ngFor="let offer of offers" class="hover:bg-muted/30 transition-colors">
+            <!-- Akcija (Ticker) -->
+            <td class="px-6 py-4">
+              <span class="font-semibold">{{ offer.ticker }}</span>
+            </td>
+
+            <!-- Količina -->
+            <td class="px-6 py-4 text-right">{{ formatAmount(offer.quantity) }}</td>
+
+            <!-- Cena po akciji sa sistemom boja -->
+            <td class="px-6 py-4 text-right">
+              <span [ngClass]="getPriceColorClass(offer)" class="inline-block rounded px-3 py-1 text-sm font-semibold">
+                {{ formatAmount(offer.pricePerShare) }}
+                <span class="ml-1 text-xs font-normal opacity-75">
+                  ({{ getPriceDeviation(offer).percentage.toFixed(1) }}%)
+                </span>
+              </span>
+            </td>
+
+            <!-- Premija -->
+            <td class="px-6 py-4 text-right">{{ formatAmount(offer.premium) }}</td>
+
+            <!-- Settlement Date -->
+            <td class="px-6 py-4 text-sm text-muted-foreground">
+              {{ offer.settlementDate ? (offer.settlementDate | date: 'dd/MM/yyyy') : '-' }}
+            </td>
+
+            <!-- Pregovara sa (Ime i banka) -->
+            <td class="px-6 py-4 text-sm">
+              <div class="font-medium">{{ getCounterpartyFullName(offer) }}</div>
+              <div class="text-xs text-muted-foreground">{{ getCounterpartyBankName(offer) }}</div>
+            </td>
+
+            <!-- Poslednja izmena (Timestamp) -->
+            <td class="px-6 py-4 text-sm text-muted-foreground">
+              {{ formatDateTime(offer.lastModified) }}
+            </td>
+
+            <!-- Akcija -->
+            <td class="px-6 py-4">
+              <button type="button" class="z-btn-outline z-btn-sm" (click)="openOfferDetail(offer)">
+                Detaljnije
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalPages > 1" class="mt-6 flex items-center justify-between">
+    <div class="text-sm text-muted-foreground">
+      Stranica {{ page + 1 }} od {{ totalPages }}
+    </div>
+    <div class="flex gap-2">
+      <button type="button" class="z-btn-outline z-btn-sm" (click)="previousPage()" [disabled]="page === 0">
+        Prethodna
+      </button>
+      <button type="button" class="z-btn-outline z-btn-sm" (click)="nextPage()"
+        [disabled]="page === totalPages - 1">
+        Sledeća
+      </button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div *ngIf="showModal && selectedOffer" class="fixed inset-0 z-50 bg-black/50" (click)="closeModal()"></div>
+
+<!-- Modal content -->
+<div *ngIf="showModal && selectedOffer"
+  class="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-lg"
+  (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="mb-6 flex items-start justify-between">
+    <div>
+      <h2 class="text-2xl font-bold">{{ selectedOffer.ticker }}</h2>
+      <p class="mt-1 text-sm text-muted-foreground">Ponuda od: {{ getCounterpartyFullName(selectedOffer) }} ({{
+        getCounterpartyBankName(selectedOffer) }})</p>
+    </div>
+    <button type="button" class="text-muted-foreground hover:text-foreground" (click)="closeModal()">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Status badge -->
+  <div class="mb-6">
+    <span [ngClass]="getStatusBadgeClass(selectedOffer)" class="inline-block rounded-full px-3 py-1 text-sm font-semibold">
+      {{ getStatusLabel(selectedOffer) }}
+    </span>
+  </div>
+
+  <!-- Modal content -->
+  <div class="space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="rounded-lg border border-border bg-muted/20 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Količina</p>
+        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.quantity) }}</p>
+      </div>
+      <div class="rounded-lg border border-border bg-muted/20 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cena po akciji</p>
+        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.pricePerShare) }}</p>
+      </div>
+      <div class="rounded-lg border border-border bg-muted/20 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Premija</p>
+        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.premium) }}</p>
+      </div>
+      <div class="rounded-lg border border-border bg-muted/20 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Settlement Date</p>
+        <p class="mt-1 text-xl font-bold">{{ formatDate(selectedOffer.settlementDate) }}</p>
+      </div>
+    </div>
+
+    <!-- Total value -->
+    <div class="rounded-lg border border-border bg-primary/5 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ukupna vrednost</p>
+      <p class="mt-1 text-2xl font-bold text-primary">
+        {{ formatAmount(selectedOffer.quantity * selectedOffer.pricePerShare + selectedOffer.premium) }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-8 flex gap-3">
+    <button type="button" class="z-btn z-btn-primary flex-1" (click)="acceptOfferModal()">
+      ✓ Prihvati
+    </button>
+    <button type="button" class="z-btn z-btn-outline flex-1" (click)="rejectOfferModal()">
+      ✗ Odustani
+    </button>
+    <button type="button" class="z-btn z-btn-outline flex-1">
+      Kontraponuda
+    </button>
+  </div>
+</div>
