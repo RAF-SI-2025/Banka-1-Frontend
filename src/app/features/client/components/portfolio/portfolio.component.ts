@@ -167,8 +167,12 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       });
   }
 
-  onSell(): void {
-    // TODO: Povezati F1 Sell modal / Create order flow kada ta implementacija bude dostupna.
+  onSell(holding: PortfolioHolding): void {
+    if (holding == null || holding.listingId == null) {
+      this.toastService.error('Nedostaje listingId za izabranu poziciju.');
+      return;
+    }
+    this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
   isStock(holding: PortfolioHolding): boolean {

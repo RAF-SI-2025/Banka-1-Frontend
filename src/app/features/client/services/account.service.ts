@@ -57,8 +57,17 @@ export class AccountService {
 
     const currency = item.currency || item.valuta || 'RSD';
 
+    // Use the server-provided primary key when present; only fall back to the legacy
+    // hashAccountNumber bridge if the response is missing `id` for some reason.
+    // Hash-derived ids do not map to anything on the backend and broke order BUY/SELL
+    // accountId resolution in /internal/accounts/id/{accountId}/details (GHI #199).
+    const id =
+      typeof item.id === 'number'
+        ? item.id
+        : this.hashAccountNumber(item.brojRacuna || item.accountNumber || '');
+
     return {
-      id: this.hashAccountNumber(item.brojRacuna),
+      id,
       name: item.nazivRacuna || '',
       accountNumber: (item.brojRacuna || item.accountNumber || '').trim(),
       balance: item.stanjeRacuna || 0,
