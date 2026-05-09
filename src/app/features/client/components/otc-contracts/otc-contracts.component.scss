@@ -1,0 +1,169 @@
+:host {
+  display: block;
+}
+
+.page-layout {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &.status-active {
+    background-color: rgb(220, 252, 231);
+    color: rgb(5, 150, 105);
+    border: 1px solid rgb(167, 243, 208);
+  }
+
+  &.status-expired {
+    background-color: rgb(254, 226, 226);
+    color: rgb(185, 28, 28);
+    border: 1px solid rgb(252, 165, 165);
+  }
+
+  &.status-executed {
+    background-color: rgb(219, 234, 254);
+    color: rgb(12, 74, 110);
+    border: 1px solid rgb(147, 197, 253);
+  }
+
+  &.status-cancelled {
+    background-color: rgb(243, 232, 255);
+    color: rgb(147, 51, 234);
+    border: 1px solid rgb(218, 165, 255);
+  }
+
+  &.status-unknown {
+    background-color: rgb(241, 245, 249);
+    color: rgb(71, 85, 105);
+    border: 1px solid rgb(203, 213, 225);
+  }
+}
+
+/* Table Styles */
+table {
+  border-collapse: collapse;
+  width: 100%;
+
+  thead {
+    background-color: var(--color-muted) / 0.3;
+  }
+
+  th {
+    text-align: left;
+    padding: 1rem 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 1rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--color-secondary) / 0.5;
+    }
+  }
+}
+
+/* Filter Buttons */
+button.z-btn-secondary {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-foreground);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-muted);
+    border-color: var(--color-muted-foreground);
+  }
+
+  &.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .page-content {
+    padding: 1.5rem 1rem;
+  }
+
+  table {
+    font-size: 0.8rem;
+
+    th, td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .page-content {
+    padding: 1rem;
+  }
+
+  .overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    font-size: 0.75rem;
+
+    th, td {
+      padding: 0.5rem 0.25rem;
+    }
+
+    th {
+      font-size: 0.65rem;
+    }
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  button.z-btn-primary.z-btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
