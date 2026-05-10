@@ -1,0 +1,55 @@
+<app-navbar />
+
+<div class="page-layout">
+  <div class="page-content">
+
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">
+          Performanse aktuara
+        </h1>
+
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled ostvarenog profita svih aktuara
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card overflow-hidden">
+
+      <table class="z-table">
+        <thead>
+          <tr>
+            <th>Ime</th>
+            <th>Prezime</th>
+            <th>Pozicija</th>
+            <th class="text-right">Ostvareni profit (RSD)</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let actuary of performances">
+
+            <td class="font-semibold">
+              {{ actuary.ime }}
+            </td>
+
+            <td>
+              {{ actuary.prezime }}
+            </td>
+
+            <td>
+              {{ actuary.pozicija }}
+            </td>
+
+            <td class="text-right font-semibold text-green-600">
+              {{ formatCurrency(actuary.profit) }}
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>

@@ -34,6 +34,8 @@ import { CreateOrderComponent } from './features/orders/components/create-order/
 import { OrdersOverviewComponent } from './features/employee/components/orders-overview/orders-overview.component';
 import { PortfolioComponent } from './features/client/components/portfolio/portfolio.component';
 import { portfolioAccessGuard } from './core/guards/portfolio-access.guard';
+import { ActuaryPerformancesComponent } from './features/employee/components/actuary-performances/actuary-performances.component';
+import { FundPositionsComponent } from './features/employee/components/fund-positions/fund-positions.component';
 
 const routes: Routes = [
   {
@@ -216,6 +218,18 @@ const routes: Routes = [
     path: 'orders/create/:direction/:listingId',
     component: CreateOrderComponent,
     canActivate: [authGuard]
+  },
+  {
+  path: 'actuary-performances',
+  component: ActuaryPerformancesComponent,
+  canActivate: [authGuard, roleGuard],
+  data: { permission: 'FUND_AGENT_MANAGE' },
+  },
+  {
+  path: 'fund-positions',
+  component: FundPositionsComponent,
+  canActivate: [authGuard, roleGuard],
+  data: { permission: 'FUND_AGENT_MANAGE' },
   },
   {
     path: '**',

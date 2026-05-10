@@ -1,0 +1,91 @@
+<app-navbar />
+
+<div class="page-layout">
+  <div class="page-content">
+
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">
+          Pozicije fondova
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled fondova u kojima banka ima udele
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card overflow-hidden">
+      <table class="z-table">
+        <thead>
+          <tr>
+            <th>Naziv fonda</th>
+            <th>Menadžer</th>
+            <th class="text-right">Udeo banke (%)</th>
+            <th class="text-right">Udeo banke (RSD)</th>
+            <th class="text-right">Profit banke (RSD)</th>
+            <th>Bankin račun</th>
+            <th class="text-right">Akcije</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let fund of fundPositions">
+            <td>
+              <button
+                type="button"
+                class="font-semibold text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                (click)="openFundDetails(fund)">
+                {{ fund.nazivFonda }}
+              </button>
+            </td>
+
+            <td>
+              {{ fund.managerIme }} {{ fund.managerPrezime }}
+            </td>
+
+            <td class="text-right">
+              {{ formatPercent(fund.udeoProcenat) }}%
+            </td>
+
+            <td class="text-right font-medium">
+              {{ formatCurrency(fund.udeoRsd) }}
+            </td>
+
+            <td class="text-right font-semibold text-green-600">
+              {{ formatCurrency(fund.profitRsd) }}
+            </td>
+
+            <td>
+              <select
+                [(ngModel)]="selectedAccountByFundId[fund.id]"
+                class="px-2 py-1 border border-border rounded-md text-sm text-foreground bg-card cursor-pointer outline-none">
+                <option *ngFor="let account of bankAccounts" [ngValue]="account">
+                  {{ account }}
+                </option>
+              </select>
+            </td>
+
+            <td>
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="deposit(fund)">
+                  Uplata
+                </button>
+
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="withdraw(fund)">
+                  Povlačenje
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
