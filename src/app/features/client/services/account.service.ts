@@ -57,8 +57,18 @@ export class AccountService {
 
     const currency = item.currency || item.valuta || 'RSD';
 
+    // Prefer the persistent primary key returned by the API. The legacy
+    // hash-of-account-number fallback exists only for older backend builds
+    // that did not yet expose `id`; values it produces do not map to either
+    // the database PK or the account number, so any subsequent lookup using
+    // the hash returns 404 and breaks order confirmation/execution flows.
+    const persistentId =
+      typeof item.id === 'number'
+        ? item.id
+        : this.hashAccountNumber(item.brojRacuna);
+
     return {
-      id: this.hashAccountNumber(item.brojRacuna),
+      id: persistentId,
       name: item.nazivRacuna || '',
       accountNumber: (item.brojRacuna || item.accountNumber || '').trim(),
       balance: item.stanjeRacuna || 0,

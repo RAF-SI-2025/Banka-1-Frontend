@@ -2,6 +2,12 @@ export type PortfolioListingType = 'STOCK' | 'FUTURES' | 'FOREX' | 'OPTION';
 
 export interface PortfolioHolding {
   id?: number;
+  /**
+   * Identifier of the underlying security listing. Required by the SELL flow
+   * to navigate to a direction-specific Create Order route; without it the
+   * portfolio row carries no usable target for navigation.
+   */
+  listingId?: number;
   listingType: PortfolioListingType;
   ticker: string;
   quantity: number;

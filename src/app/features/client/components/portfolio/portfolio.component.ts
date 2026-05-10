@@ -167,8 +167,15 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       });
   }
 
-  onSell(): void {
-    // TODO: Povezati F1 Sell modal / Create order flow kada ta implementacija bude dostupna.
+  onSell(holding: PortfolioHolding): void {
+    // The Create Order route is parameterised by direction and the underlying
+    // listing id; without listingId the SELL flow cannot identify which
+    // security the form should pre-select.
+    if (typeof holding.listingId !== 'number') {
+      this.toastService.error('Nije moguce otvoriti formu za prodaju: nedostaje identifikator hartije.');
+      return;
+    }
+    this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
   isStock(holding: PortfolioHolding): boolean {

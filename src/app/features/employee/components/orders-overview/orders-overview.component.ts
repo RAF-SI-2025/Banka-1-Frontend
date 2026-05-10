@@ -174,7 +174,12 @@ export class OrdersOverviewComponent implements OnInit {
       return;
     }
     const order = this.cancelTarget;
-    const raw = this.cancelQuantityInput.trim();
+    // ngModel on <input type="number"> coerces the bound value to a JS number as
+    // soon as the user types a digit. Calling .trim() on a number throws a
+    // TypeError, which previously left confirmCancel() silently dead whenever
+    // the textbox contained any digit (only an empty input — still a string —
+    // worked). Coerce defensively to string before parsing.
+    const raw = String(this.cancelQuantityInput ?? '').trim();
     let quantity: number | undefined;
 
     if (raw !== '') {
