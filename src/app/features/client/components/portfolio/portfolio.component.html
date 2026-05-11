@@ -5,172 +5,153 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-foreground">Moj portfolio</h1>
-        <p class="text-sm text-muted-foreground mt-1">
-          Pregled hartija, ukupnog profita i poreskih obaveza.
-        </p>
+        <p class="text-sm text-muted-foreground mt-1">Pregled hartija, ukupnog profita i investicionih fondova.</p>
       </div>
-      <button
-        type="button"
-        class="z-btn-secondary"
-        (click)="loadPortfolio()"
-        [disabled]="isLoading"
-      >
-        <span *ngIf="!isLoading">Osveži</span>
-        <span *ngIf="isLoading">Učitavanje...</span>
+      <button type="button" class="z-btn-secondary" (click)="loadPortfolio()" [disabled]="isLoading">
+        {{ isLoading ? 'Učitavanje...' : 'Osveži' }}
+      </button>
+    </div>
+
+    <div class="flex border-b border-border mb-6">
+      <button 
+        class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
+        [class]="activeTab === 'securities' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+        (click)="setActiveTab('securities')">
+        Hartije od vrednosti
+      </button>
+      <button 
+        class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
+        [class]="activeTab === 'funds' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+        (click)="setActiveTab('funds')">
+        Moji fondovi
       </button>
     </div>
 
     <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
-      <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-      <p class="mt-3 text-sm">Učitavanje portfolija...</p>
+      <p>Učitavanje...</p>
     </div>
 
-    <div *ngIf="errorMessage && !isLoading" class="z-card p-8 text-center text-red-500 text-sm">
-      <p>{{ errorMessage }}</p>
-      <button type="button" class="z-btn-primary mt-4" (click)="loadPortfolio()">Pokušaj ponovo</button>
+    <div *ngIf="!isLoading && activeTab === 'securities'">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          </div>
+       <div class="z-card p-5">
+          </div>
     </div>
 
-    <ng-container *ngIf="!isLoading && !errorMessage">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="z-card p-5">
-          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Profit</p>
-          <div class="flex items-end justify-between gap-4">
-            <div>
-              <p class="text-2xl font-bold" [ngClass]="getProfitClass(summary?.totalProfit ?? 0)">
-                {{ formatAmount(summary?.totalProfit ?? 0) }}
-              </p>
-              <p class="text-sm text-muted-foreground mt-1">Ukupan profit/gubitak za hartije koje trenutno držiš</p>
-            </div>
-            <span class="z-badge" [ngClass]="(summary?.totalProfit ?? 0) >= 0 ? 'z-badge-green' : 'z-badge-red'">
-              {{ (summary?.totalProfit ?? 0) >= 0 ? 'Dobitak' : 'Gubitak' }}
-            </span>
-          </div>
-        </div>
+<div *ngIf="!isLoading && activeTab === 'funds'" class="space-y-6">
+  <div class="z-card p-5">
+    
+    <div *ngIf="isClient" class="overflow-x-auto rounded-xl border border-border">
+      <table class="z-table min-w-[980px]">
+        <thead>
+          <tr>
+            <th>Naziv</th>
+            <th>Opis</th>
+            <th>Vrednost fonda</th>
+            <th>Udeo klijenta (%)</th>
+            <th>Udeo klijenta (Novac)</th>
+            <th>Ostvareni profit</th>
+            <th>Akcije</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fund of myFunds" class="cursor-pointer hover:bg-muted/50" (click)="navigateToFundDetails(fund.id)">
+            <td class="font-semibold">{{ fund.name }}</td>
+            <td class="text-muted-foreground">{{ fund.description }}</td>
+            <td>{{ formatAmount(fund.totalFundValue) }} RSD</td>
+            <td>{{ fund.ownershipPercentage }}%</td>
+            <td class="font-medium">{{ formatAmount(fund.ownershipValue) }} RSD</td>
+            <td class="font-semibold" [ngClass]="getProfitClass(calculateFundProfit(fund))">
+              {{ formatAmount(calculateFundProfit(fund)) }} RSD
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <button class="z-btn-primary z-btn-sm" (click)="openDepositModal(fund, $event)">Uplata</button>
+                <button class="z-btn-outline z-btn-sm" (click)="openWithdrawModal(fund, $event)">Povlačenje</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <div class="z-card p-5">
-          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-4">Porez</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="rounded-xl border border-green-200 bg-green-50 p-4">
-              <p class="text-xs font-semibold tracking-wider text-green-700 uppercase mb-1">Plaćeno ove godine</p>
-              <p class="text-xl font-bold text-green-700">{{ formatAmount(summary?.yearlyTaxPaid ?? 0) }} RSD</p>
-            </div>
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p class="text-xs font-semibold tracking-wider text-amber-700 uppercase mb-1">Neplaćeno ovog meseca</p>
-              <p class="text-xl font-bold text-amber-700">{{ formatAmount(summary?.monthlyTaxDue ?? 0) }} RSD</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="z-card p-5">
-        <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <div>
-            <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Hartije od vrednosti</p>
-            <p class="text-sm text-muted-foreground mt-1">Tip, ticker, količina, cena, profit i poslednja izmena.</p>
-          </div>
-          <span class="z-badge z-badge-blue">{{ holdings.length }} pozicija</span>
-        </div>
-
-        <div *ngIf="holdings.length === 0" class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm">
-          <p>Trenutno nemaš nijednu hartiju u portfoliju.</p>
-        </div>
-
-        <div *ngIf="holdings.length > 0" class="overflow-x-auto rounded-xl border border-border">
-          <table class="z-table portfolio-table min-w-[980px]">
+        <div *ngIf="!isClient" class="overflow-x-auto rounded-xl border border-border">
+          <table class="z-table min-w-[980px]">
             <thead>
               <tr>
-                <th>Tip</th>
-                <th>Ticker</th>
-                <th>Amount</th>
-                <th>Price</th>
-                <th>Profit</th>
-                <th>Last modified</th>
-                <th>Akcije</th>
+                <th>Naziv</th>
+                <th>Opis</th>
+                <th>Vrednost fonda (RSD)</th>
+                <th>Likvidnost fonda</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let holding of holdings; let i = index; trackBy: trackByHolding">
-                <td>
-                  <span class="z-badge" [ngClass]="{
-                    'z-badge-green': holding.listingType === 'STOCK',
-                    'z-badge-blue': holding.listingType === 'FUTURES',
-                    'z-badge-yellow': holding.listingType === 'FOREX',
-                    'z-badge-gray': holding.listingType === 'OPTION'
-                  }">
-                    {{ getTypeLabel(holding.listingType) }}
-                  </span>
-                </td>
-                <td class="font-semibold">{{ holding.ticker }}</td>
-                <td>{{ formatAmount(holding.quantity, 0) }}</td>
-                <td>{{ formatAmount(holding.currentPrice) }}</td>
-                <td class="font-semibold" [ngClass]="getProfitClass(holding.profit)">
-                  {{ formatAmount(holding.profit) }}
-                </td>
-                <td class="text-muted-foreground whitespace-nowrap">{{ formatDateTime(holding.lastModified) }}</td>
-                <td>
-                  <div class="flex flex-col gap-3 items-start min-w-[260px]">
-                    <button type="button" class="z-btn-outline z-btn-sm" (click)="onSell()">
-                      Prodaj
-                    </button>
-
-                    <div *ngIf="isStock(holding)" class="w-full rounded-lg border border-border bg-muted/20 p-3">
-                      <label class="block text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">
-                        Javni režim za OTC
-                      </label>
-                      <div class="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          [max]="holding.quantity"
-                          class="z-input"
-                          [ngModel]="draftPublicQuantities[getHoldingKey(holding, i)]"
-                          (ngModelChange)="draftPublicQuantities[getHoldingKey(holding, i)] = $event"
-                        />
-                        <button
-                          type="button"
-                          class="z-btn-primary z-btn-sm whitespace-nowrap"
-                          [disabled]="savingPublicQuantity[getHoldingKey(holding, i)] || !hasPortfolioActionId(holding)"
-                          (click)="savePublicQuantity(holding, i)"
-                        >
-                          Sačuvaj
-                        </button>
-                      </div>
-                      <p *ngIf="!hasPortfolioActionId(holding)" class="text-xs text-muted-foreground mt-2">
-                        Ažuriranje će raditi kada backend vrati portfolio ID u listi holdings.
-                      </p>
-                    </div>
-
-                    <button
-                      *ngIf="canExerciseOption(holding)"
-                      type="button"
-                      class="z-btn-secondary z-btn-sm"
-                      [disabled]="exercisingOption[getHoldingKey(holding, i)] || !hasPortfolioActionId(holding)"
-                      (click)="exerciseOption(holding, i)"
-                    >
-                      Iskoristi opciju
-                    </button>
-
-                    <span
-                      *ngIf="isOption(holding) && isActuary && !holding.exercisable"
-                      class="text-xs text-muted-foreground"
-                    >
-                      Opcija trenutno nije dostupna za iskorišćavanje.
-                    </span>
-                    <span
-                      *ngIf="isOption(holding) && isActuary && holding.exercisable && !hasPortfolioActionId(holding)"
-                      class="text-xs text-muted-foreground"
-                    >
-                      Iskorišćavanje će raditi kada backend vrati portfolio ID u holdings odgovoru.
-                    </span>
-                  </div>
-                </td>
+              <tr *ngFor="let fund of managedFunds" class="cursor-pointer hover:bg-muted/50" (click)="navigateToFundDetails(fund.id)">
+                <td class="font-semibold">{{ fund.name }}</td>
+                <td class="text-muted-foreground">{{ fund.description }}</td>
+                <td class="font-medium">{{ formatAmount(fund.totalValue) }} RSD</td>
+                <td class="font-medium text-blue-600">{{ formatAmount(fund.liquidity) }} RSD</td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div *ngIf="(isClient && myFunds.length === 0) || (!isClient && managedFunds.length === 0)" 
+            class="py-10 text-center text-muted-foreground">
+          <p>Trenutno nema dostupnih podataka o fondovima.</p>
+        </div>
+
       </div>
-    </ng-container>
+    </div>
+
+    <div *ngIf="showDepositModal || showWithdrawModal" class="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" (click)="closeModals()"></div>
+
+    <div *ngIf="showDepositModal" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md z-card p-6 shadow-xl">
+      <h3 class="text-lg font-bold mb-4 text-foreground">Uplata u fond: {{ selectedFund?.name }}</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-muted-foreground mb-1">Izaberite račun</label>
+          <select [(ngModel)]="selectedAccountId" class="z-input w-full">
+            <option *ngFor="let acc of clientAccounts" [value]="acc.id">{{ acc.accountNumber }} ({{ formatAmount(acc.balance) }} RSD)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-muted-foreground mb-1">Iznos uplate</label>
+          <input type="number" [(ngModel)]="transactionAmount" class="z-input w-full" placeholder="0.00">
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button class="z-btn-ghost" (click)="closeModals()">Odustani</button>
+        <button class="z-btn-primary" [disabled]="!selectedAccountId || transactionAmount <= 0" (click)="confirmDeposit()">Potvrdi uplatu</button>
+      </div>
+    </div>
+
+    <div *ngIf="showWithdrawModal" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md z-card p-6 shadow-xl">
+      <h3 class="text-lg font-bold mb-4 text-foreground">Povlačenje iz fonda: {{ selectedFund?.name }}</h3>
+      <div class="space-y-4">
+        <label class="flex items-center gap-2 cursor-pointer p-2 bg-muted/20 rounded-lg">
+          <input type="checkbox" [(ngModel)]="isFullWithdrawal" (change)="toggleFullWithdrawal($any($event.target).checked)">
+          <span class="text-sm">Povuci celu poziciju</span>
+        </label>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-muted-foreground mb-1">Iznos za isplatu</label>
+          <input type="number" [(ngModel)]="transactionAmount" [disabled]="isFullWithdrawal" class="z-input w-full" [class.opacity-50]="isFullWithdrawal">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-muted-foreground mb-1">Račun za isplatu</label>
+          <select [(ngModel)]="selectedAccountId" class="z-input w-full">
+            <option *ngFor="let acc of clientAccounts" [value]="acc.id">{{ acc.accountNumber }}</option>
+          </select>
+        </div>
+        <div *ngIf="isLiquidityLow" class="p-3 bg-amber-500/10 border border-amber-500/50 text-amber-600 rounded-lg text-xs">
+          <strong>Napomena:</strong> Fond nema dovoljno likvidnih sredstava. Isplata će biti nakon likvidacije hartija.
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button class="z-btn-ghost" (click)="closeModals()">Odustani</button>
+        <button class="z-btn-primary" [disabled]="!selectedAccountId || transactionAmount <= 0" (click)="confirmWithdrawal()">Potvrdi povlačenje</button>
+      </div>
+    </div>
+
   </div>
 </div>
