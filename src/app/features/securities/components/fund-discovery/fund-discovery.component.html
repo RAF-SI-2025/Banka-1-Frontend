@@ -1,0 +1,231 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Fondovi</h1>
+        <p class="text-sm text-muted-foreground mt-1">Pregled dostupnih investicionih fondova</p>
+      </div>
+      <button *ngIf="isSupervisor"
+              (click)="navigateToCreateFund()"
+              class="z-btn-primary flex items-center gap-2"
+              data-cy="create-fund-btn">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Kreiraj fond
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="z-card p-4 mb-4">
+      <div class="relative max-w-md">
+        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
+               placeholder="Pretraži po nazivu ili opisu..."
+               class="z-input pl-10" data-cy="search-input" />
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="z-card overflow-hidden">
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoading && funds.length === 0" class="text-center p-12 text-muted-foreground text-sm">
+        <svg class="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <p>Nema dostupnih fondova.</p>
+      </div>
+
+      <table *ngIf="!isLoading && funds.length > 0" class="z-table" data-cy="funds-table">
+        <thead>
+          <tr>
+            <th>
+              <button (click)="toggleSort('name')" class="flex items-center gap-1 font-semibold hover:text-primary transition-colors">
+                Naziv
+                <span [class]="sortIconClass('name')" class="text-xs">{{ sortIcon('name') }}</span>
+              </button>
+            </th>
+            <th>
+              <button (click)="toggleSort('description')" class="flex items-center gap-1 font-semibold hover:text-primary transition-colors">
+                Opis
+                <span [class]="sortIconClass('description')" class="text-xs">{{ sortIcon('description') }}</span>
+              </button>
+            </th>
+            <th class="text-right">
+              <button (click)="toggleSort('totalValue')" class="flex items-center gap-1 font-semibold hover:text-primary transition-colors ml-auto">
+                Ukupna vrednost (RSD)
+                <span [class]="sortIconClass('totalValue')" class="text-xs">{{ sortIcon('totalValue') }}</span>
+              </button>
+            </th>
+            <th class="text-right">
+              <button (click)="toggleSort('profit')" class="flex items-center gap-1 font-semibold hover:text-primary transition-colors ml-auto">
+                Profit
+                <span [class]="sortIconClass('profit')" class="text-xs">{{ sortIcon('profit') }}</span>
+              </button>
+            </th>
+            <th class="text-right">
+              <button (click)="toggleSort('minimumContribution')" class="flex items-center gap-1 font-semibold hover:text-primary transition-colors ml-auto">
+                Minimalni ulog (RSD)
+                <span [class]="sortIconClass('minimumContribution')" class="text-xs">{{ sortIcon('minimumContribution') }}</span>
+              </button>
+            </th>
+            <th *ngIf="isClient"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fund of funds; trackBy: trackById">
+            <td class="font-semibold">{{ fund.name }}</td>
+            <td class="text-muted-foreground text-sm max-w-xs">
+              <span class="line-clamp-2">{{ fund.description }}</span>
+            </td>
+            <td class="text-right font-medium">{{ formatCurrency(fund.totalValue) }}</td>
+            <td class="text-right font-medium" [class]="profitClass(fund.profit)">
+              {{ formatProfit(fund.profit) }}
+            </td>
+            <td class="text-right">{{ formatCurrency(fund.minimumContribution) }}</td>
+            <td *ngIf="isClient" class="text-right">
+              <button (click)="openInvestModal(fund)"
+                      class="z-btn-primary z-btn-sm"
+                      data-cy="invest-btn">
+                Investiraj
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div *ngIf="totalElements > 0"
+           class="flex justify-between items-center px-5 py-3 border-t border-border">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Redova po stranici:</span>
+          <select [(ngModel)]="pageSize" (change)="loadFunds()"
+                  class="px-2 py-1 border border-border rounded-md text-sm text-foreground bg-card cursor-pointer outline-none">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+          </select>
+          <span class="ml-3 font-medium">
+            {{ currentPage * pageSize + 1 }}–{{ getLastItem() }} od {{ totalElements }}
+          </span>
+        </div>
+        <div class="flex gap-1">
+          <button [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)"
+                  class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)"
+                  class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Invest Modal -->
+<div *ngIf="showInvestModal" class="z-overlay" data-cy="invest-modal">
+  <div class="z-modal max-w-md">
+    <div class="z-modal-header">
+      <div>
+        <h3 class="text-lg font-semibold text-foreground">Investiraj u fond</h3>
+        <p class="text-sm text-muted-foreground">{{ selectedFund?.name }}</p>
+      </div>
+      <button (click)="closeInvestModal()"
+              class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="z-modal-body space-y-4">
+
+      <!-- Minimum notice -->
+      <div class="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Minimalni ulog: <strong>{{ formatCurrency(selectedFund?.minimumContribution ?? 0) }} RSD</strong></span>
+      </div>
+
+      <!-- Account select -->
+      <div>
+        <label class="block text-sm font-medium text-foreground mb-1.5">Račun za uplatu</label>
+        <div *ngIf="accountsLoading" class="flex items-center gap-2 text-sm text-muted-foreground">
+          <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+          Učitavanje računa...
+        </div>
+        <select *ngIf="!accountsLoading"
+                [(ngModel)]="selectedAccountNumber"
+                class="z-input w-full"
+                data-cy="account-select">
+          <option value="" disabled>Izaberite račun</option>
+          <option *ngFor="let account of accounts" [value]="account.accountNumber">
+            {{ account.name || account.accountNumber }} — {{ formatCurrency(account.availableBalance) }} {{ account.currency }}
+          </option>
+        </select>
+        <p *ngIf="!accountsLoading && accounts.length === 0" class="text-sm text-muted-foreground mt-1">
+          Nemate aktivnih računa.
+        </p>
+      </div>
+
+      <!-- Amount input -->
+      <div>
+        <label class="block text-sm font-medium text-foreground mb-1.5">Iznos (RSD)</label>
+        <input type="number"
+               [(ngModel)]="investAmount"
+               [min]="selectedFund?.minimumContribution ?? null"
+               step="1000"
+               placeholder="Unesite iznos..."
+               class="z-input w-full"
+               [class.border-red-400]="investAmountError !== null"
+               data-cy="amount-input" />
+        <p *ngIf="investAmountError" class="text-xs text-red-500 mt-1">{{ investAmountError }}</p>
+      </div>
+
+    </div>
+
+    <div class="z-modal-footer">
+      <button (click)="closeInvestModal()" class="z-btn-outline" data-cy="cancel-invest-btn">
+        Odustani
+      </button>
+      <button (click)="confirmInvest()" [disabled]="!canInvest" class="z-btn-primary" data-cy="confirm-invest-btn">
+        <svg *ngIf="isInvesting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        {{ isInvesting ? 'Procesiranje...' : 'Investiraj' }}
+      </button>
+    </div>
+  </div>
+</div>
