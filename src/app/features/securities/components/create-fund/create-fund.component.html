@@ -1,0 +1,114 @@
+<app-navbar />
+
+<div class="page-layout">
+  <div class="page-content">
+    <button
+      type="button"
+      routerLink="/securities"
+      class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
+    >
+      <span class="material-icons text-base">arrow_back</span>
+      Nazad na hartije
+    </button>
+
+    <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Kreiraj investicioni fond</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Fond dobija dinarski račun automatski i postaje dostupan odmah nakon kreiranja.
+        </p>
+      </div>
+      <span class="z-badge z-badge-green self-start">Samo supervizori</span>
+    </div>
+
+    <div *ngIf="loadWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <span class="material-icons text-[20px]">warning</span>
+      <span>{{ loadWarning }}</span>
+    </div>
+
+    <div *ngIf="isLoading" class="z-card p-8 text-center text-muted-foreground">
+      Učitavanje podataka za fond...
+    </div>
+
+    <form *ngIf="!isLoading" [formGroup]="fundForm" (ngSubmit)="onSubmit()" novalidate class="space-y-5" data-cy="create-fund-form">
+      <div class="z-card p-6">
+        <h2 class="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+          <span class="w-1 h-5 bg-primary rounded-full"></span>
+          Osnovni podaci
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="name" class="z-label">Naziv fonda <span class="text-red-500">*</span></label>
+            <input id="name" type="text" formControlName="name" class="z-input" placeholder="npr. Alpha Growth Fund" data-cy="fund-name-input" />
+            <p class="z-error" *ngIf="fundForm.get('name')?.touched && fundForm.get('name')?.hasError('required')">
+              Naziv fonda je obavezan.
+            </p>
+            <p class="z-error" *ngIf="fundForm.get('name')?.touched && fundForm.get('name')?.hasError('minlength')">
+              Naziv mora imati najmanje 3 karaktera.
+            </p>
+            <p class="z-error" *ngIf="fundForm.get('name')?.hasError('notUnique')">
+              Fond sa ovim nazivom već postoji.
+            </p>
+          </div>
+
+          <div>
+            <label for="minimumContribution" class="z-label">Minimalni iznos ulaganja u RSD <span class="text-red-500">*</span></label>
+            <input id="minimumContribution" type="number" min="1" step="0.01" formControlName="minimumContribution" class="z-input" data-cy="fund-minimum-input" />
+            <p class="z-error" *ngIf="fundForm.get('minimumContribution')?.touched && fundForm.get('minimumContribution')?.invalid">
+              Unesite iznos veći od 0 RSD.
+            </p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label for="description" class="z-label">Opis <span class="text-red-500">*</span></label>
+            <textarea
+              id="description"
+              formControlName="description"
+              class="z-input min-h-[120px] py-3 resize-y"
+              placeholder="Kratak opis investicione strategije fonda"
+              data-cy="fund-description-input"
+            ></textarea>
+            <p class="z-error" *ngIf="fundForm.get('description')?.touched && fundForm.get('description')?.hasError('required')">
+              Opis fonda je obavezan.
+            </p>
+            <p class="z-error" *ngIf="fundForm.get('description')?.touched && fundForm.get('description')?.hasError('minlength')">
+              Opis mora imati najmanje 10 karaktera.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="z-card p-6">
+        <h2 class="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+          <span class="w-1 h-5 bg-primary rounded-full"></span>
+          Menadžer fonda
+        </h2>
+
+        <label for="managerId" class="z-label">Supervizor <span class="text-red-500">*</span></label>
+        <select id="managerId" formControlName="managerId" class="z-select" data-cy="fund-manager-select">
+          <option [ngValue]="null" disabled>Izaberite supervizora</option>
+          <option *ngFor="let supervisor of supervisors" [ngValue]="getSupervisorId(supervisor)">
+            {{ formatSupervisor(supervisor) }}
+          </option>
+        </select>
+        <p class="z-error" *ngIf="fundForm.get('managerId')?.touched && fundForm.get('managerId')?.invalid">
+          Menadžer fonda je obavezan.
+        </p>
+      </div>
+
+      <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-3">
+        <span class="material-icons text-[20px]">info</span>
+        <span>Submit kreira fond i dinarski račun vezan za fond. Račun i dostupnost fonda potvrđuje backend transakcija.</span>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" class="z-btn-outline" routerLink="/securities">Otkaži</button>
+        <button type="submit" class="z-btn-primary" [disabled]="isSubmitting || fundForm.invalid || supervisors.length === 0" data-cy="create-fund-submit">
+          <span *ngIf="isSubmitting" class="material-icons animate-spin text-base">sync</span>
+          {{ isSubmitting ? 'Kreiranje...' : 'Kreiraj fond' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
