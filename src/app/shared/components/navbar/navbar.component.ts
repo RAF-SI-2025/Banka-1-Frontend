@@ -48,7 +48,6 @@ export class NavbarComponent implements OnInit {
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
     { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
     { label: 'Nalozi',     route: '/orders-overview',      icon: 'assignment' },
-    { label: 'Aktivne ponude', route: '/client/otc-offers', icon: 'handshake' },
   ];
 
   private readonly supervisorLinks: NavLink[] = [

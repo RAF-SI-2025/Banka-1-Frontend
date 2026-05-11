@@ -43,10 +43,10 @@
       <table class="w-full">
         <thead>
           <tr class="border-b border-border bg-muted/50">
-            <th class="px-6 py-3 text-left text-sm font-semibold">Akcija</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Količina</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Cena/akcija</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-right">Premija</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Hartija</th>
+            <th class="px-6 py-3 text-right text-sm font-semibold">Količina</th>
+            <th class="px-6 py-3 text-right text-sm font-semibold">Cena/akcija</th>
+            <th class="px-6 py-3 text-right text-sm font-semibold">Premija</th>
             <th class="px-6 py-3 text-left text-sm font-semibold">Settlement Date</th>
             <th class="px-6 py-3 text-left text-sm font-semibold">Pregovara sa</th>
             <th class="px-6 py-3 text-left text-sm font-semibold">Poslednja izmena</th>
@@ -125,73 +125,10 @@
 <!-- Modal backdrop -->
 <div *ngIf="showModal && selectedOffer" class="fixed inset-0 z-50 bg-black/50" (click)="closeModal()"></div>
 
-<!-- Modal content -->
-<div *ngIf="showModal && selectedOffer"
-  class="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-lg"
-  (click)="$event.stopPropagation()">
-  <!-- Header -->
-  <div class="mb-6 flex items-start justify-between">
-    <div>
-      <h2 class="text-2xl font-bold">{{ selectedOffer.ticker }}</h2>
-      <p class="mt-1 text-sm text-muted-foreground">Ponuda od: {{ getCounterpartyFullName(selectedOffer) }} ({{
-        getCounterpartyBankName(selectedOffer) }})</p>
-    </div>
-    <button type="button" class="text-muted-foreground hover:text-foreground" (click)="closeModal()">
-      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Status badge -->
-  <div class="mb-6">
-    <span [ngClass]="getStatusBadgeClass(selectedOffer)" class="inline-block rounded-full px-3 py-1 text-sm font-semibold">
-      {{ getStatusLabel(selectedOffer) }}
-    </span>
-  </div>
-
-  <!-- Modal content -->
-  <div class="space-y-4">
-    <div class="grid grid-cols-2 gap-4">
-      <div class="rounded-lg border border-border bg-muted/20 p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Količina</p>
-        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.quantity) }}</p>
-      </div>
-      <div class="rounded-lg border border-border bg-muted/20 p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cena po akciji</p>
-        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.pricePerShare) }}</p>
-      </div>
-      <div class="rounded-lg border border-border bg-muted/20 p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Premija</p>
-        <p class="mt-1 text-xl font-bold">{{ formatAmount(selectedOffer.premium) }}</p>
-      </div>
-      <div class="rounded-lg border border-border bg-muted/20 p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Settlement Date</p>
-        <p class="mt-1 text-xl font-bold">{{ formatDate(selectedOffer.settlementDate) }}</p>
-      </div>
-    </div>
-
-    <!-- Total value -->
-    <div class="rounded-lg border border-border bg-primary/5 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ukupna vrednost</p>
-      <p class="mt-1 text-2xl font-bold text-primary">
-        {{ formatAmount(selectedOffer.quantity * selectedOffer.pricePerShare + selectedOffer.premium) }}
-      </p>
-    </div>
-  </div>
-
-  <!-- Actions -->
-  <div class="mt-8 flex gap-3">
-    <button type="button" class="z-btn z-btn-primary flex-1" (click)="acceptOfferModal()">
-      ✓ Prihvati
-    </button>
-    <button type="button" class="z-btn z-btn-outline flex-1" (click)="rejectOfferModal()">
-      ✗ Odustani
-    </button>
-    <button type="button" class="z-btn z-btn-outline flex-1">
-      Kontraponuda
-    </button>
-  </div>
-</div>
+<!-- Modal component -->
+<app-otc-offer-detail 
+  *ngIf="showModal && selectedOffer"
+  [offer]="selectedOffer"
+  (close)="closeModal()"
+  (updated)="onOfferUpdated()">
+</app-otc-offer-detail>

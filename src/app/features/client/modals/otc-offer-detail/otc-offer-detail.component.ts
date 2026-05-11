@@ -192,6 +192,7 @@ export class OtcOfferDetailComponent implements OnInit, OnDestroy {
    * Formatira datum
    */
   formatDate(dateString: string): string {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('sr-RS');
   }
 

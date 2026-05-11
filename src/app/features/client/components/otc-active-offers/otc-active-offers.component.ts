@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -8,6 +8,7 @@ import { OtcOfferService } from '../../services/otc-offer.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { OtcOffer } from '../../models/otc-offer.model';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
+import { OtcOfferDetailComponent } from '../../modals/otc-offer-detail/otc-offer-detail.component';
 
 interface PriceDeviation {
   percentage: number;
@@ -19,7 +20,7 @@ interface PriceDeviation {
   templateUrl: './otc-active-offers.component.html',
   styleUrls: ['./otc-active-offers.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NavbarComponent, OtcOfferDetailComponent],
 })
 export class OtcActiveOffersComponent implements OnInit, OnDestroy {
   offers: OtcOffer[] = [];
@@ -36,13 +37,15 @@ export class OtcActiveOffersComponent implements OnInit, OnDestroy {
   // Modal
   selectedOffer: OtcOffer | null = null;
   showModal = false;
+  modalTab: 'view' | 'counter' = 'view';
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private otcOfferService: OtcOfferService,
     private authService: AuthService,
-    private viewContainerRef: ViewContainerRef
+    private viewContainerRef: ViewContainerRef,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
@@ -121,6 +124,7 @@ export class OtcActiveOffersComponent implements OnInit, OnDestroy {
   closeModal(): void {
     this.showModal = false;
     this.selectedOffer = null;
+    this.modalTab = 'view';
   }
 
   /**
@@ -130,6 +134,13 @@ export class OtcActiveOffersComponent implements OnInit, OnDestroy {
     this.closeModal();
     this.loadOffers();
     this.loadUnreadCount();
+  }
+
+  /**
+   * Otvara tab sa formom za kontraponudu
+   */
+  openCounterOfferForm(): void {
+    this.modalTab = 'counter';
   }
 
   /**
