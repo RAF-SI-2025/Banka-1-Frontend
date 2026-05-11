@@ -10,6 +10,8 @@ import { AccountService } from '../../../client/services/account.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { OrderService } from '../../services/order.service';
+import { FundService } from '../../services/fund.service';
+import { Fund } from '../../models/fund.model';
 import { OrderDirection, OrderResponse, OrderType } from '../../models/order.model';
 
 @Component({
@@ -33,6 +35,12 @@ export class CreateOrderComponent implements OnInit {
   margin = false;
   selectedAccountId: number | null = null;
 
+  isSupervisor = false;
+  purchaseTarget: 'bank' | 'fund' = 'bank';
+  funds: Fund[] = [];
+  selectedFundId: number | null = null;
+  fundsLoading = false;
+
   isLoading = true;
   isSubmitting = false;
 
@@ -46,12 +54,14 @@ export class CreateOrderComponent implements OnInit {
     private readonly accountService: AccountService,
     private readonly authService: AuthService,
     private readonly orderService: OrderService,
+    private readonly fundService: FundService,
     private readonly toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
     this.direction = this.route.snapshot.paramMap.get('direction') as OrderDirection;
     this.listingId = Number(this.route.snapshot.paramMap.get('listingId'));
+    this.isSupervisor = this.authService.isSupervisor();
 
     this.loadSecurity();
   }
@@ -100,6 +110,30 @@ export class CreateOrderComponent implements OnInit {
         this.toastService.error('Greška pri učitavanju bankinog računa.');
       },
     });
+
+    if (this.isSupervisor) {
+      this.loadFunds();
+    }
+  }
+
+  private loadFunds(): void {
+    this.fundsLoading = true;
+
+    this.fundService.getMySupervisorFunds().subscribe({
+      next: funds => {
+        this.funds = funds;
+        this.fundsLoading = false;
+      },
+      error: () => {
+        this.fundsLoading = false;
+        this.toastService.error('Greška pri učitavanju fondova.');
+      },
+    });
+  }
+
+  onPurchaseTargetChange(): void {
+    this.selectedAccountId = this.accounts.length > 0 ? this.accounts[0].id : null;
+    this.selectedFundId = null;
   }
 
   get orderType(): OrderType {
@@ -119,8 +153,6 @@ export class CreateOrderComponent implements OnInit {
     if (this.orderType === 'STOP') {
       return Number(this.stopValue ?? 0);
     }
-
-    const anySecurity = this.security as any;
 
     if (this.direction === 'BUY') {
       return Number(this.security.ask ?? this.security.price);
@@ -151,17 +183,32 @@ export class CreateOrderComponent implements OnInit {
     return this.accounts.find(a => a.id === this.selectedAccountId) ?? null;
   }
 
+  get selectedFund(): Fund | null {
+    return this.funds.find(f => f.id === this.selectedFundId) ?? null;
+  }
+
+  get fundHasSufficientBalance(): boolean {
+    const fund = this.selectedFund;
+    return !!fund && fund.balance >= this.approximatePrice;
+  }
+
   get canSubmit(): boolean {
-    return !!this.security
-      && this.quantity > 0
-      && !!this.selectedAccountId
-      && this.pricePerUnit > 0;
+    if (!this.security || this.quantity <= 0 || this.pricePerUnit <= 0) return false;
+
+    if (this.isSupervisor) {
+      if (this.purchaseTarget === 'bank') return !!this.selectedAccountId;
+      return !!this.selectedFundId && this.fundHasSufficientBalance;
+    }
+
+    return !!this.selectedAccountId;
   }
 
   createDraftOrder(): void {
     if (!this.canSubmit || !this.security) return;
 
     this.isSubmitting = true;
+
+    const useFund = this.isSupervisor && this.purchaseTarget === 'fund';
 
     const payload = {
       listingId: this.listingId,
@@ -170,7 +217,8 @@ export class CreateOrderComponent implements OnInit {
       stopValue: this.stopValue || null,
       allOrNone: this.allOrNone,
       margin: this.margin,
-      accountId: this.selectedAccountId!,
+      accountId: useFund ? null : this.selectedAccountId,
+      fundId: useFund ? this.selectedFundId : null,
     };
 
     const request$ = this.direction === 'BUY'
@@ -196,14 +244,10 @@ export class CreateOrderComponent implements OnInit {
     this.isSubmitting = true;
 
     this.orderService.confirmOrder(this.draftOrder.id).subscribe({
-      next: order => {
+      next: () => {
         this.isSubmitting = false;
         this.showConfirmation = false;
         this.toastService.success('Order je uspešno potvrđen.');
-        // Send the user to their portfolio so the new position becomes visible
-        // as soon as the order finishes settling. The portfolio page re-fetches
-        // on every navigation hit, so this is the simplest way to show that
-        // a buy actually landed without forcing a manual refresh.
         const target = this.direction === 'BUY' ? '/portfolio' : '/securities';
         this.router.navigate([target]);
       },

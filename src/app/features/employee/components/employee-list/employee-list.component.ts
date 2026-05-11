@@ -3,6 +3,8 @@ import { Employee } from '../../models/employee';
 import { EmployeeService } from '../../services/employee.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { FundService } from '../../../orders/services/fund.service';
+import { Fund } from '../../../orders/models/fund.model';
 
 @Component({
   selector: 'app-employee-list',
@@ -22,12 +24,18 @@ export class EmployeeListComponent implements OnInit {
   selectedEmployeeForEdit: Employee | null = null;
   isEditModalOpen = false;
 
+  showSupervisorWarning = false;
+  fundsToTransfer: Fund[] = [];
+  isFundsLoading = false;
+  private pendingEmployeeUpdate: Employee | null = null;
+
   private searchTimeout: any;
 
   constructor(
     private employeeService: EmployeeService,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private fundService: FundService
   ) {}
 
   ngOnInit(): void {
@@ -124,16 +132,77 @@ export class EmployeeListComponent implements OnInit {
   onEmployeeSaved(updatedEmployee: Employee): void {
     if (!updatedEmployee.id) return;
 
-    this.employeeService.updateEmployee(updatedEmployee.id, updatedEmployee).subscribe({
+    const isSupervisorDowngrade =
+      this.selectedEmployeeForEdit?.role === 'SUPERVISOR' &&
+      updatedEmployee.role !== 'SUPERVISOR';
+
+    if (isSupervisorDowngrade) {
+      this.isFundsLoading = true;
+      this.pendingEmployeeUpdate = updatedEmployee;
+      this.closeEditModal();
+
+      this.fundService.getFundsBySupervisorId(updatedEmployee.id).subscribe({
+        next: funds => {
+          this.isFundsLoading = false;
+          if (funds.length > 0) {
+            this.fundsToTransfer = funds;
+            this.showSupervisorWarning = true;
+          } else {
+            this.doUpdateEmployee(updatedEmployee);
+          }
+        },
+        error: () => {
+          this.isFundsLoading = false;
+          this.doUpdateEmployee(updatedEmployee);
+        }
+      });
+      return;
+    }
+
+    this.doUpdateEmployee(updatedEmployee);
+  }
+
+  private doUpdateEmployee(employee: Employee): void {
+    if (!employee.id) return;
+
+    this.employeeService.updateEmployee(employee.id, employee).subscribe({
       next: () => {
         this.toastService.success('Employee updated successfully.');
-        this.closeEditModal();
         this.loadEmployees();
       },
       error: (err) => {
         this.toastService.error(err.error?.message || 'Failed to update employee.');
       }
     });
+  }
+
+  confirmSupervisorDowngrade(): void {
+    const pending = this.pendingEmployeeUpdate;
+    if (!pending?.id) return;
+
+    const adminId = this.authService.getUserIdFromToken();
+    if (!adminId) {
+      this.toastService.error('Nije moguće identifikovati admina.');
+      return;
+    }
+
+    this.fundService.transferFundOwnership(pending.id, adminId).subscribe({
+      next: () => {
+        this.showSupervisorWarning = false;
+        this.fundsToTransfer = [];
+        this.pendingEmployeeUpdate = null;
+        this.doUpdateEmployee(pending);
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.message || 'Greška pri prenosu fondova.');
+      }
+    });
+  }
+
+  cancelSupervisorDowngrade(): void {
+    this.showSupervisorWarning = false;
+    this.fundsToTransfer = [];
+    this.pendingEmployeeUpdate = null;
   }
 
   onLogout(): void {

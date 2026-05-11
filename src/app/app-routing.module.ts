@@ -122,10 +122,10 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-  path: 'stock-exchange',
-  component: ExchangeListComponent,
-  canActivate: [authGuard, roleGuard],
-  data: { roles: ['ADMIN', 'SUPERVISOR'] } 
+    path: 'stock-exchange',
+    component: ExchangeListComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN', 'SUPERVISOR'] }
   },
   {
     path: 'exchange',
@@ -188,9 +188,8 @@ const routes: Routes = [
     path: 'tax-tracking',
     component: TaxTrackingComponent,
     canActivate: [authGuard, roleGuard],
-    data: { permission: 'SECURITIES_TRADE_UNLIMITED' }, 
+    data: { permission: 'SECURITIES_TRADE_UNLIMITED' },
   },
-
   {
     path: 'securities',
     component: SecuritiesListComponent,
@@ -221,7 +220,7 @@ const routes: Routes = [
   {
     path: 'orders/create/:direction/:listingId',
     component: CreateOrderComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: '**',

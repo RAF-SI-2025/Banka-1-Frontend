@@ -56,17 +56,74 @@
             Ako ostavite limit/stop polja prazna, koristi se market order po trenutnoj tržišnoj ceni.
           </p>
 
-          <div>
+          <!-- Sekcija vidljiva samo supervizorima -->
+          <div *ngIf="isSupervisor" class="rounded-lg border border-border bg-muted/20 p-4 space-y-4">
+            <div>
+              <label class="z-label mb-2 block">Kupujem u ime</label>
+              <div class="flex gap-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="purchaseTarget" value="bank"
+                    [(ngModel)]="purchaseTarget" (change)="onPurchaseTargetChange()" />
+                  <span>Banke</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="purchaseTarget" value="fund"
+                    [(ngModel)]="purchaseTarget" (change)="onPurchaseTargetChange()" />
+                  <span>Fonda</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Bankini računi za supervizora -->
+            <div *ngIf="purchaseTarget === 'bank'">
+              <label class="z-label">Bankini račun</label>
+              <select class="z-input" [(ngModel)]="selectedAccountId">
+                <option [ngValue]="null" disabled>Izaberite račun</option>
+                <option *ngFor="let account of accounts" [ngValue]="account.id">
+                  {{ account.accountNumber }} - {{ account.currency }} -
+                  {{ formatMoney(account.availableBalance || account.balance) }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Fondovi za supervizora -->
+            <div *ngIf="purchaseTarget === 'fund'">
+              <label class="z-label">Fond</label>
+              <div *ngIf="fundsLoading" class="text-sm text-muted-foreground py-2">
+                Učitavanje fondova...
+              </div>
+              <select *ngIf="!fundsLoading" class="z-input" [(ngModel)]="selectedFundId">
+                <option [ngValue]="null" disabled>Izaberite fond</option>
+                <option *ngFor="let fund of funds" [ngValue]="fund.id">
+                  {{ fund.name }} - {{ formatMoney(fund.balance) }} {{ fund.currency }}
+                </option>
+              </select>
+              <div *ngIf="selectedFundId && !fundHasSufficientBalance"
+                class="mt-2 p-3 rounded-lg border border-red-500 bg-red-50 text-red-800 text-sm">
+                Fond nema dovoljno likvidnih sredstava.
+                Potrebno: {{ formatMoney(approximatePrice) }} {{ security.currency }},
+                dostupno: {{ formatMoney(selectedFund?.balance) }} {{ selectedFund?.currency }}.
+              </div>
+              <div *ngIf="!fundsLoading && funds.length === 0"
+                class="mt-2 p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 text-sm">
+                Nemate fondova kojima upravljate.
+              </div>
+            </div>
+          </div>
+
+          <!-- Račun za klijente i agente -->
+          <div *ngIf="!isSupervisor">
             <label class="z-label">Račun</label>
             <select class="z-input" [(ngModel)]="selectedAccountId">
               <option [ngValue]="null" disabled>Izaberite račun</option>
-              <option *ngFor="let account of accounts" [ngValue]="account.accountNumber">
+              <option *ngFor="let account of accounts" [ngValue]="account.id">
                 {{ account.name || account.accountNumber }} -
                 {{ account.currency }} -
                 {{ formatMoney(account.availableBalance || account.balance) }}
               </option>
             </select>
-            <div *ngIf="accounts.length === 0 && !isLoading" class="mt-2 p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 text-sm">
+            <div *ngIf="accounts.length === 0 && !isLoading"
+              class="mt-2 p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 text-sm">
               Nema dostupnih računa za ovu operaciju.
             </div>
           </div>
@@ -201,6 +258,11 @@
       <div class="flex justify-between" *ngIf="selectedAccount">
         <span>Račun</span>
         <strong>{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</strong>
+      </div>
+
+      <div class="flex justify-between" *ngIf="isSupervisor && purchaseTarget === 'fund' && selectedFund">
+        <span>Fond</span>
+        <strong>{{ selectedFund!.name }}</strong>
       </div>
     </div>
 
