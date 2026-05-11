@@ -50,3 +50,43 @@ export interface OtcContractResponse {
   executionDate?: string;
   totalValue?: number;
 }
+
+/**
+ * SAGA Pattern - Faza transakcije
+ * Prati status svake faze i razlog neuspeha ako postoji
+ */
+export type SagaPhaseName = 'reserving-funds' | 'checking-securities' | 'transferring-funds' | 'transferring-ownership';
+
+export interface SagaPhaseResult {
+  phase: SagaPhaseName;
+  success: boolean;
+  duration: number;
+  error?: string;
+  timestamp: Date;
+}
+
+/**
+ * Kompletna SAGA transakcija sa svim fazama i rezima
+ */
+export interface SagaTransaction {
+  contractId: string;
+  contractNumber: string;
+  startTime: Date;
+  endTime?: Date;
+  phases: SagaPhaseResult[];
+  finalStatus: 'pending' | 'success' | 'failed' | 'rolled-back';
+  rollbackReason?: string;
+}
+
+/**
+ * Simulacija rezervacije sredstava/hartija na frontend-u
+ */
+export interface ContractReservation {
+  contractId: string;
+  sellerId: string;
+  amount: number;
+  totalFundsNeeded: number;
+  securitiesReserved: boolean;
+  fundsReserved: boolean;
+  reservationTime: Date;
+}

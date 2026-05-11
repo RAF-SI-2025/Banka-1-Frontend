@@ -88,8 +88,7 @@ export class OtcContractsComponent implements OnInit {
   }
 
   /**
-   * Realizuje (koristi) OTC ugovor - pokreće transakciju kupoprodaje
-   * SAGA pattern: Rezervacija sredstava → Provera hartija → Transfer vlasništva
+   * Realizuje (koristi) OTC ugovor - pokreće transakciju kupoprodaje na backend-u
    */
   public executeContract(contractId: string): void {
     if (confirm('Sigurni ste da želite da realizujete ovaj ugovor?')) {
@@ -100,7 +99,7 @@ export class OtcContractsComponent implements OnInit {
       this.otcService.executeContract(contractId).subscribe({
         next: (updatedContract: OtcContract) => {
           this.executingContractId = null;
-          
+
           // Ažurira ugovor u listi
           const index = this.contracts.findIndex(c => c.id === contractId);
           if (index !== -1) {
@@ -108,19 +107,17 @@ export class OtcContractsComponent implements OnInit {
             this.applyFilter();
           }
 
-          this.successMessage = `Ugovor ${updatedContract.contractNumber} je uspešno realizovan!`;
-          
+          this.successMessage = `✓ Ugovor ${updatedContract.contractNumber} je uspešno realizovan!`;
+
           // Skriva success poruku nakon 4 sekunde
           setTimeout(() => {
             this.successMessage = '';
           }, 4000);
         },
-        error: (error: HttpErrorResponse) => {
+        error: (error: HttpErrorResponse | Error) => {
           this.executingContractId = null;
-          this.errorMessage =
-            error.error?.message ||
-            error.error?.error ||
-            'Greška pri realizaciji ugovora. Pokušajte ponovo.';
+          const errorMsg = (error as any).message || (error as any).error?.message || error.toString();
+          this.errorMessage = errorMsg;
         }
       });
     }

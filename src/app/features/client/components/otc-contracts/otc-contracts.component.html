@@ -10,11 +10,16 @@
 
     <!-- Error Message -->
     <div *ngIf="errorMessage && !isLoading"
-         class="z-card p-4 mb-4 text-red-600 text-sm border border-red-300 bg-red-50 rounded-lg flex items-start gap-3">
-      <svg class="w-5 h-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-      </svg>
-      <p>{{ errorMessage }}</p>
+         class="z-card p-6 mb-4 bg-red-50 border border-red-300 rounded-lg">
+      <div class="flex items-start gap-3">
+        <svg class="w-6 h-6 flex-shrink-0 mt-0.5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-red-700 mb-2">❌ Greška pri izvršenju ugovora</p>
+          <p class="text-sm text-red-600 whitespace-pre-wrap">{{ errorMessage }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- Success Message -->
@@ -24,6 +29,17 @@
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
       </svg>
       <p>{{ successMessage }}</p>
+    </div>
+
+    <!-- Executing State -->
+    <div *ngIf="executingContractId"
+         class="z-card p-6 mb-4 bg-blue-50 border border-blue-300 rounded-lg">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        <p class="text-sm font-semibold text-blue-800">Realizovanje ugovora u toku...</p>
+      </div>
     </div>
 
     <!-- Loading State -->
