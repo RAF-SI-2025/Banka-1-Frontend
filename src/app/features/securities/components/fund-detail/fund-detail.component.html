@@ -1,0 +1,172 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <div class="flex items-center gap-4 mb-6">
+      <button
+        type="button"
+        class="text-muted-foreground hover:text-foreground transition-colors"
+        (click)="goBack()"
+        aria-label="Nazad"
+      >
+        <span class="material-icons text-xl">chevron_left</span>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Detaljan prikaz fonda</h1>
+        <p class="text-sm text-muted-foreground mt-1">Pregled vrednosti, likvidnosti, hartija i performansi fonda.</p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
+      <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+      <p class="mt-3 text-sm">Učitavanje detalja fonda...</p>
+    </div>
+
+    <div *ngIf="!isLoading && errorMessage" class="z-card p-8 text-center text-red-500 text-sm">
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="z-btn-primary mt-4" (click)="loadFund()">Pokušaj ponovo</button>
+    </div>
+
+    <ng-container *ngIf="!isLoading && !errorMessage && fund">
+      <section class="z-card mb-6 overflow-hidden">
+        <div class="p-6 border-b border-border">
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div class="max-w-3xl">
+              <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Investicioni fond</p>
+              <h2 class="text-2xl font-bold text-foreground">{{ fund.name }}</h2>
+              <p class="text-sm text-muted-foreground mt-2">{{ fund.description }}</p>
+            </div>
+            <span class="z-badge z-badge-blue">Menadžer: {{ fund.managerName }}</span>
+          </div>
+        </div>
+
+        <div class="fund-metrics-grid">
+          <div class="fund-metric">
+            <span>Vrednost fonda</span>
+            <strong>{{ formatMoney(fund.fundValue) }}</strong>
+          </div>
+          <div class="fund-metric">
+            <span>Minimalni ulog</span>
+            <strong>{{ formatMoney(fund.minimumContribution) }}</strong>
+          </div>
+          <div class="fund-metric">
+            <span>Profit</span>
+            <strong [ngClass]="getChangeClass(fund.profit)">{{ formatMoney(fund.profit) }}</strong>
+          </div>
+          <div class="fund-metric">
+            <span>Račun fonda</span>
+            <strong>{{ fund.accountNumber }}</strong>
+          </div>
+          <div class="fund-metric">
+            <span>Likvidnost</span>
+            <strong>{{ formatMoney(fund.liquidity) }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="z-card mb-6">
+        <div class="p-5">
+          <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 class="text-base font-semibold text-foreground">Hartije fonda</h3>
+              <p class="text-sm text-muted-foreground mt-1">Ticker, cena, promena, volumen, početna marža i datum akvizicije.</p>
+            </div>
+            <span class="z-badge z-badge-gray">{{ fund.securities.length }} hartija</span>
+          </div>
+
+          <div *ngIf="fund.securities.length === 0" class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm">
+            Fond trenutno nema hartije od vrednosti.
+          </div>
+
+          <div *ngIf="fund.securities.length > 0" class="overflow-x-auto rounded-xl border border-border">
+            <table class="z-table fund-table min-w-[900px]">
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>Volume</th>
+                  <th>initial MarginCost</th>
+                  <th>acquisition Date</th>
+                  <th *ngIf="canSellFundSecurities">Akcije</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let security of fund.securities; trackBy: trackBySecurityId">
+                  <td class="font-semibold">{{ security.ticker }}</td>
+                  <td>{{ formatMoney(security.price) }}</td>
+                  <td class="font-semibold" [ngClass]="getChangeClass(security.change)">
+                    {{ security.change > 0 ? '+' : '' }}{{ formatMoney(security.change) }}
+                  </td>
+                  <td>{{ formatNumber(security.volume) }}</td>
+                  <td>{{ formatMoney(security.initialMarginCost) }}</td>
+                  <td>{{ formatDate(security.acquisitionDate) }}</td>
+                  <td *ngIf="canSellFundSecurities">
+                    <button
+                      type="button"
+                      class="z-btn-outline z-btn-sm"
+                      [disabled]="sellingSecurity[security.id]"
+                      (click)="sellSecurity(security)"
+                    >
+                      {{ sellingSecurity[security.id] ? 'Slanje...' : 'Prodaj' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="z-card">
+        <div class="p-5">
+          <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 class="text-base font-semibold text-foreground">Performanse fonda</h3>
+              <p class="text-sm text-muted-foreground mt-1">Istorijska vrednost fonda po izabranom periodu.</p>
+            </div>
+            <div class="flex gap-2">
+              <button
+                *ngFor="let period of periods"
+                type="button"
+                class="period-button"
+                [class.period-button-active]="selectedPeriod === period.value"
+                (click)="selectPeriod(period.value)"
+              >
+                {{ period.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="performance-chart">
+            <canvas #performanceCanvas></canvas>
+            <div *ngIf="isPerformanceLoading" class="chart-loading">Učitavanje...</div>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-border mt-5">
+            <table class="z-table performance-table min-w-[640px]">
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Vrednost fonda</th>
+                  <th>Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let point of performance; trackBy: trackByPerformanceDate">
+                  <td>{{ formatDate(point.date) }}</td>
+                  <td class="font-semibold">{{ formatMoney(point.value) }}</td>
+                  <td class="font-semibold" [ngClass]="getChangeClass(point.profit)">
+                    {{ formatMoney(point.profit) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>

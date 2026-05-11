@@ -22,6 +22,7 @@ import { PaymentHistoryComponent } from './features/client/components/payment-hi
 import { SecuritiesListComponent } from './features/securities/components/securities-list/securities-list.component';
 import { SecurityDetailComponent } from './features/securities/components/security-detail/security-detail.component';
 import { StockDetailComponent } from './features/securities/components/stock-detail/stock-detail.component';
+import { FundDetailComponent } from './features/securities/components/fund-detail/fund-detail.component';
 import { LoanListComponent } from './features/client/components/loan-list/loan-list.component';
 import { LoanDetailsComponent } from './features/client/components/loan-details/loan-details.component';
 import { ExchangeRateComponent } from './features/client/components/exchange-rate/exchange-rate.component';
@@ -125,7 +126,7 @@ const routes: Routes = [
   path: 'stock-exchange',
   component: ExchangeListComponent,
   canActivate: [authGuard, roleGuard],
-  data: { roles: ['ADMIN', 'SUPERVISOR'] } 
+  data: { roles: ['ADMIN', 'SUPERVISOR'] }
   },
   {
     path: 'exchange',
@@ -188,7 +189,7 @@ const routes: Routes = [
     path: 'tax-tracking',
     component: TaxTrackingComponent,
     canActivate: [authGuard, roleGuard],
-    data: { permission: 'SECURITIES_TRADE_UNLIMITED' }, 
+    data: { permission: 'SECURITIES_TRADE_UNLIMITED' },
   },
 
   {
@@ -205,6 +206,11 @@ const routes: Routes = [
     path: 'securities/stock/:ticker',
     component: StockDetailComponent,
     canActivate: [authGuard],
+  },
+  {
+    path: 'securities/funds/:id',
+    component: FundDetailComponent,
+    //canActivate: [authGuard],
   },
   {
     path: 'securities/future/:ticker',
