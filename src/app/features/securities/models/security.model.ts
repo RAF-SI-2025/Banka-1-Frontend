@@ -156,6 +156,35 @@ export interface SortConfig {
 }
 
 /**
+ * Investment fund
+ */
+export interface Fund {
+  id: number;
+  name: string;
+  description: string;
+  totalValue: number;
+  profit: number;
+  minimumContribution: number;
+}
+
+export interface FundFilters {
+  search?: string;
+  totalValueMin?: number;
+  totalValueMax?: number;
+  profitMin?: number;
+  profitMax?: number;
+  minimumContributionMin?: number;
+  minimumContributionMax?: number;
+}
+
+export type FundSortField = 'name' | 'description' | 'totalValue' | 'profit' | 'minimumContribution';
+
+export interface FundSortConfig {
+  field: FundSortField;
+  direction: 'asc' | 'desc';
+}
+
+/**
  * Paginated response
  */
 export interface SecuritiesPage<T> {

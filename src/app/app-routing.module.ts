@@ -34,6 +34,8 @@ import { CreateOrderComponent } from './features/orders/components/create-order/
 import { OrdersOverviewComponent } from './features/employee/components/orders-overview/orders-overview.component';
 import { PortfolioComponent } from './features/client/components/portfolio/portfolio.component';
 import { portfolioAccessGuard } from './core/guards/portfolio-access.guard';
+import { FundDiscoveryComponent } from './features/securities/components/fund-discovery/fund-discovery.component';
+import { clientOrActuaryGuard } from './core/guards/client-or-actuary.guard';
 
 const routes: Routes = [
   {
@@ -125,7 +127,7 @@ const routes: Routes = [
   path: 'stock-exchange',
   component: ExchangeListComponent,
   canActivate: [authGuard, roleGuard],
-  data: { roles: ['ADMIN', 'SUPERVISOR'] } 
+  data: { roles: ['ADMIN', 'SUPERVISOR'] }
   },
   {
     path: 'exchange',
@@ -188,13 +190,18 @@ const routes: Routes = [
     path: 'tax-tracking',
     component: TaxTrackingComponent,
     canActivate: [authGuard, roleGuard],
-    data: { permission: 'SECURITIES_TRADE_UNLIMITED' }, 
+    data: { permission: 'SECURITIES_TRADE_UNLIMITED' },
   },
 
   {
     path: 'securities',
     component: SecuritiesListComponent,
     canActivate: [authGuard],
+  },
+  {
+    path: 'funds',
+    component: FundDiscoveryComponent,
+    canActivate: [authGuard, clientOrActuaryGuard],
   },
   {
     path: 'portfolio',
