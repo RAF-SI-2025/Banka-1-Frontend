@@ -14,6 +14,34 @@ import {
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
+type PortfolioTab = 'securities' | 'funds';
+
+export interface FundPosition {
+  id: number;
+  name: string;
+  description: string;
+  totalFundValue: number;
+  ownershipPercentage: number;
+  ownershipValue: number;
+  investedAmount: number;
+  liquidAssets: number;
+}
+
+export interface ManagedFund {
+  id: number;
+  name: string;
+  description: string;
+  totalValue: number;
+  liquidity: number;
+}
+
+
+export interface BankAccount {
+  id: number;
+  accountNumber: string;
+  balance: number;
+}
+
 @Component({
   selector: 'app-portfolio',
   standalone: true,
@@ -21,12 +49,30 @@ import { ToastService } from '../../../../shared/services/toast.service';
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.scss'],
 })
+
 export class PortfolioComponent implements OnInit, OnDestroy {
   summary: PortfolioSummary | null = null;
   holdings: PortfolioHolding[] = [];
   isLoading = false;
   errorMessage = '';
   isActuary = false;
+  isClient = false;
+
+  activeTab: PortfolioTab = 'securities';
+  myFunds: FundPosition[] = [];
+
+  managedFunds: ManagedFund[] = [];
+
+  clientAccounts: BankAccount[] = [];
+
+  selectedFund: FundPosition | null = null;
+  showDepositModal = false;
+  showWithdrawModal = false;
+
+  selectedAccountId: number | null = null;
+  transactionAmount: number = 0;
+  isFullWithdrawal = false;
+  
 
   draftPublicQuantities: Record<string, number> = {};
   savingPublicQuantity: Record<string, boolean> = {};
@@ -43,6 +89,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isActuary = this.authService.isActuary();
+    this.isClient = this.authService.isClient();
     this.loadPortfolio();
 
     // The portfolio page is the natural landing spot after a buy/sell flow,
@@ -60,6 +107,79 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+setActiveTab(tab: PortfolioTab): void {
+    this.activeTab = tab;
+    if (tab === 'funds') {
+      if (this.isClient) {
+        // Logika za klijenta 
+      } else {
+        // Logika za supervizora 
+      }
+    }
+  }
+  calculateFundProfit(fund: FundPosition): number {
+    return fund.ownershipValue - fund.investedAmount;
+  }
+
+  openDepositModal(fund: FundPosition, event: Event): void {
+    event.stopPropagation();
+    this.selectedFund = fund;
+    this.showDepositModal = true;
+    this.resetFundForm();
+  }
+
+  openWithdrawModal(fund: FundPosition, event: Event): void {
+    event.stopPropagation();
+    this.selectedFund = fund;
+    this.showWithdrawModal = true;
+    this.resetFundForm();
+  }
+
+  closeModals(): void {
+    this.showDepositModal = false;
+    this.showWithdrawModal = false;
+    this.selectedFund = null;
+  }
+
+  resetFundForm(): void {
+    this.selectedAccountId = null;
+    this.transactionAmount = 0;
+    this.isFullWithdrawal = false;
+  }
+
+  toggleFullWithdrawal(checked: boolean): void {
+    this.isFullWithdrawal = checked;
+    if (checked && this.selectedFund) {
+      this.transactionAmount = this.selectedFund.ownershipValue;
+    } else {
+      this.transactionAmount = 0;
+    }
+  }
+
+  get isLiquidityLow(): boolean {
+    if (!this.selectedFund) return false;
+    return this.transactionAmount > this.selectedFund.liquidAssets;
+  }
+
+  confirmDeposit(): void {
+    // TODO: Connect to fund-service
+    this.toastService.success('Uplata uspešno procesuirana.');
+    this.closeModals();
+  }
+
+  confirmWithdrawal(): void {
+    if (this.isLiquidityLow) {
+      this.toastService.info('Fond nema dovoljno likvidnih sredstava. Isplata će biti izvršena nakon likvidacije hartija.');
+    } else {
+      this.toastService.success('Zahtev za povlačenje sredstava je podnet.');
+    }
+    this.closeModals();
+  }
+
+  navigateToFundDetails(fundId: number): void {
+    this.router.navigate(['/funds', fundId]); //Ovo treba da se doupini kada se implemenitra F4
   }
 
   loadPortfolio(): void {
