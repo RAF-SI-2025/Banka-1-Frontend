@@ -32,6 +32,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Menjačnica', route: '/exchange',            icon: 'currency_exchange' },
     { label: 'Primaoci plaćanja', route: '/payments/recipients', icon: 'people' },
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
+    { label: 'Aktivne ponude', route: '/client/otc-offers', icon: 'handshake' },
     this.portfolioLink,
     { label: 'Krediti',    route: '/loans',               icon: 'credit_card' },
     { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },

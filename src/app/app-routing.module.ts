@@ -43,6 +43,12 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'client',
+    loadChildren: () =>
+      import('./features/client/client.module').then((m) => m.ClientModule),
+    canActivate: [authGuard],
+  },
+  {
     path: 'employees/new',
     component: EmployeeCreateComponent,
     canActivate: [authGuard, roleGuard],
