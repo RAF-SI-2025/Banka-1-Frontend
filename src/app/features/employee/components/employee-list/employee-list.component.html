@@ -132,3 +132,29 @@
   (save)="onEmployeeSaved($event)"
   (cancel)="closeEditModal()">
 </app-employee-edit-modal>
+
+<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" *ngIf="showSupervisorWarning">
+  <div class="bg-card rounded-xl shadow-xl p-6 w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-2">Upozorenje: Prenos fondova</h2>
+    <p class="text-sm text-muted-foreground mb-4">
+      Ovaj supervizor trenutno upravlja sledećim fondovima. Uklanjanjem supervizorske uloge, vlasništvo nad svim fondovima biće automatski prebačeno na vas.
+    </p>
+
+    <ul class="mb-4 space-y-2">
+      <li *ngFor="let fund of fundsToTransfer"
+          class="flex justify-between items-center px-3 py-2 rounded-lg border border-border bg-muted/20 text-sm">
+        <span class="font-medium">{{ fund.name }}</span>
+        <span class="text-muted-foreground">{{ fund.balance | number:'1.2-2' }} {{ fund.currency }}</span>
+      </li>
+    </ul>
+
+    <div class="flex justify-end gap-3">
+      <button class="z-btn-outline" (click)="cancelSupervisorDowngrade()">
+        Odustani
+      </button>
+      <button class="z-btn-primary" (click)="confirmSupervisorDowngrade()">
+        Potvrdi i prenesi fondove
+      </button>
+    </div>
+  </div>
+</div>
