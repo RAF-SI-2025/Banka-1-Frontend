@@ -35,6 +35,7 @@ export class NavbarComponent implements OnInit {
     this.portfolioLink,
     { label: 'Krediti',    route: '/loans',               icon: 'credit_card' },
     { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
+    { label: 'OTC Ponude', route: '/home/otc-contracts',  icon: 'description' },
   ];
 
   private readonly employeeLinks: NavLink[] = [
