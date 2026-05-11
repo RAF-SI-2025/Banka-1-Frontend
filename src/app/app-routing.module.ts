@@ -201,7 +201,7 @@ const routes: Routes = [
   {
     path: 'funds',
     component: FundDiscoveryComponent,
-    //canActivate: [authGuard, clientOrActuaryGuard],
+    canActivate: [authGuard, clientOrActuaryGuard],
   },
   {
     path: 'portfolio',
