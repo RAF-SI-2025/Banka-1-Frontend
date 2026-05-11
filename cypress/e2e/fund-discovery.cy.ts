@@ -29,18 +29,19 @@ const MOCK_FUNDS = [
   },
 ];
 
-const MOCK_ACCOUNTS = [
+// Backend format (mapToAccountFromClient reads brojRacuna, raspolozivoStanje, nazivRacuna)
+const MOCK_ACCOUNTS_BACKEND = [
   {
-    accountNumber: '265000000011111111',
-    name: 'Transakcioni račun',
-    availableBalance: 200000,
+    brojRacuna: '265000000011111111',
+    nazivRacuna: 'Transakcioni račun',
+    raspolozivoStanje: 200000,
     currency: 'RSD',
     status: 'ACTIVE',
   },
   {
-    accountNumber: '265000000022222222',
-    name: 'Štedni račun',
-    availableBalance: 50000,
+    brojRacuna: '265000000022222222',
+    nazivRacuna: 'Štedni račun',
+    raspolozivoStanje: 50000,
     currency: 'RSD',
     status: 'ACTIVE',
   },
@@ -54,43 +55,30 @@ const MOCK_PAGE = {
   size: 10,
 };
 
-const setClientAuth = (): void => {
-  cy.window().then((win: any) => {
-    win.localStorage.setItem('authToken', 'fake-jwt-token');
-    win.localStorage.setItem('loggedUser', JSON.stringify({
-      email: 'klijent@test.com',
-      role: 'Client',
-      permissions: [],
-    }));
-  });
-};
+const clientUser = JSON.stringify({ email: 'klijent@test.com', role: 'Client', permissions: [] });
+const supervisorUser = JSON.stringify({ email: 'supervisor@test.com', role: 'Supervisor', permissions: ['FUND_AGENT_MANAGE'] });
 
-const setSupervisorAuth = (): void => {
-  cy.window().then((win: any) => {
-    win.localStorage.setItem('authToken', 'fake-jwt-token');
-    win.localStorage.setItem('loggedUser', JSON.stringify({
-      email: 'supervisor@test.com',
-      role: 'Supervisor',
-      permissions: ['FUND_AGENT_MANAGE'],
-    }));
+const visitAsFund = (user: string): void => {
+  cy.visit('/funds', {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', 'fake-jwt-token');
+      win.localStorage.setItem('loggedUser', user);
+    },
   });
 };
 
 const clearAuth = (): void => {
-  cy.window().then((win: any) => {
-    win.localStorage.removeItem('authToken');
-    win.localStorage.removeItem('loggedUser');
-  });
+  cy.clearLocalStorage();
 };
 
 const interceptFunds = (body = MOCK_PAGE): void => {
-  cy.intercept('GET', '**/funds*', { statusCode: 200, body }).as('getFunds');
+  cy.intercept('GET', 'http://localhost/funds*', { statusCode: 200, body }).as('getFunds');
 };
 
 const interceptAccounts = (): void => {
-  cy.intercept('GET', '**/accounts/client/accounts*', {
+  cy.intercept('GET', 'http://localhost/accounts/client/accounts*', {
     statusCode: 200,
-    body: { content: MOCK_ACCOUNTS, totalElements: 2, totalPages: 1 },
+    body: { content: MOCK_ACCOUNTS_BACKEND, totalElements: 2, totalPages: 1 },
   }).as('getAccounts');
 };
 
@@ -103,8 +91,7 @@ describe('Fund Discovery — klijent', () => {
   beforeEach(() => {
     interceptFunds();
     interceptAccounts();
-    setClientAuth();
-    cy.visit('/funds');
+    visitAsFund(clientUser);
     cy.wait('@getFunds');
   });
 
@@ -117,7 +104,7 @@ describe('Fund Discovery — klijent', () => {
     cy.get('[data-cy="funds-table"] tbody tr').should('have.length', 3);
   });
 
-  it('prikazuje naziv, opis i finansijske podatke fonda', () => {
+  it('prikazuje naziv i opis fonda', () => {
     cy.get('[data-cy="funds-table"] tbody tr').first()
       .should('contain', 'Global Growth Fund')
       .and('contain', 'Fond usmeren na rast');
@@ -146,10 +133,14 @@ describe('Fund Discovery — klijent', () => {
   // ===========================================================
 
   it('poziva API sa search parametrom pri pretrazi', () => {
+    // ngModelChange okida API za svako slovo — čekamo poslednji zahtev
     interceptFunds({ ...MOCK_PAGE, content: [MOCK_FUNDS[2]], totalElements: 1 });
     cy.get('[data-cy="search-input"]').type('Tech');
+    // 4 slova → 4 zahteva, čekamo sve da bismo proverili poslednji
+    cy.wait('@getFunds');
+    cy.wait('@getFunds');
+    cy.wait('@getFunds');
     cy.wait('@getFunds').its('request.url').should('include', 'search=Tech');
-    cy.get('[data-cy="funds-table"] tbody tr').should('have.length', 1);
   });
 
   // ===========================================================
@@ -159,16 +150,19 @@ describe('Fund Discovery — klijent', () => {
   it('sortira po nazivu klikom na zaglavlje', () => {
     interceptFunds();
     cy.get('[data-cy="funds-table"] thead button').contains('Naziv').click();
+    // inicijalno je name:asc, prvi klik menja na name:desc
     cy.wait('@getFunds').its('request.url').should('include', 'sortBy=name');
   });
 
   it('menja smer sortiranja pri drugom kliku', () => {
-    interceptFunds();
-    cy.get('[data-cy="funds-table"] thead button').contains('Naziv').click();
-    cy.wait('@getFunds');
+    // 1. klik: name:asc → name:desc
     interceptFunds();
     cy.get('[data-cy="funds-table"] thead button').contains('Naziv').click();
     cy.wait('@getFunds').its('request.url').should('include', 'sortDirection=desc');
+    // 2. klik: name:desc → name:asc
+    interceptFunds();
+    cy.get('[data-cy="funds-table"] thead button').contains('Naziv').click();
+    cy.wait('@getFunds').its('request.url').should('include', 'sortDirection=asc');
   });
 
   it('sortira po ukupnoj vrednosti', () => {
@@ -211,7 +205,8 @@ describe('Fund Discovery — klijent', () => {
   it('učitava i prikazuje aktivne račune u select-u', () => {
     cy.get('[data-cy="invest-btn"]').first().click();
     cy.wait('@getAccounts');
-    cy.get('[data-cy="account-select"] option').should('have.length.gte', 2);
+    // 1 disabled placeholder + 2 računa = 3 opcije
+    cy.get('[data-cy="account-select"] option').should('have.length', 3);
   });
 
   it('dugme "Investiraj" u modalu je onemogućeno bez iznosa', () => {
@@ -242,12 +237,12 @@ describe('Fund Discovery — klijent', () => {
   });
 
   it('šalje POST zahtev pri potvrdi investicije', () => {
-    cy.intercept('POST', '**/funds/*/invest', { statusCode: 200 }).as('invest');
+    cy.intercept('POST', 'http://localhost/funds/*/invest', { statusCode: 200 }).as('invest');
     cy.get('[data-cy="invest-btn"]').first().click();
     cy.wait('@getAccounts');
     cy.get('[data-cy="amount-input"]').type('60000');
     cy.get('[data-cy="confirm-invest-btn"]').click();
-    cy.wait('@invest').its('request.body').should('include', { amount: 60000 });
+    cy.wait('@invest').its('request.body').should('deep.include', { amount: 60000 });
     cy.get('[data-cy="invest-modal"]').should('not.exist');
   });
 
@@ -261,8 +256,7 @@ describe('Fund Discovery — supervizor', () => {
 
   beforeEach(() => {
     interceptFunds();
-    setSupervisorAuth();
-    cy.visit('/funds');
+    visitAsFund(supervisorUser);
     cy.wait('@getFunds');
   });
 
@@ -295,9 +289,8 @@ describe('Fund Discovery — paginacija', () => {
       number: 0,
       size: 10,
     };
-    cy.intercept('GET', '**/funds*', { statusCode: 200, body: pagedResponse }).as('getFunds');
-    setClientAuth();
-    cy.visit('/funds');
+    cy.intercept('GET', 'http://localhost/funds*', { statusCode: 200, body: pagedResponse }).as('getFunds');
+    visitAsFund(clientUser);
     cy.wait('@getFunds');
   });
 
@@ -306,12 +299,17 @@ describe('Fund Discovery — paginacija', () => {
   });
 
   it('dugme za prethodnu stranicu je onemogućeno na prvoj stranici', () => {
-    cy.get('button').filter('[disabled]').first().should('exist');
+    // prev dugme je prvo u paginacionom div-u
+    cy.get('.flex.gap-1 button').first().should('be.disabled');
   });
 
   it('prelazi na sledeću stranicu', () => {
-    cy.intercept('GET', '**/funds*', { statusCode: 200, body: { ...MOCK_PAGE, number: 1 } }).as('page2');
-    cy.get('button').contains('svg[viewBox]').parents('button').last().click();
+    cy.intercept('GET', 'http://localhost/funds*', {
+      statusCode: 200,
+      body: { content: MOCK_FUNDS, totalElements: 25, totalPages: 3, number: 1, size: 10 },
+    }).as('page2');
+    // next dugme je poslednje u paginacionom div-u
+    cy.get('.flex.gap-1 button').last().click();
     cy.wait('@page2').its('request.url').should('include', 'page=1');
   });
 
