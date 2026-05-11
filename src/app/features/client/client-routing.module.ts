@@ -19,8 +19,7 @@ const routes: Routes = [
   },
   { path: 'cards', component: CardListComponent },
   { path: 'cards/request', component: RequestCardComponent, canActivate: [authGuard] },
-  { path: 'otc-contracts', component: OtcContractsComponent }
-  // Privremeno bez authGuard za testiranje
+  { path: 'otc-contracts', component: OtcContractsComponent, canActivate: [authGuard] }
 
 
 ];

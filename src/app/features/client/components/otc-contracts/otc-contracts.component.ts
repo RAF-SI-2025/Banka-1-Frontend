@@ -58,7 +58,7 @@ export class OtcContractsComponent implements OnInit {
    */
   public applyFilter(): void {
     if (this.selectedFilter === 'ALL') {
-      this.filteredContracts = this.contracts;
+      this.filteredContracts = [...this.contracts];
     } else if (this.selectedFilter === 'ACTIVE') {
       this.filteredContracts = this.contracts.filter(c => c.status === 'ACTIVE');
     } else if (this.selectedFilter === 'EXPIRED') {

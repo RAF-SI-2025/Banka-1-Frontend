@@ -118,7 +118,7 @@
                       <div class="font-semibold text-foreground truncate">{{ contract.stock.symbol }}</div>
                       <div class="text-xs text-muted-foreground truncate">{{ contract.stock.name }}</div>
                       <div class="text-xs font-semibold text-green-600 mt-0.5">
-                        ${{ formatAmount(contract.stock.currentPrice, 2) }}
+                        {{ contract.stock.currency }}{{ formatAmount(contract.stock.currentPrice, 2) }}
                       </div>
                     </div>
                   </div>
@@ -132,13 +132,13 @@
 
                 <!-- Strike Price -->
                 <td class="py-4 px-4 text-center">
-                  <div class="font-semibold text-foreground">${{ formatAmount(contract.strikePrice, 2) }}</div>
+                  <div class="font-semibold text-foreground">{{ contract.stock.currency }}{{ formatAmount(contract.strikePrice, 2) }}</div>
                   <div class="text-xs text-muted-foreground">po jedinici</div>
                 </td>
 
                 <!-- Premium -->
                 <td class="py-4 px-4 text-center">
-                  <div class="font-semibold text-foreground">${{ formatAmount(contract.premium, 2) }}</div>
+                  <div class="font-semibold text-foreground">{{ contract.stock.currency }}{{ formatAmount(contract.premium, 2) }}</div>
                 </td>
 
                 <!-- Settlement Date -->
@@ -160,7 +160,7 @@
                 <!-- Profit -->
                 <td class="py-4 px-4 text-center">
                   <div [ngClass]="getProfitColor(contract.profit)" class="font-bold">
-                    {{ isProfitable(contract.profit) ? '+' : '-' }}${{ formatAmount(Math.abs(contract.profit), 2) }}
+                    {{ isProfitable(contract.profit) ? '+' : '-' }}{{ contract.stock.currency }}{{ formatAmount(Math.abs(contract.profit), 2) }}
                   </div>
                   <div class="text-xs" [ngClass]="isProfitable(contract.profit) ? 'text-green-600' : 'text-red-600'">
                     {{ isProfitable(contract.profit) ? 'Dobit' : 'Gubitak' }}
