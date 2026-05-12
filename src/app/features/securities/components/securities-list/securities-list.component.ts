@@ -4,12 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, Subject, combineLatest, interval } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SecuritiesService } from '../../services/securities.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ExchangeManagerService } from '../../../employee/services/exchange-manager.service';
 import { ExchangeService } from '../../../../shared/services/exchange.service';
+import { AppPaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
+// PR_31 Phase 7 T22: lucide-icon za drawer close button.
+import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
 import {
   Security,
   Stock,
@@ -26,7 +30,7 @@ type SecurityTab = 'stocks' | 'futures' | 'forex';
 @Component({
   selector: 'app-securities-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent],
   templateUrl: './securities-list.component.html',
   styleUrls: ['./securities-list.component.scss'],
 })

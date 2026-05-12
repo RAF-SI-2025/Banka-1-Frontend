@@ -1,0 +1,91 @@
+<div>
+<div>
+  <h1 class="text-2xl font-bold text-foreground mb-5">Moji fondovi</h1>
+
+  <!-- PR_19 C19.7: shared StateComponent zameni inline loading/empty/error markup. -->
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje pozicija..."></app-state>
+  <app-state *ngIf="error" mode="error" [text]="error"></app-state>
+
+  <div *ngIf="!loading && !error && rows.length > 0" class="z-card overflow-hidden">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th class="text-left">Fond</th>
+          <th class="text-right">Ukupno ulozeno</th>
+          <th class="text-right">Trenutna vrednost fonda</th>
+          <th class="text-right">Moj % udeo</th>
+          <th class="text-left">Prva uplata</th>
+          <th class="text-right">Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows">
+          <td>
+            <a [routerLink]="['/funds', r.position.fundId]" class="text-primary hover:underline font-medium">
+              {{ r.fund?.naziv ?? ('Fond #' + r.position.fundId) }}
+            </a>
+          </td>
+          <td class="text-right font-mono">{{ r.position.totalInvested | number:'1.2-2' }} RSD</td>
+          <td class="text-right font-mono">{{ (r.fund?.totalValue ?? 0) | number:'1.2-2' }} RSD</td>
+          <td class="text-right">
+            <span class="z-badge z-badge-blue">{{ (r.pctOfFund ?? 0) | number:'1.2-2' }}%</span>
+          </td>
+          <td>{{ r.position.firstInvestedAt | date:'short' }}</td>
+          <td class="text-right space-x-2 whitespace-nowrap">
+            <button type="button" class="z-btn-primary z-btn-sm"
+                    (click)="openInvest(r)" [disabled]="!r.fund"
+                    data-testid="invest-btn">
+              Uplati
+            </button>
+            <button type="button" class="z-btn-destructive z-btn-sm"
+                    (click)="openRedeem(r)" [disabled]="!r.fund || r.position.totalInvested <= 0"
+                    data-testid="redeem-btn">
+              Povuci
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <app-state *ngIf="!loading && !error && rows.length === 0"
+             mode="empty" icon="briefcase" title="Nema pozicija"
+             text="Niste investirali ni u jedan fond. Otidite na 'Discover' za pregled dostupnih fondova.">
+  </app-state>
+
+  <!-- PR_19 C19.7: shared FormModalComponent zameni hand-coded native HTML modal. -->
+  <app-form-modal *ngIf="modal.open"
+                  [title]="(modal.mode === 'invest' ? 'Uplata u fond' : 'Isplata iz fonda') + ': ' + (modal.row?.fund?.naziv || '')"
+                  [submitting]="modal.submitting"
+                  [errorMessage]="modal.errorMessage"
+                  (close)="closeModal()"
+                  (confirm)="submitModal()">
+    <div class="z-form-row">
+      <label for="amount-input" class="z-label">Iznos (RSD)</label>
+      <input id="amount-input" type="number" min="0" step="0.01"
+             [(ngModel)]="modal.amount" name="amount"
+             aria-label="Iznos transakcije u RSD"
+             placeholder="0.00"
+             data-testid="amount-input"
+             class="z-input">
+      <p *ngIf="modal.mode === 'invest' && modal.row?.fund" class="z-help">
+        Min: {{ modal.row?.fund?.minimumContribution | number:'1.2-2' }} RSD
+      </p>
+      <p *ngIf="modal.mode === 'redeem' && modal.row" class="z-help">
+        Max: {{ modal.row?.position?.totalInvested | number:'1.2-2' }} RSD
+      </p>
+    </div>
+
+    <div class="z-form-row">
+      <label for="account-input" class="z-label">
+        {{ modal.mode === 'invest' ? 'Sa kog tekuceg racuna' : 'Na koji tekuci racun' }}
+      </label>
+      <input id="account-input" type="text"
+             [(ngModel)]="modal.account" name="account"
+             placeholder="19-cifren broj racuna"
+             data-testid="account-input"
+             class="z-input font-mono">
+    </div>
+  </app-form-modal>
+</div>
+</div>

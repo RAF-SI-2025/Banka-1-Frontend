@@ -1,0 +1,145 @@
+<div>
+  <div>
+    <div class="mb-6">
+      <a routerLink="/otc/offers" class="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+        <span aria-hidden="true">←</span> Nazad na aktivne ponude
+      </a>
+    </div>
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Nova OTC ponuda</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Posaljite kontra-strani opcionu ponudu na akciju iz vaseg portfolija. Po prihvatanju kreira se ugovor.
+        </p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="z-card p-6 max-w-2xl">
+      <!-- PR_33 Phase B: toggle intra-bank vs cross-bank. -->
+      <div class="mb-6 pb-5 border-b border-border">
+        <label class="z-label">Tip pregovora</label>
+        <div class="flex items-center gap-3 mt-2" role="radiogroup" aria-label="Tip pregovora">
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="radio"
+                   name="otcMode"
+                   value="local"
+                   data-testid="mode-local"
+                   [checked]="mode === 'local'"
+                   (change)="setMode('local')" />
+            <span class="z-badge z-badge-gray">Naša banka</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="radio"
+                   name="otcMode"
+                   value="banka2"
+                   data-testid="mode-banka2"
+                   [checked]="mode === 'banka2'"
+                   (change)="setMode('banka2')" />
+            <span class="z-badge z-badge-gold">Banka 2</span>
+          </label>
+        </div>
+        <p class="text-xs text-muted-foreground mt-2">
+          <ng-container *ngIf="mode === 'local'">
+            Ponuda upucena lokalnom klijentu nase banke (preko interne OTC rute).
+          </ng-container>
+          <ng-container *ngIf="mode === 'banka2'">
+            Cross-bank pregovor sa Banka 2 (routing 222). Prodavac se identifikuje stringom "C-{{ '{' }}n{{ '}' }}" ili "E-{{ '{' }}n{{ '}' }}".
+          </ng-container>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="otc-ticker" class="z-label">Akcija (ticker)</label>
+          <input id="otc-ticker"
+                 formControlName="stockTicker"
+                 class="z-input font-mono uppercase"
+                 placeholder="AAPL" />
+          <p *ngIf="form.controls['stockTicker'].invalid && form.controls['stockTicker'].touched" class="z-error">
+            Ticker mora biti 1–16 velikih slova/cifara.
+          </p>
+        </div>
+
+        <!-- Intra-bank: numericki sellerId -->
+        <div *ngIf="mode === 'local'">
+          <label for="otc-seller" class="z-label">Prodavac (klijent ID)</label>
+          <input id="otc-seller"
+                 type="number"
+                 formControlName="sellerId"
+                 class="z-input"
+                 data-testid="seller-id-input"
+                 placeholder="123" />
+        </div>
+
+        <!-- Banka 2: foreign id "C-{n}" / "E-{n}" + routing 222 indikator -->
+        <div *ngIf="mode === 'banka2'">
+          <label for="otc-seller-foreign" class="z-label">Prodavac (Banka 2 ID)</label>
+          <input id="otc-seller-foreign"
+                 type="text"
+                 formControlName="sellerForeignId"
+                 class="z-input font-mono"
+                 data-testid="seller-foreign-input"
+                 placeholder="C-2" />
+          <p class="text-xs text-muted-foreground mt-1">Routing number: <span class="font-mono">222</span> (Banka 2).</p>
+          <p *ngIf="form.controls['sellerForeignId'].invalid && form.controls['sellerForeignId'].touched" class="z-error">
+            Format: "C-2" (klijent) ili "E-7" (employee).
+          </p>
+        </div>
+
+        <div>
+          <label for="otc-amount" class="z-label">Kolicina</label>
+          <input id="otc-amount"
+                 type="number"
+                 formControlName="amount"
+                 class="z-input font-mono"
+                 placeholder="0" />
+        </div>
+
+        <div>
+          <label for="otc-price" class="z-label">Cena po akciji</label>
+          <input id="otc-price"
+                 type="number"
+                 step="0.01"
+                 formControlName="pricePerStock"
+                 class="z-input font-mono"
+                 placeholder="0.00" />
+        </div>
+
+        <div>
+          <label for="otc-premium" class="z-label">Premium (cena ugovora)</label>
+          <input id="otc-premium"
+                 type="number"
+                 step="0.01"
+                 formControlName="premium"
+                 class="z-input font-mono"
+                 placeholder="0.00" />
+          <p class="text-xs text-muted-foreground mt-1">Iznos koji kupac placa odmah za pravo na opciju.</p>
+        </div>
+
+        <div>
+          <label for="otc-settlement" class="z-label">Datum isteka opcije</label>
+          <input id="otc-settlement"
+                 type="date"
+                 formControlName="settlementDate"
+                 class="z-input" />
+        </div>
+      </div>
+
+      <div *ngIf="error" class="z-alert-error mt-5">
+        {{ error }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-border">
+        <a routerLink="/otc/offers" class="z-btn-outline">Otkazi</a>
+        <button type="submit"
+                class="z-btn-gold"
+                [disabled]="form.invalid || loading"
+                data-testid="submit-btn">
+          <span *ngIf="!loading">Posalji ponudu</span>
+          <span *ngIf="loading">Slanje...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { LoanService } from '../../services/loan.service';
 import { AccountService } from '../../services/account.service';
 import {
@@ -30,7 +29,7 @@ interface SelectOption<T> {
 
 @Component({
   selector: 'app-loan-request',
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './loan-request.component.html',
   standalone: true,
   styleUrls: ['./loan-request.component.scss']
@@ -260,9 +259,9 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
           this.form.reset({ currency: Currency.RSD });
           this.submitted = false;
 
-          // Preusmeri nakon 3 sekunde
+          /* PR_31 hotfix: ruta je `/loans` (LoanListComponent), ne `/home/loans` (404). */
           setTimeout(() => {
-            this.router.navigate(['/home/loans']);
+            this.router.navigate(['/loans']);
           }, 3000);
         },
         error: (err) => {

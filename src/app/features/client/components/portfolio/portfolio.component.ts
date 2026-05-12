@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import {
   PortfolioHolding,
@@ -13,11 +12,13 @@ import {
 } from '../../models/portfolio.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, StateComponent],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.scss'],
 })
@@ -167,8 +168,12 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       });
   }
 
-  onSell(): void {
-    // TODO: Povezati F1 Sell modal / Create order flow kada ta implementacija bude dostupna.
+  onSell(holding: PortfolioHolding): void {
+    if (holding == null || holding.listingId == null) {
+      this.toastService.error('Nedostaje listingId za izabranu poziciju.');
+      return;
+    }
+    this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
   isStock(holding: PortfolioHolding): boolean {

@@ -66,6 +66,32 @@ export interface CardRequestResponseDto {
   createdCard: unknown | null;
 }
 
+/**
+ * PR_32: row shape returned by `GET /api/cards/all` for the employee cards
+ * management portal. Mirrors {@code CardAdminSummaryDTO} on the backend.
+ */
+export interface CardAdminSummary {
+  id: number;
+  cardNumber: string;
+  brand: string;
+  status: 'ACTIVE' | 'BLOCKED' | 'DEACTIVATED';
+  accountNumber: string;
+  clientId: number;
+  cardLimit: number;
+}
+
+/**
+ * PR_32: Spring Data Page envelope returned for `GET /api/cards/all`.
+ * Only the fields the UI consumes are typed.
+ */
+export interface CardAdminPage {
+  content: CardAdminSummary[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CardService {
   private readonly accountsBase = `${environment.apiUrl}/accounts/client`;
@@ -89,6 +115,49 @@ export class CardService {
     return this.http.put<void>(`${this.cardsBase}/id/${cardId}/block`, {});
   }
 
+  /**
+   * PR_32: unblocks a previously blocked card.
+   * Employee-only endpoint (the gateway rejects clients).
+   * Allowed transition: BLOCKED -> ACTIVE.
+   */
+  public unblockCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.cardsBase}/id/${cardId}/unblock`, {});
+  }
+
+  /**
+   * PR_32: permanently deactivates a card.
+   * Employee-only endpoint. Deactivation is irreversible.
+   * Allowed transitions: ACTIVE -> DEACTIVATED or BLOCKED -> DEACTIVATED.
+   */
+  public deactivateCard(cardId: number): Observable<void> {
+    return this.http.put<void>(`${this.cardsBase}/id/${cardId}/deactivate`, {});
+  }
+
+  /**
+   * PR_32: bank-wide paginated card listing for the employee
+   * "Portal za upravljanje karticama" screen.
+   *
+   * <p>Returns a Spring Data `Page` envelope. {@code status} is one of
+   * {@code ACTIVE / BLOCKED / DEACTIVATED} (case-insensitive on the backend).
+   * {@code search} is matched against masked card number, account number, and
+   * brand label.
+   */
+  public getAllCards(
+    page: number,
+    size: number,
+    status?: string,
+    search?: string,
+  ): Observable<CardAdminPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (status) {
+      params = params.set('status', status);
+    }
+    if (search) {
+      params = params.set('search', search);
+    }
+    return this.http.get<CardAdminPage>(`${this.cardsBase}/all`, { params });
+  }
+
   public requestPersonalCard(body: ClientCardRequestDto): Observable<CardRequestResponseDto> {
     return this.http.post<CardRequestResponseDto>(`${this.cardsBase}/request`, body);
   }
@@ -103,7 +172,8 @@ export class CardService {
     if (digits.length >= 8) {
       const first4 = digits.slice(0, 4);
       const last4 = digits.slice(-4);
-      return `${first4} **** **** ${last4}`;
+      // Spec Celina 2: prve 4 cifre + 8 zvezdica + zadnje 4 (npr. 5798********5571)
+      return `${first4}${'*'.repeat(8)}${last4}`;
     }
 
     return cardNumber;

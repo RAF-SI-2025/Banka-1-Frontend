@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AppRoutingModule } from './app-routing.module';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+
 describe('AppRoutingModule', () => {
   let router: Router;
 
@@ -14,19 +15,18 @@ describe('AppRoutingModule', () => {
     router = TestBed.inject(Router);
   });
 
-  it('should have guarded route for employees/accounts/new with CLIENT_MANAGE permission', () => {
-    const route = router.config.find(
-      (r) => r.path === 'employees/accounts/new',
-    );
+  // PR_20 konsolidacija je promenila /employees/accounts/new -> /accounts/new
+  // i /employees/clients -> /clients (vidi app-routing.module.ts posle PR_20).
+  it('should have guarded route for accounts/new with CLIENT_MANAGE permission', () => {
+    const route = router.config.find((r) => r.path === 'accounts/new');
     if (!route) {
-      throw new Error('Route employees/accounts/new should exist');
+      throw new Error('Route accounts/new should exist');
     }
 
     if (!route.canActivate) {
       throw new Error('Route should have canActivate guards');
     }
 
-    // Guards are functions in this project; ensure both are present
     if (!route.canActivate.includes(authGuard)) {
       throw new Error('authGuard should be present on the route');
     }
@@ -40,10 +40,10 @@ describe('AppRoutingModule', () => {
     }
   });
 
-  it('should have guarded route for employees/clients with CLIENT_MANAGE permission', () => {
-    const route = router.config.find((r) => r.path === 'employees/clients');
+  it('should have guarded route for clients with CLIENT_MANAGE permission', () => {
+    const route = router.config.find((r) => r.path === 'clients');
     if (!route) {
-      throw new Error('Route employees/clients should exist');
+      throw new Error('Route clients should exist');
     }
 
     if (!route.canActivate) {

@@ -1,64 +1,86 @@
-<app-navbar></app-navbar>
-
-<div class="flex-1 flex flex-col ml-[240px] mt-[60px]">
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-foreground">Berza</h1>
-      <div class="flex items-center gap-6">
-        <!-- Prikaži samo otvorene -->
-        <label class="flex items-center gap-2 cursor-pointer select-none">
-          <span class="text-sm text-muted-foreground">Prikaži samo otvorene</span>
-          <div class="relative">
-            <input type="checkbox" class="sr-only" [(ngModel)]="showOpenOnly">
-            <div class="w-10 h-6 rounded-full transition-colors"
-                 [ngClass]="showOpenOnly ? 'bg-green-500' : 'bg-muted-foreground/30'">
-            </div>
-            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
-                 [ngClass]="showOpenOnly ? 'translate-x-4' : 'translate-x-0'">
-            </div>
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Berze</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled svih svetskih berzi sa radnim vremenima i trenutnim statusom otvorenosti.
+        </p>
+      </div>
+      <label class="flex items-center gap-3 cursor-pointer select-none">
+        <span class="text-sm font-medium text-foreground">Samo otvorene</span>
+        <div class="relative">
+          <input type="checkbox" class="sr-only" [(ngModel)]="showOpenOnly" />
+          <div class="w-10 h-6 rounded-full transition-colors"
+               [ngClass]="showOpenOnly ? 'bg-primary' : 'bg-muted'">
           </div>
-        </label>
-      </div>
+          <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
+               [ngClass]="showOpenOnly ? 'translate-x-4' : 'translate-x-0'">
+          </div>
+        </div>
+      </label>
     </div>
 
-    <div class="bg-card rounded-lg shadow overflow-hidden">
-      <table class="w-full" *ngIf="filteredExchanges.length > 0 && !loadError">
-        <thead class="bg-muted border-b border-border">
-          <tr>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Naziv Berze</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Akronim</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">MIC Kod</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Država</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Valuta</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Vremenska Zona</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Otvorena</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Radno Vreme</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border">
-          <tr *ngFor="let exchange of filteredExchanges" class="hover:bg-muted/50 transition-colors">
-            <td class="px-6 py-3 text-sm text-foreground font-medium">{{ exchange.exchangeName }}</td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.exchangeAcronym }}</td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.exchangeMICCode }}</td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.polity }}</td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.currency }}</td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">{{ exchange.timeZone }}</td>
-            <td class="px-6 py-3 text-sm">
-              <span [ngClass]="exchangeManager.isExchangeOpen(exchange) ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'">
-                {{ exchangeManager.isExchangeOpen(exchange) ? 'Otvorena' : 'Zatvorena' }}
-              </span>
-            </td>
-            <td class="px-6 py-3 text-sm text-muted-foreground">
-              {{ exchange.openTime }} - {{ exchange.closeTime }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Poruka ako nema podataka ili je došlo do greške -->
-      <div class="px-6 py-12 text-center" *ngIf="filteredExchanges.length === 0 || loadError">
-        <p class="text-lg text-muted-foreground">{{ loadError ? 'Greška pri učitavanju podataka' : (showOpenOnly ? 'Nema otvorenih berzi' : 'Nema podataka') }}</p>
-      </div>
+    <div *ngIf="loadError" class="z-card p-8 text-center mb-6">
+      <p class="text-sm text-destructive font-medium">Greska pri ucitavanju podataka.</p>
     </div>
+
+    <section *ngIf="!loadError" class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Berze sveta</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Vremenska zona po lokalnom standardu, status u realnom vremenu.</p>
+        </div>
+        <span *ngIf="filteredExchanges.length > 0" class="z-badge z-badge-blue">{{ filteredExchanges.length }} berzi</span>
+      </div>
+
+      <div *ngIf="filteredExchanges.length === 0" class="py-10 text-center text-sm text-muted-foreground">
+        {{ showOpenOnly ? 'Nema trenutno otvorenih berzi.' : 'Nema podataka.' }}
+      </div>
+
+      <div *ngIf="filteredExchanges.length > 0" class="overflow-x-auto">
+        <table class="z-table min-w-[920px]">
+          <thead>
+            <tr>
+              <th>Naziv berze</th>
+              <th>Akronim</th>
+              <th>MIC</th>
+              <th>Drzava</th>
+              <th>Valuta</th>
+              <th>Vremenska zona</th>
+              <th>Status</th>
+              <th class="text-right">Radno vreme</th>
+              <th class="text-right">Radno vreme aktivno</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let exchange of filteredExchanges">
+              <td class="font-medium">{{ exchange.exchangeName }}</td>
+              <td class="text-muted-foreground font-mono">{{ exchange.exchangeAcronym }}</td>
+              <td class="text-muted-foreground font-mono">{{ exchange.exchangeMICCode }}</td>
+              <td class="text-muted-foreground">{{ exchange.polity }}</td>
+              <td class="text-muted-foreground font-mono">{{ exchange.currency }}</td>
+              <td class="text-muted-foreground">{{ exchange.timeZone }}</td>
+              <td>
+                <span class="z-badge z-badge-dot"
+                      [ngClass]="exchangeManager.isExchangeOpen(exchange) ? 'z-badge-green' : 'z-badge-red'">
+                  {{ exchangeManager.isExchangeOpen(exchange) ? 'Otvorena' : 'Zatvorena' }}
+                </span>
+              </td>
+              <td class="text-right font-mono whitespace-nowrap">{{ exchange.openTime }} – {{ exchange.closeTime }}</td>
+              <td class="text-right">
+                <button type="button"
+                        class="z-btn-sm"
+                        [ngClass]="exchange.isActive ? 'z-btn-outline' : 'z-btn-secondary'"
+                        (click)="toggleWorkingHours(exchange, $event)"
+                        [title]="exchange.isActive ? 'Iskljuci proveru radnog vremena (test mod)' : 'Ukljuci proveru radnog vremena'">
+                  {{ exchange.isActive ? 'Ukljuceno' : 'Iskljuceno' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>

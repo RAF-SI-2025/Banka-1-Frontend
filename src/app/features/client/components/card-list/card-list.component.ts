@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { CardService, AccountDto } from '../../services/card.service';
 import { Card } from '../../models/card.model';
 import { BlockCardDialogComponent } from '../../modals/block-card-dialog/block-card-dialog.component';
 import {RouterModule} from "@angular/router";
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 export interface CardGroup {
   accountName: string;
@@ -18,7 +19,7 @@ export interface CardGroup {
 @Component({
   selector: 'app-card-list',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, BlockCardDialogComponent, RouterModule],
+  imports: [CommonModule, BlockCardDialogComponent, RouterModule, StateComponent],
   templateUrl: './card-list.component.html',
   styles: [`:host { display: block; }
 

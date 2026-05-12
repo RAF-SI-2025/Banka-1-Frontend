@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { SecuritiesService } from '../../services/securities.service';
 import {
   Stock,
@@ -12,6 +11,10 @@ import {
   OptionChain,
   StockOption,
 } from '../../models/security.model';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
+// PR_31 Phase 7 T23: ApexCharts zameni Canvas drawChart().
+import { PriceChartComponent, PriceSeriesPoint } from '../../../../shared/charts/price-chart/price-chart.component';
 
 type Period = 'day' | 'week' | 'month' | 'year' | '5year' | 'all';
 
@@ -23,13 +26,11 @@ interface DetailRow {
 @Component({
   selector: 'app-stock-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, StateComponent, PriceChartComponent],
   templateUrl: './stock-detail.component.html',
   styleUrls: ['./stock-detail.component.scss'],
 })
-export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
-
+export class StockDetailComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   ticker = '';
@@ -40,6 +41,9 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoading = true;
   errorMessage = '';
 
+  /** PR_31 Phase 7 T23: ApexCharts serija (zameni Canvas drawChart). */
+  priceSeries: PriceSeriesPoint[] = [];
+
   selectedPeriod: Period = 'month';
   periods: { value: Period; label: string }[] = [
     { value: 'day', label: 'Dan' },
@@ -47,8 +51,7 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     { value: 'month', label: 'Mesec' },
     { value: 'year', label: 'Godina' },
     { value: '5year', label: '5 God' },
-    { value: 'all', label: 'Početak' },
-  ];
+    { value: 'all', label: 'Početak' }];
 
   detailRows: DetailRow[] = [];
 
@@ -59,6 +62,9 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   displayedCalls: StockOption[] = [];
   displayedPuts: StockOption[] = [];
   displayedStrikes: number[] = [];
+  /** PR_31 Phase 7 T23/T25: indeks strike-a sa minimalnom apsolutnom razlikom u
+   * odnosu na spot price — ATM red dobija gold ring (z-option-atm-row). */
+  atmIndex: number = -1;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -76,10 +82,6 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     interval(60000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.loadPriceHistory());
-  }
-
-  ngAfterViewInit(): void {
-    // Chart will be drawn after data is loaded
   }
 
   ngOnDestroy(): void {
@@ -106,8 +108,12 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             period: this.selectedPeriod,
             data: stock.priceHistory ?? [],
           };
+          // PR_31 Phase 7 T23: mapiraj priceHistory u ApexCharts seriju.
+          this.priceSeries = (stock.priceHistory ?? []).map((p: any) => ({
+            x: new Date(p.date ?? p.timestamp ?? p.datum),
+            y: p.price ?? p.close ?? p.value
+          }));
           this.isLoading = false;
-          setTimeout(() => this.drawChart(), 0);
           if (initialLoad) {
             this.loadSettlementDates();
           }
@@ -185,6 +191,24 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.displayedPuts = this.optionChain.puts.filter((p) =>
       this.displayedStrikes.includes(p.strike)
     );
+
+    // PR_31 Phase 7 T25: indeks ATM strike-a (najblizi spot ceni).
+    this.atmIndex = this.computeAtmIndex(this.displayedStrikes, currentPrice);
+  }
+
+  /**
+   * PR_31 Phase 7 T25: vrati indeks strike-a sa minimalnom apsolutnom razlikom
+   * u odnosu na spot price. Vraca -1 ako nema strike-ova.
+   */
+  computeAtmIndex(strikes: number[], spot: number): number {
+    if (!strikes || strikes.length === 0) return -1;
+    let closestIdx = 0;
+    let minDiff = Infinity;
+    strikes.forEach((s, i) => {
+      const d = Math.abs(s - spot);
+      if (d < minDiff) { minDiff = d; closestIdx = i; }
+    });
+    return closestIdx;
   }
 
   applyPeriodStats(stock: Stock): Stock {
@@ -230,114 +254,7 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       { label: 'Dividendni prinos',     value: s.dividendYield !== undefined ? (s.dividendYield * 100).toFixed(2) + '%' : nan },
       { label: 'Dollar volumen',        value: s.dollarVolume !== undefined ? this.formatLargeNumber(s.dollarVolume) : nan },
       { label: 'Akcije u opticaju',     value: s.outstandingShares !== undefined ? this.formatLargeNumber(s.outstandingShares) : nan },
-      { label: 'Veličina ugovora',      value: s.contractSize !== undefined ? s.contractSize.toString() : nan },
-    ];
-  }
-
-  drawChart(): void {
-    if (!this.chartCanvas || !this.priceHistory?.data?.length) return;
-
-    const canvas = this.chartCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Handle high DPI displays
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const data = this.priceHistory.data;
-    const padding = 40;
-    const width = rect.width;
-    const height = rect.height;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Find min/max prices
-    const prices = data.map((d) => d.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const priceRange = maxPrice - minPrice || 1;
-
-    // Draw grid lines
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-
-    // Horizontal grid lines
-    for (let i = 0; i <= 4; i++) {
-      const y = padding + (chartHeight / 4) * i;
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(width - padding, y);
-      ctx.stroke();
-
-      // Price labels
-      const price = maxPrice - (priceRange / 4) * i;
-      ctx.fillStyle = '#6b7280';
-      ctx.font = '11px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(price.toFixed(2), padding - 5, y + 4);
-    }
-
-    const xStep = data.length > 1 ? chartWidth / (data.length - 1) : 0;
-    const getX = (i: number) => data.length === 1 ? padding + chartWidth / 2 : padding + xStep * i;
-    const getY = (price: number) => data.length === 1
-      ? padding + chartHeight / 2
-      : padding + chartHeight - ((price - minPrice) / priceRange) * chartHeight;
-
-    if (data.length === 1) {
-      // Draw a single dot
-      const x = getX(0);
-      const y = getY(data[0].price);
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#16a34a';
-      ctx.fill();
-    } else {
-      // Draw line chart
-      ctx.beginPath();
-      ctx.strokeStyle = '#16a34a';
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-
-      data.forEach((point, index) => {
-        const x = getX(index);
-        const y = getY(point.price);
-        if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
-
-      ctx.stroke();
-
-      // Fill area under line
-      ctx.lineTo(getX(data.length - 1), height - padding);
-      ctx.lineTo(padding, height - padding);
-      ctx.closePath();
-
-      const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-      gradient.addColorStop(0, 'rgba(22, 163, 74, 0.3)');
-      gradient.addColorStop(1, 'rgba(22, 163, 74, 0.05)');
-      ctx.fillStyle = gradient;
-      ctx.fill();
-    }
-
-    // Draw date labels
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-
-    const labelCount = Math.min(5, data.length);
-    for (let i = 0; i < labelCount; i++) {
-      const dataIndex = labelCount > 1 ? Math.floor((i / (labelCount - 1)) * (data.length - 1)) : 0;
-      const x = getX(dataIndex);
-      const date = new Date(data[dataIndex].date);
-      const label = date.toLocaleDateString('sr-RS', { month: 'short', year: '2-digit' });
-      ctx.fillText(label, x, height - padding + 15);
-    }
+      { label: 'Veličina ugovora',      value: s.contractSize !== undefined ? s.contractSize.toString() : nan }];
   }
 
   getCallByStrike(strike: number): StockOption | undefined {
@@ -418,8 +335,32 @@ export class StockDetailComponent implements OnInit, OnDestroy, AfterViewInit {
    *   });
    * }
    */
+  /**
+   * PR_05 C5.1: Buy option flow vise nije placeholder.
+   *
+   * Spec (Celina 3): kupovina opcije pokrece order kreiranje sa kontekstom za
+   * underlying stock + strike + tip (CALL/PUT). Implementacija salje korisnika
+   * na postojecu /orders/create rutu sa query parametrima koji se konzumiraju
+   * u CreateOrderComponent.
+   */
   onBuyOption(option: StockOption, type: 'CALL' | 'PUT'): void {
-    // Placeholder until F1 (OrderModal) is implemented
-    console.log('Buy option clicked:', { type, strike: option.strike, bid: option.bid, ask: option.ask });
+    if (!this.stock) {
+      this.errorMessage = 'Akcija jos uvek nije ucitana — pokusajte ponovo.';
+      return;
+    }
+    this.router.navigate(
+      ['/orders/create', 'BUY', this.stock.id ?? this.ticker],
+      {
+        queryParams: {
+          orderType: 'OPTION',
+          optionType: type,
+          strike: option.strike,
+          bid: option.bid,
+          ask: option.ask,
+          settlementDate: this.selectedSettlementDate ?? null,
+          underlyingTicker: this.ticker,
+        },
+      },
+    );
   }
 }

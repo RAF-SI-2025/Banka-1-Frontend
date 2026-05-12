@@ -36,9 +36,13 @@
           <span class="text-sm text-muted-foreground">Rezervisana sredstva</span>
           <span class="text-sm font-medium">{{ formatAmount(account.reservedFunds) }} {{ account.currency }}</span>
         </div>
-        <div class="flex justify-between items-center px-4 py-2.5 bg-green-50">
+        <div class="flex justify-between items-center px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20">
           <span class="text-sm font-medium text-foreground">Stanje</span>
-          <span class="text-sm font-bold text-green-700">{{ formatAmount(account.balance) }} {{ account.currency }}</span>
+          <span class="text-sm font-bold font-mono tabular-nums text-primary">{{ formatAmount(account.balance) }} {{ account.currency }}</span>
+        </div>
+        <div class="flex justify-between items-center px-4 py-2.5 bg-card" *ngIf="statusLabel()">
+          <span class="text-sm text-muted-foreground">Status</span>
+          <span class="text-sm font-medium" [class.text-green-700]="statusLabel() === 'Aktivan'" [class.text-red-600]="statusLabel() === 'Neaktivan'">{{ statusLabel() }}</span>
         </div>
       </div>
 
@@ -116,7 +120,7 @@
             <span>Novo plaćanje</span>
             <svg class="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
-          <button type="button" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm" (click)="onChangeLimit()">
+          <button *ngIf="isOwner" type="button" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm" (click)="onChangeLimit()">
             <span>Promeni limit</span>
             <svg class="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>

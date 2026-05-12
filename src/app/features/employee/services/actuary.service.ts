@@ -41,4 +41,44 @@ updateNeedApproval(id: number, needApproval: boolean): Observable<void> {
   // Koristimo apiUrl (koji je već .../order/actuaries) i samo dodajemo /agents/...
   return this.http.put<void>(`${this.apiUrl}/agents/${id}/need-approval`, { needApproval });
 }
+
+  /**
+   * PR_14 C14.9: trading P&L po aktuaru (suma komisija sa izvrsenih transakcija).
+   * Zameni stari fund-AUM aggregation pristup u ProfitAktuaraComponent-u.
+   */
+  profitByActuary(from?: string, to?: string): Observable<ActuaryProfit[]> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<ActuaryProfit[]>(`${this.apiUrl}/profit`, { params });
+  }
+
+  /**
+   * PR_17 C17.6: bank-wide trading P&L summary. Trading-side doprinos;
+   * fund-side se sabira posebno iz /funds endpoint-a.
+   */
+  bankProfitSummary(from?: string, to?: string): Observable<BankProfitSummary> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<BankProfitSummary>(`${this.apiUrl}/profit/bank-summary`, { params });
+  }
+}
+
+export interface ActuaryProfit {
+  userId: number;
+  totalCommission: number;
+  transactionCount: number;
+  // PR_15 C15.7: optional enrichment fields iz employee-service-a.
+  ime?: string;
+  prezime?: string;
+  pozicija?: string;
+}
+
+export interface BankProfitSummary {
+  totalCommission: number;
+  transactionCount: number;
+  distinctActuaries: number;
+  from: string | null;
+  to: string | null;
 }

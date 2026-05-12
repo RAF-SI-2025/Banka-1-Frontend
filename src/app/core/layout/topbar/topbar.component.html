@@ -1,0 +1,73 @@
+<!-- PR_31 hotfix: h-14 = 56px visina, identicna sidebar header-u (h-14)
+     da se separatori u sidebaru i topbar bottom border poklapaju visinski. -->
+<header class="z-topbar relative h-14 py-0">
+  <div class="flex items-center gap-1.5 text-sm min-w-0">
+    <ng-container *ngIf="breadcrumb.length === 0">
+      <span class="text-muted-foreground">Banka 1</span>
+    </ng-container>
+    <ng-container *ngFor="let seg of breadcrumb; let i = index; let last = last">
+      <span [class.text-foreground]="last"
+            [class.font-semibold]="last"
+            [class.text-muted-foreground]="!last"
+            class="truncate max-w-[160px]">
+        {{ seg }}
+      </span>
+      <span *ngIf="!last" class="text-muted-foreground/60">/</span>
+    </ng-container>
+  </div>
+
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <button type="button" (click)="openCommandPalette()"
+            class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs cursor-pointer"
+            aria-label="Otvori paletu komandi">
+      <lucide-icon name="search" [size]="12"></lucide-icon>
+      <span>Pretrazi</span>
+      <kbd class="font-mono text-[10px] px-1 py-0.5 rounded bg-background border border-border">Ctrl+K</kbd>
+    </button>
+
+    <div class="relative">
+      <button type="button" (click)="toggleThemeMenu()"
+              class="z-btn-icon"
+              [attr.aria-label]="'Tema: ' + themeLabel(theme.current)"
+              [attr.aria-expanded]="themeMenuOpen">
+        <lucide-icon [name]="iconForTheme(theme.current)" [size]="16"></lucide-icon>
+      </button>
+      <div *ngIf="themeMenuOpen"
+           role="menu"
+           class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg">
+        <button type="button" *ngFor="let t of themes"
+                role="menuitem"
+                (click)="setTheme(t)"
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/40 cursor-pointer border-0 bg-transparent text-left"
+                [class.font-semibold]="theme.current === t">
+          <lucide-icon [name]="iconForTheme(t)" [size]="14"></lucide-icon>
+          <span>{{ themeLabel(t) }}</span>
+          <span *ngIf="theme.current === t" class="ml-auto text-primary">&check;</span>
+        </button>
+      </div>
+    </div>
+
+    <button type="button" class="z-btn-icon" aria-label="Notifikacije">
+      <lucide-icon name="bell" [size]="16"></lucide-icon>
+    </button>
+
+    <div class="relative">
+      <button type="button" (click)="toggleAvatarMenu()"
+              class="w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center cursor-pointer border-0"
+              [attr.aria-label]="'Korisnik ' + userInitials"
+              [attr.aria-expanded]="avatarMenuOpen">
+        {{ userInitials }}
+      </button>
+      <div *ngIf="avatarMenuOpen"
+           role="menu"
+           class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg">
+        <a routerLink="/profile" role="menuitem" (click)="closeMenus()"
+           class="block px-3 py-2 text-sm text-foreground hover:bg-accent/40">Profil</a>
+        <button type="button" role="menuitem" (click)="logout()"
+                class="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 cursor-pointer border-0 bg-transparent">
+          Odjava
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

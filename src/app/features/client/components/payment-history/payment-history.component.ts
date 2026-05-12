@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { PaymentService } from '../../services/payment.service';
 import { AccountService } from '../../services/account.service';
 import { TransferService } from '../../services/transfer.service';
@@ -15,6 +14,8 @@ import {
   PaymentStatus,
 } from '../../models/payment.model';
 import { TransactionDetailModalComponent } from '../../modals/transaction-detail-modal/transaction-detail-modal.component';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 @Component({
   selector: 'app-payment-history',
@@ -22,9 +23,8 @@ import { TransactionDetailModalComponent } from '../../modals/transaction-detail
   imports: [
     CommonModule,
     FormsModule,
-    NavbarComponent,
     TransactionDetailModalComponent,
-  ],
+    StateComponent],
   templateUrl: './payment-history.component.html',
   styleUrls: ['./payment-history.component.scss'],
 })
@@ -70,8 +70,7 @@ export class PaymentHistoryComponent implements OnInit, OnDestroy {
     { value: '', label: 'Svi statusi' },
     { value: 'REALIZED', label: 'Realizovano' },
     { value: 'PROCESSING', label: 'U obradi' },
-    { value: 'REJECTED', label: 'Odbijeno' },
-  ];
+    { value: 'REJECTED', label: 'Odbijeno' }];
 
   constructor(
     private readonly paymentService: PaymentService,

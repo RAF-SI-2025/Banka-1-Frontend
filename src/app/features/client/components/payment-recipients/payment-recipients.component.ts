@@ -4,14 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ClientService } from '../../services/client.service';
 import { AccountService } from '../../services/account.service';
 import { PaymentRecipient } from '../../models/account.model';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
-
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 type FormMode = 'add' | 'edit' | null;
 
 @Component({
   selector: 'app-payment-recipients',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, StateComponent],
   templateUrl: './payment-recipients.component.html',
   styleUrls: ['./payment-recipients.component.scss']
 })
@@ -142,12 +142,18 @@ export class PaymentRecipientsComponent implements OnInit {
     this.formLoading = true;
 
     if (this.formMode === 'add') {
-      // TODO: dodati backend endpoint za cuvanje primaoca placanja
-      const created: PaymentRecipient = { id: Date.now(), name, accountNumber };
-      this.recipients.push(created);
-      this.applyFilter();
-      this.closeForm();
-      this.formLoading = false;
+      this.clientService.createRecipient(name, accountNumber).subscribe({
+        next: (created: PaymentRecipient) => {
+          this.recipients.push(created);
+          this.applyFilter();
+          this.closeForm();
+          this.formLoading = false;
+        },
+        error: (err) => {
+          this.formError = err?.error?.message ?? 'Greska pri cuvanju primaoca.';
+          this.formLoading = false;
+        },
+      });
     } else if (this.formMode === 'edit' && this.editingId !== null) {
       this.clientService.updateRecipient(this.editingId, name, accountNumber).subscribe({
         next: (updated: PaymentRecipient) => {

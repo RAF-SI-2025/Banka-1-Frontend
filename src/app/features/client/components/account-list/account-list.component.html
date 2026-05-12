@@ -1,41 +1,18 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-foreground">Lista računa</h1>
-        <p class="text-sm text-muted-foreground mt-1">Pregledajte i upravljajte svim računima</p>
-      </div>
-      <button type="button" (click)="onCreateAccount()"
-              class="z-btn-primary flex items-center gap-2">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Dodaj račun
-      </button>
+<div>
+  <div>
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-foreground">Lista racuna</h1>
+      <p class="text-sm text-muted-foreground mt-1">
+        Pregled svih vasih licnih i poslovnih racuna. Za otvaranje novog racuna obratite se zaposlenom u banci.
+      </p>
     </div>
 
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
-      <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-      <p class="mt-3 text-sm">Učitavanje računa...</p>
-    </div>
-
-    <!-- Error -->
-    <div *ngIf="errorMessage && !isLoading"
-         class="z-card p-8 text-center text-red-500 text-sm">
-      <p>{{ errorMessage }}</p>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!isLoading && !errorMessage && accounts.length === 0"
-         class="z-card p-12 text-center text-muted-foreground text-sm italic">
-      <p>Nema aktivnih računa.</p>
-    </div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje racuna..."></app-state>
+    <app-state *ngIf="errorMessage && !isLoading" mode="error" [text]="errorMessage"></app-state>
+    <app-state *ngIf="!isLoading && !errorMessage && accounts.length === 0"
+               mode="empty" title="Nema aktivnih racuna"
+               text="Trenutno nemate nijedan aktivan racun."></app-state>
 
     <!-- Accounts list -->
     <div *ngIf="!isLoading && accounts.length > 0" class="z-card p-5 mb-4">

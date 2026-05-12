@@ -48,7 +48,10 @@ export class TransferService {
   constructor(private http: HttpClient) {}
 
   transfer(request: TransferRequest): Observable<TransferResponse> {
-    return this.http.post<TransferResponse>(`${this.baseUrl}/`, request);
+    /* PR_31 hotfix: trailing slash je generisao 404 jer banking-core mapping
+       je `/transfers` exact (nije `/transfers/`). Bez trailing slash radi kroz
+       nginx gateway upstream `banking_core_service`. */
+    return this.http.post<TransferResponse>(this.baseUrl, request);
   }
 
   previewTransfer(request: Omit<TransferRequest, 'verificationSessionId'>): Observable<TransferPreview> {

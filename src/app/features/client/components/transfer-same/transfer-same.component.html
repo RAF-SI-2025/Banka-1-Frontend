@@ -1,9 +1,7 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content max-w-3xl">
+<div>
+  <div class="max-w-3xl">
     <!-- Hero card -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-900 to-green-600 text-white p-8 mb-6">
+    <div class="transfer-hero relative overflow-hidden rounded-2xl text-white p-8 mb-6">
       <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5"></div>
       <div class="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5"></div>
       <div class="relative flex items-center gap-4">
@@ -12,7 +10,7 @@
         </div>
         <div>
           <h2 class="text-xl font-bold">Prenos sredstava</h2>
-          <p class="text-sm text-green-100 mt-1">Prebacite novac između svojih računa iste valute — bez provizije.</p>
+          <p class="text-sm text-white/80 mt-1">Prebacite novac između svojih računa iste valute — bez provizije.</p>
         </div>
       </div>
     </div>
@@ -67,7 +65,7 @@
           <label class="z-label" for="amount">Iznos ({{ selectedFromAccount?.currency || '—' }})</label>
           <div class="relative">
             <input id="amount" type="number" class="z-input pr-16" formControlName="amount" placeholder="0.00" step="0.01" data-cy="amount-input"
-                   [class.border-red-400]="amountError" />
+                   [class.border-destructive]="amountError" />
             <span *ngIf="selectedFromAccount" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded">{{ selectedFromAccount.currency }}</span>
           </div>
           <p *ngIf="amountError" class="z-error flex items-center gap-1" data-cy="amount-error">{{ amountError }}</p>

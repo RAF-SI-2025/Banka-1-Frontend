@@ -1,0 +1,78 @@
+<div>
+<div>
+  <h1 class="text-2xl font-bold text-foreground mb-2">Profit Banke</h1>
+  <p class="text-sm text-muted-foreground mb-5">
+    Pregled bankine zarade — kombinuje trading komisije (od izvrsenih naloga aktuara)
+    i profit od investicionih fondova.
+  </p>
+
+  <app-state *ngIf="loading" mode="loading" text="Agregacija profit metrika..."></app-state>
+  <app-state *ngIf="error" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="z-stat-card">
+        <span class="z-stat-label">Trading komisije</span>
+        <span class="z-stat-value text-success">
+          {{ (bankSummary?.totalCommission ?? 0) | number:'1.2-2' }} RSD
+        </span>
+        <p class="z-stat-hint">
+          {{ bankSummary?.transactionCount ?? 0 }} transakcija /
+          {{ bankSummary?.distinctActuaries ?? 0 }} aktuara
+        </p>
+      </div>
+
+      <div class="z-stat-card">
+        <span class="z-stat-label">Fund profit</span>
+        <span class="z-stat-value"
+              [class.text-success]="fundsProfit > 0"
+              [class.text-destructive]="fundsProfit < 0">
+          {{ fundsProfit | number:'1.2-2' }} RSD
+        </span>
+        <p class="z-stat-hint">{{ funds.length }} fondova</p>
+      </div>
+
+      <div class="z-stat-card">
+        <span class="z-stat-label">Ukupan profit</span>
+        <span class="z-stat-value"
+              [class.text-success]="totalProfit > 0"
+              [class.text-destructive]="totalProfit < 0">
+          {{ totalProfit | number:'1.2-2' }} RSD
+        </span>
+      </div>
+    </section>
+
+    <h2 class="text-lg font-semibold text-foreground mb-3">Pojedinacni fondovi</h2>
+
+    <div *ngIf="funds.length > 0" class="z-card overflow-hidden">
+      <table class="z-table">
+        <thead>
+          <tr>
+            <th class="text-left">Fond</th>
+            <th class="text-right">Likvidno</th>
+            <th class="text-right">Ukupno</th>
+            <th class="text-right">Profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of funds">
+            <td class="font-medium">{{ f.naziv }}</td>
+            <td class="text-right font-mono">{{ f.likvidnaSredstva | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">{{ f.totalValue | number:'1.2-2' }}</td>
+            <td class="text-right font-mono"
+                [class.text-success]="f.profit > 0"
+                [class.text-destructive]="f.profit < 0">
+              {{ f.profit | number:'1.2-2' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <app-state *ngIf="funds.length === 0"
+               mode="empty" icon="building" title="Nema fondova"
+               text="Banka jos uvek nema kreirane investicione fondove.">
+    </app-state>
+  </ng-container>
+</div>
+</div>

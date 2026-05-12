@@ -2,73 +2,224 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* PR_19 C19.12: typography overhaul.
+ *  - Display (h1-h3, brand wordmark): Bricolage Grotesque — variable, optical-size,
+ *    nezvanicno-banking neo-grotesque (Mercury, Bilt patern). Pre PR_19 svuda
+ *    Inter, generic.
+ *  - Body (UI text + buttons): Geist — Vercel-ovo, neutralan ali rafiniran.
+ *  - Mono (account brojevi, kursevi): Geist Mono — usaglašen sa Geist body-jem.
+ *  - Numeric "luxury" (samo .z-stat-value veliki balance display): Fraunces serif.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Fraunces:opsz,wght@9..144,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@300..700&display=swap');
 
-/* ── Zard UI Green Theme ─────────────────────────────────── */
 :root {
   --radius: 0.625rem;
 
-  /* Core palette - GREEN primary */
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  /* Core palette */
+  --background: #f6f7f5;
+  --foreground: #0a1410;
 
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #0a1410;
 
-  --primary: #16a34a;
+  /* Emerald scale — od sumadijske borovine do svetle traves */
+  --emerald-950: #021410;
+  --emerald-900: #0a2e1f;
+  --emerald-800: #0f3d29;
+  --emerald-700: #14532d;
+  --emerald-600: #16a34a;
+  --emerald-500: #22c55e;
+  --emerald-400: #4ade80;
+  --emerald-300: #86efac;
+  --emerald-200: #bbf7d0;
+  --emerald-100: #dcfce7;
+  --emerald-50:  #f0fdf4;
+
+  --primary: #15803d;
   --primary-foreground: #ffffff;
+
+  /* Premium gold accent */
+  --gold-700: #92740d;
+  --gold-600: #b08a0e;
+  --gold-500: #d4a72c;
+  --gold-400: #e4bc4f;
+  --gold-300: #f4d76d;
+  --gold-100: #fef3c7;
 
   --secondary: #f0fdf4;
   --secondary-foreground: #14532d;
 
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted: #eef1ed;
+  --muted-foreground: #5e6b62;
 
   --accent: #ecfdf5;
   --accent-foreground: #065f46;
 
-  --destructive: #ef4444;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
 
   --success: #16a34a;
   --success-foreground: #ffffff;
 
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-foreground: #ffffff;
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #16a34a;
+  --border: #dbe2dd;
+  --input: #dbe2dd;
+  --ring: #15803d;
 
-  /* Sidebar */
-  --sidebar: #14532d;
-  --sidebar-foreground: #f0fdf4;
-  --sidebar-primary: #22c55e;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #166534;
+  /* Sidebar — glass-morphism dark emerald */
+  --sidebar: #0a2e1f;
+  --sidebar-foreground: #d1f0db;
+  --sidebar-primary: #4ade80;
+  --sidebar-primary-foreground: #021410;
+  --sidebar-accent: #14532d;
   --sidebar-accent-foreground: #bbf7d0;
-  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-border: rgba(74,222,128,0.12);
 
-  /* Extended greens */
-  --primary-dark: #15803d;
-  --primary-darker: #14532d;
+  /* Topbar (light) */
+  --topbar: #ffffff;
+  --topbar-border: #dbe2dd;
+
+  /* Extended */
+  --primary-dark: #14532d;
+  --primary-darker: #0a2e1f;
   --primary-light: #22c55e;
   --primary-lighter: #4ade80;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #166534 0%, #16a34a 40%, #22c55e 100%);
-  --gradient-hero: linear-gradient(160deg, #14532d 0%, #15803d 30%, #16a34a 60%, #22c55e 100%);
+  /* Premium gradients */
+  --gradient-primary: linear-gradient(135deg, #14532d 0%, #15803d 40%, #16a34a 80%, #22c55e 100%);
+  --gradient-hero: linear-gradient(140deg, #021410 0%, #0a2e1f 25%, #14532d 55%, #15803d 85%);
+  --gradient-aurora: radial-gradient(at 25% 20%, rgba(34,197,94,0.18) 0%, transparent 50%),
+                     radial-gradient(at 75% 0%, rgba(212,167,44,0.10) 0%, transparent 60%),
+                     radial-gradient(at 50% 100%, rgba(20,83,45,0.20) 0%, transparent 70%);
+  --gradient-card: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(246,247,245,0.5) 100%);
+  --gradient-gold: linear-gradient(135deg, #92740d 0%, #d4a72c 50%, #f4d76d 100%);
   --gradient-subtle: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdf4 100%);
+
+  /* Premium shadows — colored sa green undertone-om umesto sirovog crnog */
+  --shadow-soft: 0 1px 2px 0 rgba(10, 46, 31, 0.04), 0 1px 3px 0 rgba(10, 46, 31, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(10, 46, 31, 0.06), 0 2px 4px -2px rgba(10, 46, 31, 0.04);
+  --shadow-lg: 0 12px 24px -8px rgba(10, 46, 31, 0.10), 0 4px 8px -4px rgba(10, 46, 31, 0.06);
+  --shadow-xl: 0 24px 48px -16px rgba(10, 46, 31, 0.18), 0 8px 16px -8px rgba(10, 46, 31, 0.08);
+  --shadow-glow: 0 0 40px -8px rgba(34, 197, 94, 0.35);
+  --shadow-gold: 0 0 24px -4px rgba(212, 167, 44, 0.40);
+
+  /* Type pairing */
+  --font-display: 'Bricolage Grotesque', 'Geist', system-ui, sans-serif;
+  --font-body: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-numeric: 'Fraunces', 'Geist', serif;
+}
+
+/* PR_31 C31.1: Dark mode override block. Toggle preko `data-theme="dark"`
+ * atributa na <html>. ThemeService cita prefers-color-scheme + localStorage.
+ * Forest Vault paleta: emerald-950 (#021410) base, emerald-900 (#0a2e1f) cards,
+ * gold accent retained from light theme. */
+[data-theme="dark"] {
+  /* Core palette — dark mode */
+  --background: #021410;           /* emerald-950 — Forest Vault base */
+  --foreground: #e7f0ea;
+  --card: #0a2e1f;                 /* emerald-900 */
+  --card-foreground: #e7f0ea;
+
+  --primary: #16a34a;
+  --primary-foreground: #021410;
+
+  --secondary: rgba(74,222,128,0.08);
+  --secondary-foreground: #bbf7d0;
+
+  --muted: #14532d;
+  --muted-foreground: #86efac;     /* emerald-300 — readable secondary text */
+
+  --accent: rgba(74,222,128,0.10);
+  --accent-foreground: #bbf7d0;
+
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+
+  --success: #4ade80;
+  --success-foreground: #021410;
+
+  --warning: #fbbf24;
+  --warning-foreground: #021410;
+
+  --border: rgba(74,222,128,0.12);
+  --input: rgba(74,222,128,0.12);
+  --ring: #4ade80;
+
+  /* Sidebar ostaje tamno-emerald — vec radi za dark */
+  --sidebar: #021410;
+  --sidebar-foreground: #d1f0db;
+  --sidebar-primary: #4ade80;
+  --sidebar-primary-foreground: #021410;
+  --sidebar-accent: #0a2e1f;
+  --sidebar-accent-foreground: #bbf7d0;
+  --sidebar-border: rgba(74,222,128,0.10);
+
+  /* Topbar (novi token) */
+  --topbar: rgba(2,20,16,0.85);
+  --topbar-border: rgba(74,222,128,0.10);
+
+  /* Gradient variants */
+  --gradient-card: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+  --gradient-subtle: linear-gradient(135deg, rgba(20,83,45,0.20) 0%, rgba(10,46,31,0.30) 50%, rgba(20,83,45,0.20) 100%);
+
+  /* Premium shadows — sa visim alfa-jem zbog tamne pozadine */
+  --shadow-soft: 0 1px 2px 0 rgba(0,0,0,0.30), 0 1px 3px 0 rgba(0,0,0,0.20);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.35), 0 2px 4px -2px rgba(0,0,0,0.25);
+  --shadow-lg: 0 12px 24px -8px rgba(0,0,0,0.45), 0 4px 8px -4px rgba(0,0,0,0.30);
+  --shadow-xl: 0 24px 48px -16px rgba(0,0,0,0.55), 0 8px 16px -8px rgba(0,0,0,0.40);
+  --shadow-glow: 0 0 40px -8px rgba(74,222,128,0.45);
+  --shadow-gold: 0 0 24px -4px rgba(212,167,44,0.55);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.55;
+    /* PR_19 C19.13: warm noise + dual-corner aurora glow za "real paper"
+     * banking osecaj. 0.5% opacity da ne crta paznju, ali daje teksturu. */
+    background-image:
+      radial-gradient(at 100% 0%, rgba(212,167,44,0.04) 0%, transparent 40%),
+      radial-gradient(at 0% 100%, rgba(34,197,94,0.05) 0%, transparent 40%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05  0 0 0 0 0.07  0 0 0 0 0.04  0 0 0 0.025 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+  }
+
+  /* PR_31 C31.1: dark mode body background — pojacane aurora radial-gradient
+   * tacke + zelenkasta noise tekstura (vs ciste warm-paper boje u light modu). */
+  [data-theme="dark"] body {
+    background-image:
+      radial-gradient(at 100% 0%, rgba(212,167,44,0.07) 0%, transparent 40%),
+      radial-gradient(at 0% 100%, rgba(74,222,128,0.08) 0%, transparent 40%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05  0 0 0 0 0.10  0 0 0 0 0.07  0 0 0 0.045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.022em;
+  }
+  h1 { letter-spacing: -0.038em; font-weight: 700; }
+  h2 { letter-spacing: -0.030em; font-weight: 700; }
+
+  /* Tabular numbers gde je vazno (balance, transakcije, kursevi) */
+  .font-mono, code, kbd, .tabular {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum";
   }
 }
 
@@ -106,84 +257,253 @@
 
 /* ── Reusable Component Classes (Zard UI-inspired) ─────── */
 @layer components {
-  /* Page layout with sidebar */
-  .page-layout {
-    @apply ml-[240px] min-h-screen pt-[52px] relative z-[1];
-  }
-  .page-content {
-    @apply p-6 max-w-7xl mx-auto;
-  }
-
-  /* Cards */
+  /* Cards — refined premium feel sa subtle gradient + warm-tinted shadow */
   .z-card {
-    @apply bg-card rounded-xl border border-border shadow-sm;
+    @apply bg-card rounded-xl border border-border;
+    background-image: var(--gradient-card);
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 220ms ease;
+  }
+  .z-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(21, 128, 61, 0.20);
   }
 
-  /* Form inputs */
+  /* Premium card — za hero / featured momente. Gradient border simulacija
+   * preko padding + ::before pseudo-elementa. */
+  .z-card-premium {
+    @apply relative bg-card rounded-xl overflow-hidden;
+    box-shadow: var(--shadow-lg);
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      var(--gradient-primary) border-box;
+    border: 1px solid transparent;
+  }
+
+  /* Glass card — za sidebar/topbar overlay */
+  .z-card-glass {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(219, 226, 221, 0.6);
+    @apply rounded-xl;
+  }
+
+  /* Hero card sa aurora gradient pozadinom — za login + onboarding */
+  .z-card-aurora {
+    @apply relative rounded-2xl overflow-hidden text-white;
+    background: var(--gradient-hero);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+  }
+  .z-card-aurora::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    background: var(--gradient-aurora);
+    mix-blend-mode: screen;
+  }
+  .z-card-aurora::after {
+    /* Dijagonalna staklena traka — premium banking signature */
+    content: "";
+    @apply absolute inset-0 pointer-events-none opacity-30;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%);
+  }
+
+  /* Form inputs — refined sa softer focus ring + subtle hover */
   .z-input {
-    @apply w-full h-10 px-3 rounded-lg border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-primary transition-colors;
+    @apply w-full h-11 px-3.5 rounded-lg border border-input bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none;
+    font-family: var(--font-body);
+    transition: border-color 160ms ease, box-shadow 200ms ease, background-color 160ms ease;
   }
+  .z-input:hover:not(:disabled):not(:focus) {
+    border-color: var(--emerald-300);
+  }
+  .z-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.14);
+  }
+  .z-input:disabled {
+    background: var(--muted);
+    cursor: not-allowed;
+  }
+
   .z-select {
-    @apply w-full h-10 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-primary transition-colors cursor-pointer;
+    @apply w-full h-11 px-3.5 rounded-lg border border-input bg-card text-sm text-foreground focus:outline-none cursor-pointer;
+    font-family: var(--font-body);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%235e6b62' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    appearance: none;
+    transition: border-color 160ms ease, box-shadow 200ms ease;
   }
+  .z-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.14);
+  }
+
   .z-label {
-    @apply block text-sm font-medium text-foreground mb-1.5;
+    @apply block text-[13px] font-semibold text-foreground mb-1.5;
+    letter-spacing: -0.005em;
   }
   .z-error {
-    @apply text-xs text-red-500 mt-1;
+    @apply text-xs font-medium text-red-600 mt-1.5 flex items-center gap-1;
+  }
+  .z-error::before {
+    content: "⚠";
+    @apply text-red-500;
   }
 
-  /* Buttons */
+  /* Buttons — premium, sa subtle inset highlight + warm shadow */
   .z-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+    font-family: var(--font-body);
+    letter-spacing: -0.01em;
+    transition: transform 140ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 200ms ease,
+                background-color 160ms ease;
   }
+  .z-btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .z-btn:focus-visible {
+    @apply outline-none;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18);
+  }
+
   .z-btn-primary {
-    @apply z-btn h-10 px-4 bg-primary text-primary-foreground hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/20;
+    @apply z-btn h-10 px-4 text-primary-foreground;
+    background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.20),
+      0 1px 2px 0 rgba(10, 46, 31, 0.20),
+      0 4px 8px -2px rgba(21, 128, 61, 0.30);
   }
+  .z-btn-primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      0 2px 4px 0 rgba(10, 46, 31, 0.25),
+      0 8px 16px -4px rgba(21, 128, 61, 0.40);
+  }
+
   .z-btn-secondary {
-    @apply z-btn h-10 px-4 bg-secondary text-secondary-foreground hover:bg-slate-200 border border-border;
+    @apply z-btn h-10 px-4 bg-secondary text-secondary-foreground border border-border;
   }
+  .z-btn-secondary:hover:not(:disabled) {
+    background: var(--emerald-100);
+    border-color: var(--emerald-300);
+  }
+
   .z-btn-outline {
-    @apply z-btn h-10 px-4 bg-transparent text-foreground border border-border hover:bg-accent hover:text-accent-foreground;
+    @apply z-btn h-10 px-4 bg-transparent text-foreground border border-border;
   }
+  .z-btn-outline:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-color: var(--emerald-300);
+  }
+
   .z-btn-ghost {
-    @apply z-btn h-10 px-4 bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground;
+    @apply z-btn h-10 px-4 bg-transparent text-foreground;
   }
+  .z-btn-ghost:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
   .z-btn-destructive {
-    @apply z-btn h-10 px-4 bg-destructive text-white hover:bg-red-700;
+    @apply z-btn h-10 px-4 text-white;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.18),
+      0 1px 2px 0 rgba(127, 29, 29, 0.30),
+      0 4px 8px -2px rgba(220, 38, 38, 0.30);
   }
-  .z-btn-sm {
-    @apply h-8 px-3 text-xs;
-  }
-  .z-btn-lg {
-    @apply h-12 px-6 text-base;
-  }
-  .z-btn-full {
-    @apply w-full;
+  .z-btn-destructive:hover:not(:disabled) {
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
   }
 
-  /* Badge */
+  /* Premium gold CTA — za "Iskoristi opciju", "Kreiraj fond", high-impact akcije */
+  .z-btn-gold {
+    @apply z-btn h-10 px-4 text-emerald-900;
+    background: var(--gradient-gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.40),
+      0 1px 2px 0 rgba(146, 116, 13, 0.30),
+      0 8px 16px -4px rgba(212, 167, 44, 0.45);
+  }
+  .z-btn-gold:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.50),
+      0 2px 4px 0 rgba(146, 116, 13, 0.35),
+      0 12px 24px -6px rgba(212, 167, 44, 0.55);
+  }
+
+  .z-btn-sm { @apply h-8 px-3 text-xs; }
+  .z-btn-lg { @apply h-12 px-6 text-base; }
+  .z-btn-xl { @apply h-14 px-8 text-base; }
+  .z-btn-full { @apply w-full; }
+
+  /* Badges — refined sa border + medium weight */
   .z-badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide border;
+    font-feature-settings: "tnum";
   }
-  .z-badge-green { @apply bg-green-100 text-green-700; }
-  .z-badge-red { @apply bg-red-100 text-red-700; }
-  .z-badge-yellow { @apply bg-amber-100 text-amber-700; }
-  .z-badge-blue { @apply bg-blue-100 text-blue-700; }
-  .z-badge-gray { @apply bg-gray-100 text-gray-700; }
+  .z-badge-green { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
+  .z-badge-red { @apply bg-red-50 text-red-700 border-red-200; }
+  .z-badge-yellow { @apply bg-amber-50 text-amber-700 border-amber-200; }
+  .z-badge-blue { @apply bg-blue-50 text-blue-700 border-blue-200; }
+  .z-badge-gray { @apply bg-gray-50 text-gray-700 border-gray-200; }
+  .z-badge-gold {
+    background: var(--gold-100);
+    color: var(--gold-700);
+    border-color: var(--gold-300);
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide border;
+  }
+  .z-badge-dot::before {
+    content: "";
+    @apply inline-block w-1.5 h-1.5 rounded-full mr-1.5;
+    background: currentColor;
+  }
 
-  /* Table */
+  /* Tables — refined sa sticky header + zebra hover + tabular numbers */
   .z-table {
     @apply w-full text-sm text-left;
+    border-collapse: separate;
+    border-spacing: 0;
   }
-  .z-table th {
-    @apply px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider bg-slate-50 border-b border-border;
+  .z-table thead th {
+    @apply px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.10em] bg-slate-50/60 border-b border-border;
+    font-family: var(--font-body);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
-  .z-table td {
-    @apply px-4 py-3 border-b border-border text-foreground;
+  .z-table tbody td {
+    @apply px-4 py-3.5 border-b border-border text-foreground;
   }
   .z-table tbody tr {
-    @apply hover:bg-slate-50 transition-colors;
+    transition: background-color 140ms ease;
+  }
+  .z-table tbody tr:hover {
+    /* PR_31 hotfix: koristi semanticki accent token. U dark mode-u override
+       (dole) zameni svetli emerald-50 sa tamnijim translucent zelenim
+       kako tekst ne bi postao necitljiv na svetloj zelenoj pozadini. */
+    background: var(--emerald-50);
+  }
+  .z-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* PR_31 Phase 7 T22: right-anchored drawer (8+ filter polja u securities-list).
+   * slide-in-right keyframe je vec definisan u tailwind.config.js. */
+  .z-drawer-overlay {
+    @apply fixed inset-0 z-50 bg-black/40 backdrop-blur-sm;
+  }
+  .z-drawer-panel {
+    @apply fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-card border-l border-border shadow-2xl overflow-y-auto;
+    animation: slide-in-right 0.25s ease-out;
   }
 
   /* Modal overlay */
@@ -224,9 +544,12 @@
   .z-strength-fill {
     @apply h-full rounded-full transition-all duration-300;
   }
-  .strength-weak .z-strength-fill { @apply bg-red-500; }
-  .strength-medium .z-strength-fill { @apply bg-amber-500; }
-  .strength-strong .z-strength-fill { @apply bg-green-500; }
+  /* PR_31 Phase 4: strength bar koristi CSS variable umesto sirovih
+   * Tailwind paleta — dark mode automatski radi (--destructive/--warning/--success
+   * imaju dark overrides u :root[data-theme="dark"]). */
+  .strength-weak .z-strength-fill { background: var(--destructive); }
+  .strength-medium .z-strength-fill { background: var(--warning); }
+  .strength-strong .z-strength-fill { background: var(--success); }
 
   /* Skeleton loader */
   .z-skeleton {
@@ -239,6 +562,332 @@
   /* Topbar */
   .z-topbar {
     @apply sticky top-0 z-40 flex items-center justify-between px-6 py-3 bg-card border-b border-border;
+  }
+
+  /* PR_31 Task 7: ikonsko dugme (kvadratno, 32x32) — koristi se u topbar-u za
+     theme toggle, notifications, command palette trigger. Tema-svesno: bg/hover
+     idu kroz CSS varijable, tako da dark mode automatski radi. Hover bg ide
+     kroz `var(--muted)` jer Tailwind `bg-muted/60` opacity-slash sintaksa ne
+     radi sa `@apply` kad su boje definisane kao CSS variable (treba space-RGB
+     format koji Banka1 ne koristi). */
+  .z-btn-icon {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground transition-colors cursor-pointer border-0 bg-transparent;
+  }
+  .z-btn-icon:hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
+  .z-btn-icon:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* PR_19 C19.4-C19.6: shared state-component klase. Pre PR_19 svaka komponenta
+     je inline definisala loading/empty/error markup uz "Ucitavanje..." + classe
+     po sopstvenom nahodjenju. Sada koriste centralizovane utility klase. */
+
+  /* Loading state — placeholder za ucitavanje sa skeleton blokovima */
+  .z-state-loading {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+  .z-state-loading-spinner {
+    @apply inline-block w-8 h-8 border-4 border-muted border-t-primary rounded-full;
+    animation: z-spin 0.8s linear infinite;
+  }
+  .z-state-loading-text {
+    @apply mt-4 text-sm text-muted-foreground;
+  }
+
+  /* Empty state — kad query ne vraca podatke */
+  .z-state-empty {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+  .z-state-empty-icon {
+    @apply w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 text-3xl;
+  }
+  .z-state-empty-title {
+    @apply text-base font-semibold text-foreground mb-1;
+  }
+  .z-state-empty-text {
+    @apply text-sm text-muted-foreground max-w-md;
+  }
+
+  /* Error state — server-side ili network failure */
+  .z-state-error {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center bg-red-50 border border-red-200 rounded-xl;
+  }
+  .z-state-error-icon {
+    @apply w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 text-3xl text-red-600;
+  }
+  .z-state-error-title {
+    @apply text-base font-semibold text-red-800 mb-1;
+  }
+  .z-state-error-text {
+    @apply text-sm text-red-600 max-w-md;
+  }
+
+  /* Stat card — premium dashboard metric. Gradient hairline na vrhu daje
+   * "live ticker" osecaj. Numeric value koristi Fraunces serif (luxury banking).
+   */
+  .z-stat-card {
+    @apply z-card p-6 relative overflow-hidden;
+  }
+  .z-stat-card::before {
+    /* Hairline gold-emerald gradijent na vrhu kartice — signature detalj */
+    content: "";
+    @apply absolute top-0 left-0 right-0 h-px;
+    background: linear-gradient(90deg, transparent, var(--emerald-500), var(--gold-500), var(--emerald-500), transparent);
+    opacity: 0.7;
+  }
+  .z-stat-card:hover::before {
+    opacity: 1;
+  }
+  .z-stat-label {
+    @apply text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase block mb-3;
+  }
+  .z-stat-value {
+    @apply block text-3xl font-bold text-foreground;
+    font-family: var(--font-numeric);
+    font-feature-settings: "tnum", "ss01";
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  .z-stat-value-mono {
+    /* Alternativa za stat brojeve gde Fraunces serif ne odgovara (npr. 19-cifren account broj) */
+    @apply block text-3xl font-bold text-foreground;
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum";
+    letter-spacing: -0.020em;
+  }
+  .z-stat-hint {
+    @apply text-xs text-muted-foreground mt-2 leading-relaxed;
+  }
+  .z-stat-trend-up {
+    @apply inline-flex items-center gap-1 text-xs font-semibold text-emerald-600;
+  }
+  .z-stat-trend-down {
+    @apply inline-flex items-center gap-1 text-xs font-semibold text-red-600;
+  }
+
+  /* Form-modal pattern — kombinacija .z-overlay + .z-modal sa form layout-om
+     (zameni inline native dialog koji je hand-coded u my-funds component-u). */
+  .z-form-row {
+    @apply grid gap-1.5 mb-3;
+  }
+
+  /* Help text — pomocni tekst ispod input-a (npr. "Min: 1000 RSD"). */
+  .z-help {
+    @apply text-xs text-muted-foreground mt-1;
+  }
+
+  /* PR_19 C19.15: Brand wordmark — koristi se na login + sidebar header.
+   * Bricolage Grotesque + custom letter-spacing + subtle gold gradient na "1".
+   */
+  .z-wordmark {
+    @apply inline-flex items-baseline gap-0.5 font-bold;
+    font-family: var(--font-display);
+    letter-spacing: -0.045em;
+  }
+  .z-wordmark-banka { color: currentColor; }
+  .z-wordmark-num {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+  }
+
+  /* Sidebar item — premium pill sa active gradient indicator */
+  .z-sidebar-item {
+    @apply relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium cursor-pointer;
+    color: var(--sidebar-foreground);
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  .z-sidebar-item:hover {
+    background: var(--sidebar-accent);
+    color: var(--sidebar-primary-foreground);
+  }
+  .z-sidebar-item-active {
+    background: linear-gradient(90deg, rgba(74,222,128,0.18), transparent);
+    color: var(--sidebar-primary);
+    font-weight: 600;
+  }
+  .z-sidebar-item-active::before {
+    content: "";
+    @apply absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r;
+    background: var(--gradient-gold);
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* Aurora scene — full-page hero pozadina za login / onboarding */
+  .z-aurora-scene {
+    @apply relative min-h-screen overflow-hidden;
+    background: var(--gradient-hero);
+    color: white;
+  }
+  .z-aurora-scene::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    background: var(--gradient-aurora);
+    mix-blend-mode: screen;
+    animation: aurora-drift 18s ease-in-out infinite alternate;
+  }
+  .z-aurora-scene::after {
+    /* Subtle film grain za "real" film osecaj */
+    content: "";
+    @apply absolute inset-0 pointer-events-none opacity-30;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Stagger reveal — primeni na grid kontejner; ::nth-child kaska delay-e */
+  .z-stagger > * {
+    opacity: 0;
+    animation: z-fade-up 0.55s cubic-bezier(0.21, 0.61, 0.35, 1) forwards;
+  }
+  .z-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+  .z-stagger > *:nth-child(2) { animation-delay: 0.10s; }
+  .z-stagger > *:nth-child(3) { animation-delay: 0.18s; }
+  .z-stagger > *:nth-child(4) { animation-delay: 0.26s; }
+  .z-stagger > *:nth-child(5) { animation-delay: 0.34s; }
+  .z-stagger > *:nth-child(6) { animation-delay: 0.42s; }
+  .z-stagger > *:nth-child(7) { animation-delay: 0.50s; }
+  .z-stagger > *:nth-child(8) { animation-delay: 0.58s; }
+
+  /* Sparkline trend strip — koristi se ispod stat-value-a */
+  .z-sparkline {
+    @apply block w-full h-12;
+  }
+
+  /* Divider sa gold midpoint (signature detalj) */
+  .z-divider-gold {
+    @apply relative h-px my-6;
+    background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+  }
+  .z-divider-gold::after {
+    content: "◆";
+    @apply absolute left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-xs;
+    color: var(--gold-500);
+    background: var(--background);
+    top: 50%;
+  }
+
+  /* ─── PR_31 Phase 4 dodatni tokeni ──────────────────────────────────── */
+
+  /* Alerts (banner notifications inline u stranici) */
+  .z-alert {
+    @apply flex items-start gap-3 px-4 py-3 rounded-lg border text-sm;
+  }
+  .z-alert-success {
+    @apply z-alert bg-emerald-50 border-emerald-200 text-emerald-800;
+  }
+  .z-alert-error {
+    @apply z-alert bg-red-50 border-red-200 text-red-800;
+  }
+  .z-alert-warning {
+    @apply z-alert bg-amber-50 border-amber-200 text-amber-800;
+  }
+  .z-alert-info {
+    @apply z-alert bg-blue-50 border-blue-200 text-blue-800;
+  }
+
+  /* Callouts (suptilniji od alert-a) */
+  .z-callout {
+    @apply flex items-start gap-3 px-3.5 py-2.5 rounded-lg border text-sm;
+  }
+  .z-callout-success {
+    @apply z-callout;
+    background: rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.20);
+    color: var(--success);
+  }
+  .z-callout-warning {
+    @apply z-callout;
+    background: rgba(217,119,6,0.08);
+    border-color: rgba(217,119,6,0.22);
+    color: var(--warning);
+  }
+  .z-callout-info {
+    @apply z-callout;
+    background: var(--accent);
+    border-color: rgba(74,222,128,0.20);
+    color: var(--accent-foreground);
+  }
+  .z-callout-error {
+    @apply z-callout;
+    background: rgba(220,38,38,0.08);
+    border-color: rgba(220,38,38,0.20);
+    color: var(--destructive);
+  }
+
+  /* Tabs */
+  .z-tabs {
+    @apply flex items-center gap-1 border-b border-border;
+  }
+  .z-tab {
+    @apply px-4 py-2 text-sm font-semibold text-muted-foreground cursor-pointer transition-colors bg-transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+  }
+  .z-tab:hover { @apply text-foreground; }
+  .z-tab-active {
+    @apply text-foreground;
+    border-bottom-color: var(--primary);
+  }
+
+  /* Stepper */
+  .z-stepper { @apply flex items-center gap-2; }
+  .z-stepper-step { @apply flex items-center gap-2 text-sm; }
+  .z-stepper-step-active { @apply font-semibold text-foreground; }
+  .z-stepper-step-done { @apply text-muted-foreground; }
+  .z-stepper-dot {
+    @apply w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border;
+    background: var(--muted);
+    color: var(--muted-foreground);
+    border-color: var(--border);
+  }
+  .z-stepper-dot-active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21,128,61,0.18);
+  }
+  .z-stepper-dot-done {
+    background: var(--success);
+    color: var(--success-foreground);
+    border-color: var(--success);
+  }
+  .z-stepper-line {
+    @apply flex-1 h-px;
+    background: var(--border);
+  }
+  .z-stepper-line-done {
+    background: var(--success);
+  }
+
+  /* Diff palette (OTC deviation, profit indicators) */
+  .z-diff-low  { color: var(--success); font-weight: 600; }
+  .z-diff-mid  { color: var(--gold-600); font-weight: 600; }
+  .z-diff-high { color: var(--destructive); font-weight: 700; }
+
+  /* Option chain heat-map */
+  .z-option-cell {
+    @apply px-2 py-1.5 text-sm;
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum";
+  }
+  .z-option-itm { background: rgba(34,197,94,0.10); }
+  .z-option-otm { background: rgba(220,38,38,0.06); }
+  .z-option-atm-row {
+    position: relative;
+  }
+  .z-option-atm-row td {
+    box-shadow: inset 0 0 0 1px var(--gold-500);
+    background: linear-gradient(180deg, rgba(212,167,44,0.10), rgba(212,167,44,0.04));
+  }
+  .z-option-atm-row .z-option-strike {
+    font-weight: 800;
+    color: var(--gold-700);
+    background: var(--gold-100);
   }
 }
 
@@ -254,4 +903,124 @@
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
   50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.4); }
+}
+
+/* PR_19 C19.4: scale-in animation referencirana iz .z-modal class-a (animate-scale-in).
+   Pre PR_19 keyframes nije bio definisan pa je modal pojavljivao bez animacije. */
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-scale-in {
+  animation: scale-in 0.18s ease-out;
+}
+
+/* PR_19 C19.4: spinner za loading state. */
+@keyframes z-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* PR_19 C19.18: stagger fade-up za hero/dashboard mreze. */
+@keyframes z-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PR_19 C19.15: aurora drift za login pozadinu — slow & subtle. */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-2%, 2%, 0) scale(1.05); }
+  100% { transform: translate3d(2%, -1%, 0) scale(1.02); }
+}
+
+/* PR_19 C19.18: count-up animacija (samo opacity sweep,
+ * stvarni broj prelazak ide kroz JS counter direktivu). */
+@keyframes z-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Reduced motion — postoje korisnici sa vestibular issues; isključi animacije. */
+@media (prefers-reduced-motion: reduce) {
+  .z-stagger > *,
+  .z-aurora-scene::before,
+  .animate-scale-in {
+    animation: none !important;
+  }
+  .z-card,
+  .z-btn,
+  .z-input {
+    transition: none !important;
+  }
+}
+
+/* ─── Dark mode overrides za nove Phase 4 tokene ───────────────────────
+ * Alert variants koriste tailwind utility klase (bg-emerald-50 itd.) koje
+ * NE prate CSS variable, pa za dark mode moramo eksplicitno overridovati
+ * RGBA bojama koje rade na tamnoj pozadini. */
+[data-theme="dark"] {
+  .z-alert-success {
+    background: rgba(74,222,128,0.10);
+    border-color: rgba(74,222,128,0.30);
+    color: #bbf7d0;
+  }
+  .z-alert-error {
+    background: rgba(248,113,113,0.10);
+    border-color: rgba(248,113,113,0.30);
+    color: #fecaca;
+  }
+  .z-alert-warning {
+    background: rgba(251,191,36,0.10);
+    border-color: rgba(251,191,36,0.30);
+    color: #fde68a;
+  }
+  .z-alert-info {
+    background: rgba(59,130,246,0.10);
+    border-color: rgba(59,130,246,0.30);
+    color: #bfdbfe;
+  }
+
+  .z-option-itm { background: rgba(74,222,128,0.14); }
+  .z-option-otm { background: rgba(248,113,113,0.10); }
+  .z-option-atm-row td {
+    box-shadow: inset 0 0 0 1px var(--gold-400);
+    background: linear-gradient(180deg, rgba(244,215,109,0.12), rgba(244,215,109,0.04));
+  }
+  .z-option-atm-row .z-option-strike {
+    color: #f4d76d;
+    background: rgba(244,215,109,0.18);
+  }
+
+  /* PR_31 hotfix: hover states u dark mode-u ne smeju da koriste svetli
+     emerald-50 (jer postaje skoro bela pozadina + tamni tekst → necitljivo).
+     Koristimo translucent emerald kompatibilan sa dark Forest Vault paletom. */
+  .z-table tbody tr:hover {
+    background: rgba(74,222,128,0.06);
+  }
+
+  /* z-btn-secondary/outline hover state generic — ako se koristi bg-emerald-100 ili sl. */
+  .z-btn-secondary:hover:not(:disabled),
+  .z-btn-outline:hover:not(:disabled),
+  .z-btn-ghost:hover:not(:disabled) {
+    background: rgba(74,222,128,0.08);
+    color: #bbf7d0;
+  }
+
+  /* Generic Tailwind hover utility-i koji u light mode koriste emerald-50/100
+     postaju nedovoljno kontrastni u dark. Snizavamo alpha + light text. */
+  .hover\:bg-emerald-50:hover,
+  .hover\:bg-emerald-100:hover,
+  .hover\:bg-accent:hover,
+  .hover\:bg-accent\/40:hover,
+  .hover\:bg-accent\/60:hover {
+    background-color: rgba(74,222,128,0.10) !important;
+    color: #bbf7d0;
+  }
 }

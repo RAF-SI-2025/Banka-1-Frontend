@@ -1,13 +1,12 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <!-- Back link and title -->
     <div class="flex items-center gap-4 mb-6">
       <button
         type="button"
         class="text-muted-foreground hover:text-foreground transition-colors"
         (click)="goBack()"
+        aria-label="Nazad"
       >
         <svg
           class="w-5 h-5"
@@ -22,23 +21,9 @@
       <h1 class="text-2xl font-bold text-foreground">DETALJAN PRIKAZ AKCIJE</h1>
     </div>
 
-    <!-- Loading state -->
-    <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-      <svg
-        class="w-8 h-8 text-primary animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="!isLoading && errorMessage" class="text-center p-12 text-red-500 text-sm">
-      <p>{{ errorMessage }}</p>
-    </div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading/error markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Učitavanje hartije..."></app-state>
+    <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
 
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && stock">
@@ -61,43 +46,40 @@
           </div>
           <div class="p-4 text-center">
             <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cena</div>
-            <div class="font-semibold">{{ formatPrice(stock.price) }} {{ stock.currency }}</div>
+            <div class="font-semibold font-mono tabular-nums">{{ formatPrice(stock.price) }} {{ stock.currency }}</div>
           </div>
           <div class="p-4 text-center">
             <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Promena</div>
-            <div class="font-semibold" [ngClass]="getChangeClass(stock.change)">
+            <div class="font-semibold font-mono tabular-nums" [ngClass]="getChangeClass(stock.change)">
               {{ formatChange(stock.change, stock.changePercent) }}
             </div>
           </div>
           <div class="p-4 text-center">
             <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Volumen</div>
-            <div class="font-semibold">{{ formatVolume(stock.volume) }}</div>
+            <div class="font-semibold font-mono tabular-nums">{{ formatVolume(stock.volume) }}</div>
           </div>
           <div class="p-4 text-center">
             <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Početna marža</div>
-            <div class="font-semibold">{{ formatPrice(stock.initialMarginCost) }}</div>
+            <div class="font-semibold font-mono tabular-nums">{{ formatPrice(stock.initialMarginCost) }}</div>
           </div>
         </div>
 
-        <!-- Period selector and chart -->
+        <!-- Period selector and chart (PR_31 Phase 7 T23: z-tabs + ApexCharts) -->
         <div class="p-5">
-          <div class="flex gap-2 mb-4">
+          <div class="z-tabs mb-4">
             <button
               *ngFor="let period of periods"
               type="button"
-              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-              [class]="selectedPeriod === period.value
-                ? 'bg-primary text-white'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+              class="z-tab"
+              [class.z-tab-active]="selectedPeriod === period.value"
               (click)="selectPeriod(period.value)"
             >
               {{ period.label }}
             </button>
           </div>
 
-          <div class="chart-container">
-            <canvas #chartCanvas></canvas>
-          </div>
+          <!-- PR_31 Phase 7 T23: ApexCharts zameni Canvas drawChart(). -->
+          <app-price-chart [series]="priceSeries" [type]="'area'" [height]="320"></app-price-chart>
         </div>
       </div>
 
@@ -109,8 +91,9 @@
           <!-- Options filters -->
           <div class="flex gap-4 items-end mb-4">
             <div class="w-48">
-              <label class="z-label">Datum isteka</label>
+              <label class="z-label" for="option-settlement-date">Datum isteka</label>
               <select
+                id="option-settlement-date"
                 class="z-select"
                 [(ngModel)]="selectedSettlementDate"
                 (change)="onSettlementDateChange()"
@@ -124,8 +107,9 @@
               ({{ optionChain.daysToExpiry }} dana do isteka)
             </div>
             <div class="w-40">
-              <label class="z-label">Strikeovi (na svaku stranu)</label>
+              <label class="z-label" for="option-strike-count">Strikeovi (na svaku stranu)</label>
               <input
+                id="option-strike-count"
                 type="number"
                 class="z-input"
                 [(ngModel)]="strikeCount"
@@ -136,7 +120,7 @@
             </div>
           </div>
 
-          <!-- Options table -->
+          <!-- Options table (PR_31 Phase 7 T23/T25: z-option-* tokeni + ATM gold ring) -->
           <div class="options-table-container" *ngIf="optionChain && displayedStrikes.length > 0">
             <table class="options-table">
               <thead>
@@ -164,40 +148,53 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let strike of displayedStrikes; trackBy: trackByStrike">
-                  <!-- Call data -->
+                <tr *ngFor="let strike of displayedStrikes; let i = index; trackBy: trackByStrike"
+                    [class.z-option-atm-row]="i === atmIndex">
+                  <!-- Call data (PR_31 Phase 7 T23: z-option-cell + z-option-itm/otm) -->
                   <ng-container *ngIf="getCallByStrike(strike) as call">
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.last) }}</td>
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.theta.toFixed(2) }}</td>
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.bid) }}</td>
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ formatOptionPrice(call.ask) }}</td>
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.volume }}</td>
-                    <td [ngClass]="{'in-the-money': call.inTheMoney, 'out-of-money': !call.inTheMoney}">{{ call.openInterest }}</td>
-                    <td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(call.last) }}</td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ call.theta.toFixed(2) }}</td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(call.bid) }}</td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(call.ask) }}</td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ call.volume }}</td>
+                    <td class="z-option-cell" [ngClass]="call.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ call.openInterest }}</td>
+                    <td class="z-option-cell">
                       <button type="button" class="z-btn-primary z-btn-sm" (click)="onBuyOption(call, 'CALL')">Kupi</button>
                     </td>
                   </ng-container>
                   <ng-container *ngIf="!getCallByStrike(strike)">
-                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell"></td>
                   </ng-container>
 
                   <!-- Strike price -->
-                  <td class="strike-cell">{{ formatPrice(strike) }}</td>
+                  <td class="z-option-cell z-option-strike">{{ formatPrice(strike) }}</td>
 
                   <!-- Put data -->
                   <ng-container *ngIf="getPutByStrike(strike) as put">
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.last) }}</td>
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.theta.toFixed(2) }}</td>
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.bid) }}</td>
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ formatOptionPrice(put.ask) }}</td>
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.volume }}</td>
-                    <td [ngClass]="{'in-the-money': put.inTheMoney, 'out-of-money': !put.inTheMoney}">{{ put.openInterest }}</td>
-                    <td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(put.last) }}</td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ put.theta.toFixed(2) }}</td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(put.bid) }}</td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ formatOptionPrice(put.ask) }}</td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ put.volume }}</td>
+                    <td class="z-option-cell" [ngClass]="put.inTheMoney ? 'z-option-itm' : 'z-option-otm'">{{ put.openInterest }}</td>
+                    <td class="z-option-cell">
                       <button type="button" class="z-btn-primary z-btn-sm" (click)="onBuyOption(put, 'PUT')">Kupi</button>
                     </td>
                   </ng-container>
                   <ng-container *ngIf="!getPutByStrike(strike)">
-                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell">-</td>
+                    <td class="z-option-cell"></td>
                   </ng-container>
                 </tr>
               </tbody>
@@ -210,21 +207,23 @@
         </div>
       </div>
 
-      <!-- Details section -->
-      <div class="z-card">
-        <div class="p-5">
-          <h3 class="text-base font-semibold text-foreground mb-4">DETALJI</h3>
-          <table class="w-full">
+      <!-- Details section (PR_31 Phase 7 T23: z-table) -->
+      <div class="z-card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">DETALJI</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="z-table">
             <thead>
-              <tr class="border-b border-border">
-                <th class="text-left text-xs text-muted-foreground uppercase tracking-wide py-2">Atribut</th>
-                <th class="text-right text-xs text-muted-foreground uppercase tracking-wide py-2">Vrednost</th>
+              <tr>
+                <th>Atribut</th>
+                <th class="text-right">Vrednost</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of detailRows" class="border-b border-border last:border-0">
-                <td class="py-3 text-muted-foreground">{{ row.label }}</td>
-                <td class="py-3 text-right font-medium">{{ row.value }}</td>
+              <tr *ngFor="let row of detailRows">
+                <td class="text-muted-foreground">{{ row.label }}</td>
+                <td class="text-right font-medium font-mono tabular-nums">{{ row.value }}</td>
               </tr>
             </tbody>
           </table>

@@ -1,7 +1,5 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content" *ngIf="!isLoading && security">
+<div>
+  <div *ngIf="!isLoading && security">
     <h1 class="text-2xl font-bold mb-6">
       {{ direction === 'BUY' ? 'Kupovina hartije' : 'Prodaja hartije' }}
     </h1>
@@ -37,7 +35,15 @@
         <div class="space-y-4">
           <div>
             <label class="z-label">Količina</label>
-            <input class="z-input" type="number" min="1" [(ngModel)]="quantity" />
+            <input class="z-input" type="number" min="1"
+                   [attr.max]="direction === 'SELL' && maxSellQuantity > 0 ? maxSellQuantity : null"
+                   [(ngModel)]="quantity" />
+            <p *ngIf="direction === 'SELL' && maxSellQuantity > 0" class="text-xs text-muted-foreground mt-1">
+              Maks. dostupno za prodaju: {{ maxSellQuantity }}
+            </p>
+            <p *ngIf="direction === 'SELL' && quantity > maxSellQuantity && maxSellQuantity > 0" class="z-error">
+              Ne možete prodati više nego što posedujete ({{ maxSellQuantity }}).
+            </p>
           </div>
 
           <div>
@@ -57,8 +63,8 @@
           </p>
 
           <div>
-            <label class="z-label">Račun</label>
-            <select class="z-input" [(ngModel)]="selectedAccountId">
+            <label class="z-label" for="create-order-account">Račun</label>
+            <select id="create-order-account" class="z-select" [(ngModel)]="selectedAccountId">
               <option [ngValue]="null" disabled>Izaberite račun</option>
               <option *ngFor="let account of accounts" [ngValue]="account.accountNumber">
                 {{ account.name || account.accountNumber }} -
@@ -66,7 +72,8 @@
                 {{ formatMoney(account.availableBalance || account.balance) }}
               </option>
             </select>
-            <div *ngIf="accounts.length === 0 && !isLoading" class="mt-2 p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 text-sm">
+            <!-- PR_31 Phase 7 T26: yellow tailwind hardkode -> z-callout-warning. -->
+            <div *ngIf="accounts.length === 0 && !isLoading" class="z-callout-warning mt-2">
               Nema dostupnih računa za ovu operaciju.
             </div>
           </div>
@@ -76,10 +83,13 @@
             <span>All or None</span>
           </label>
 
-          <label class="flex items-center gap-2">
+          <label class="flex items-center gap-2" *ngIf="canUseMargin">
             <input type="checkbox" [(ngModel)]="margin" />
             <span>Margin order</span>
           </label>
+          <p *ngIf="!canUseMargin" class="text-xs text-muted-foreground">
+            Margin order zahteva permisiju (MARGIN_TRADE). Klijenti dobijaju permisiju automatski po odobravanju kredita.
+          </p>
         </div>
       </div>
 
@@ -123,10 +133,10 @@
           </div>
         </div>
 
-        <button class="z-btn-primary w-full mt-6" [disabled]="!canSubmit || isSubmitting" (click)="createDraftOrder()">
+        <button type="button" class="z-btn-primary w-full mt-6" [disabled]="!canSubmit || isSubmitting" (click)="createDraftOrder()">
           <span *ngIf="!isSubmitting">Nastavi na potvrdu</span>
           <span *ngIf="isSubmitting" class="flex items-center justify-center gap-2">
-            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
             </svg>
             Slanje...
@@ -137,80 +147,65 @@
   </div>
 </div>
 
-<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" *ngIf="showConfirmation && draftOrder">
-  <div class="bg-card rounded-xl shadow-xl p-6 w-full max-w-lg">
-    <h2 class="text-xl font-bold mb-4">Potvrda ordera</h2>
-
-    <div *ngIf="draftOrder.exchangeClosed || draftOrder.afterHours"
-      class="p-3 rounded-lg border border-yellow-500 bg-yellow-50 text-yellow-800 mb-4">
-      Berza je trenutno zatvorena ili je order kreiran u after-hours periodu.
-      Ako nastavite, izvršavanje ordera može trajati duže.
+<!-- PR_31 Phase 7 T26: confirmation modal redesign — z-overlay + z-modal,
+     duplikat "Smer" red uklonjen (audit bug). Single "Smer" row preživeo. -->
+<div *ngIf="showConfirmation && draftOrder" class="z-overlay" (click)="cancelDraft()">
+  <div class="z-modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="confirm-order-title">
+    <div class="z-modal-header">
+      <h2 id="confirm-order-title" class="text-lg font-bold">Potvrda ordera</h2>
+      <button type="button" class="z-btn-icon" (click)="cancelDraft()" [disabled]="isSubmitting" aria-label="Zatvori">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
-    <div class="space-y-3">
-      <div class="flex justify-between">
-        <span>Hartija</span>
-        <strong>{{ security?.ticker }} - {{ security?.name }}</strong>
+    <div class="z-modal-body space-y-3">
+      <div *ngIf="draftOrder.exchangeClosed || draftOrder.afterHours" class="z-callout-warning">
+        Berza je trenutno zatvorena ili je order kreiran u after-hours periodu.
+        Ako nastavite, izvršavanje ordera može trajati duže.
       </div>
 
-      <div class="flex justify-between">
-        <span>Smer</span>
-        <strong>{{ draftOrder.direction }}</strong>
-      </div>
+      <dl class="grid grid-cols-2 gap-y-2 text-sm">
+        <dt class="text-muted-foreground">Hartija:</dt>
+        <dd class="font-semibold">{{ security?.ticker }} - {{ security?.name }}</dd>
 
-      <div class="flex justify-between">
-        <span>Tip ordera</span>
-        <strong>{{ draftOrder.orderType }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Smer:</dt>
+        <dd class="font-semibold">{{ draftOrder.direction === 'BUY' ? 'Kupovina' : 'Prodaja' }}</dd>
 
-      <div class="flex justify-between">
-        <span>Smer</span>
-        <strong>{{ draftOrder.direction }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Tip ordera:</dt>
+        <dd>{{ draftOrder.orderType }}</dd>
 
-      <div class="flex justify-between">
-        <span>Količina</span>
-        <strong>{{ draftOrder.quantity }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Količina:</dt>
+        <dd class="font-mono tabular-nums">{{ draftOrder.quantity }}</dd>
 
-      <div class="flex justify-between">
-        <span>Price per unit</span>
-        <strong>{{ formatMoney(draftOrder.pricePerUnit) }} {{ security?.currency }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Cena po jedinici:</dt>
+        <dd class="font-mono tabular-nums">{{ formatMoney(draftOrder.pricePerUnit) }} {{ security?.currency }}</dd>
 
-      <div class="flex justify-between">
-        <span>Approximate Price</span>
-        <strong>{{ formatMoney(draftOrder.approximatePrice) }} {{ security?.currency }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Ukupno:</dt>
+        <dd class="font-mono tabular-nums font-bold">{{ formatMoney(draftOrder.approximatePrice) }} {{ security?.currency }}</dd>
 
-      <div class="flex justify-between">
-        <span>Fee</span>
-        <strong>{{ formatMoney(draftOrder.fee) }} {{ security?.currency }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Provizija:</dt>
+        <dd class="font-mono tabular-nums">{{ formatMoney(draftOrder.fee) }} {{ security?.currency }}</dd>
 
-      <div class="flex justify-between">
-        <span>AON</span>
-        <strong>{{ draftOrder.allOrNone ? 'Da' : 'Ne' }}</strong>
-      </div>
+        <dt class="text-muted-foreground">AON:</dt>
+        <dd>{{ draftOrder.allOrNone ? 'Da' : 'Ne' }}</dd>
 
-      <div class="flex justify-between">
-        <span>Margin</span>
-        <strong>{{ draftOrder.margin ? 'Da' : 'Ne' }}</strong>
-      </div>
+        <dt class="text-muted-foreground">Margin:</dt>
+        <dd>{{ draftOrder.margin ? 'Da' : 'Ne' }}</dd>
 
-      <div class="flex justify-between" *ngIf="selectedAccount">
-        <span>Račun</span>
-        <strong>{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</strong>
-      </div>
+        <dt *ngIf="selectedAccount" class="text-muted-foreground">Račun:</dt>
+        <dd *ngIf="selectedAccount" class="font-mono">{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</dd>
+      </dl>
     </div>
 
-    <div class="flex justify-end gap-3 mt-6">
-      <button class="z-btn-outline" [disabled]="isSubmitting" (click)="cancelDraft()">
+    <div class="z-modal-footer">
+      <button type="button" class="z-btn-outline" [disabled]="isSubmitting" (click)="cancelDraft()">
         Odustani
       </button>
-
-      <button class="z-btn-primary" [disabled]="isSubmitting" (click)="confirmOrder()">
-        Potvrdi order
+      <button type="button" class="z-btn-primary" [disabled]="isSubmitting" (click)="confirmOrder()">
+        {{ isSubmitting ? 'Slanje...' : 'Potvrdi order' }}
       </button>
     </div>
   </div>

@@ -10,7 +10,6 @@ import {CardListComponent} from "@/features/client/components/card-list/card-lis
 import { LoanListComponent } from './components/loan-list/loan-list.component';
 import {RequestCardComponent} from "@/features/client/components/request-card/request-card.component";
 import { LoanRequestComponent } from './components/loan-request/loan-request.component';
-import { OtcActiveOffersComponent } from './components/otc-active-offers/otc-active-offers.component';
 
 @NgModule({
   declarations: [
@@ -28,8 +27,7 @@ import { OtcActiveOffersComponent } from './components/otc-active-offers/otc-act
     CardListComponent,
     LoanListComponent,
     RequestCardComponent,
-    LoanRequestComponent,
-    OtcActiveOffersComponent,
+    LoanRequestComponent
   ]
 })
 export class ClientModule {}

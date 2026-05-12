@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { Account } from '../../models/account.model';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 import { PaymentRecipient } from '../../models/account.model';
 import { ClientService, NewPaymentDto } from '../../services/client.service';
@@ -14,7 +13,7 @@ import { ClientService, NewPaymentDto } from '../../services/client.service';
   templateUrl: './new-payment.component.html',
   styleUrls: ['./new-payment.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
+  imports: [CommonModule, ReactiveFormsModule, VerificationModalComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
 })
 export class NewPaymentComponent implements OnInit {
   public paymentForm!: FormGroup;
@@ -23,8 +22,30 @@ export class NewPaymentComponent implements OnInit {
   public showVerificationModal = false;
   public transactionSuccess = false;
   public isNewRecipient = false;
-  public recipientSaved = false;    
-  public isSavingRecipient = false; 
+  public recipientSaved = false;
+  public isSavingRecipient = false;
+  public showLimitInfo = false;
+
+  public get selectedAccount(): Account | null {
+    const acctNum = this.paymentForm?.value?.senderAccount;
+    return this.myAccounts.find((a) => a.accountNumber === acctNum) ?? null;
+  }
+
+  public get remainingDailyLimit(): number {
+    const a = this.selectedAccount;
+    if (!a) return 0;
+    return Math.max(0, (a.dailyLimit ?? 0) - (a.dailySpending ?? 0));
+  }
+
+  public get remainingMonthlyLimit(): number {
+    const a = this.selectedAccount;
+    if (!a) return 0;
+    return Math.max(0, (a.monthlyLimit ?? 0) - (a.monthlySpending ?? 0));
+  }
+
+  public toggleLimitInfo(): void {
+    this.showLimitInfo = !this.showLimitInfo;
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -45,8 +66,8 @@ export class NewPaymentComponent implements OnInit {
     this.paymentForm = this.fb.group({
       senderAccount: ['', Validators.required],
       receiverName: ['', Validators.required],
-      // Tačno 19 cifara za račun primaoca
-      receiverAccount: ['', [Validators.required, Validators.pattern('^[0-9]{19}$')]],
+      // Tačno 18 cifara za račun primaoca (spec Celina 2: 3 + 4 + 9 + 2 = 18)
+      receiverAccount: ['', [Validators.required, Validators.pattern('^[0-9]{18}$')]],
       // Iznos mora biti veći od 0
       amount: ['', [Validators.required, Validators.min(0.01)]],
       // Šifra plaćanja: tačno 3 cifre, default za e-banking je obično 289
@@ -139,11 +160,25 @@ export class NewPaymentComponent implements OnInit {
 
   
   public saveToRecipients(): void {
+    if (this.isSavingRecipient || this.recipientSaved) {
+      return;
+    }
+    const name = (this.paymentForm.value.receiverName ?? '').toString().trim();
+    const accountNumber = (this.paymentForm.value.receiverAccount ?? '').toString().trim();
+    if (!name || !accountNumber) {
+      return;
+    }
     this.isSavingRecipient = true;
-    // TODO: dodati backend endpoint za cuvanje primaoca placanja
-    this.isSavingRecipient = false;
-    this.recipientSaved = true;
-    this.isNewRecipient = false;
+    this.clientService.createRecipient(name, accountNumber).subscribe({
+      next: () => {
+        this.isSavingRecipient = false;
+        this.recipientSaved = true;
+        this.isNewRecipient = false;
+      },
+      error: () => {
+        this.isSavingRecipient = false;
+      },
+    });
   }
 /**
    * Pokreće se klikom na dugme "Odustani" ili "Nazad na listu".

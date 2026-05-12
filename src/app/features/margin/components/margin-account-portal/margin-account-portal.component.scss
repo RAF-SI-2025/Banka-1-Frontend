@@ -1,0 +1,23 @@
+// Tailwind se koristi inline u template-u; minimalan SCSS samo za grid layout-e
+// koje Tailwind ne pokriva direktno.
+
+.margin-portal {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.card {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+dl {
+  dt {
+    font-weight: 500;
+    color: #374151;
+  }
+  dd {
+    color: #111827;
+  }
+}

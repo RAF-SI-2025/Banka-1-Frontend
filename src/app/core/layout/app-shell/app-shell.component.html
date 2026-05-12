@@ -1,0 +1,16 @@
+<ng-container *ngIf="isAuthRoute; else fullShell">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<ng-template #fullShell>
+  <div class="app-shell">
+    <app-sidebar class="app-shell__sidebar"></app-sidebar>
+    <div class="app-shell__main">
+      <app-topbar class="app-shell__topbar"></app-topbar>
+      <main class="app-shell__content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+    <app-command-palette></app-command-palette>
+  </div>
+</ng-template>

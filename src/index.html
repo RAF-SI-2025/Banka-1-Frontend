@@ -5,8 +5,27 @@
   <title>Banka1Frontend</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- PR_31: pre-paint theme resolution — set data-theme on <html> BEFORE any
+       stylesheet or Angular bundle loads, to prevent flash-of-unstyled-content
+       (FOUC). Mirrors ThemeService.readInitial() + resolve() logic. Mora da bude
+       pre <link rel="stylesheet"> tagova. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('banka:theme') || 'system';
+        var resolved = t;
+        if (t === 'system') {
+          resolved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', resolved);
+      } catch (e) { /* localStorage unavailable */ }
+    })();
+  </script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- PR_29: runtime API URL config — operatori menjaju assets/env-config.js u deploy-u
+       bez Angular rebuild-a. Mora da se ucita PRE Angular bundle-a, zato je u <head>. -->
+  <script src="assets/env-config.js"></script>
 </head>
 <body>
   <app-root></app-root>

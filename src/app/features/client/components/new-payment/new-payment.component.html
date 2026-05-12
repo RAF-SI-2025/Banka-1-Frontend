@@ -1,7 +1,5 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content max-w-3xl">
+<div>
+  <div class="max-w-3xl">
     <!-- Header -->
     <div class="text-center mb-8">
       <h1 class="text-2xl font-bold text-foreground">{{ transactionSuccess ? 'UPLATA USPEŠNA' : 'NOVO PLAĆANJE' }}</h1>
@@ -21,7 +19,7 @@
         <div>
           <label class="z-label">Račun pošiljaoca</label>
           <select formControlName="senderAccount" class="z-select"
-                  [class.border-red-400]="paymentForm.get('senderAccount')?.invalid && paymentForm.get('senderAccount')?.touched">
+                  [class.border-destructive]="paymentForm.get('senderAccount')?.invalid && paymentForm.get('senderAccount')?.touched">
             <option *ngFor="let acc of myAccounts" [value]="acc.accountNumber">
               {{ acc.name }} ({{ maskAccountNumber(acc.accountNumber) }}) - Raspoloživo: {{ formatAmount(acc.availableBalance) }} {{ acc.currency }}
             </option>
@@ -32,31 +30,63 @@
           <div>
             <label class="z-label">Primalac (Ime ili Naziv)</label>
             <input type="text" formControlName="receiverName" class="z-input" placeholder="Unesite ime primaoca"
-                   [class.border-red-400]="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched" />
+                   [class.border-destructive]="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched" />
             <p class="z-error" *ngIf="paymentForm.get('receiverName')?.invalid && paymentForm.get('receiverName')?.touched">Ime primaoca je obavezno.</p>
           </div>
           <div>
             <label class="z-label">Račun primaoca</label>
-            <input type="text" formControlName="receiverAccount" class="z-input" placeholder="Npr. 2650000001234567890"
-                   [class.border-red-400]="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched" />
-            <p class="z-error" *ngIf="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">Unesite ispravan broj računa (19 cifara).</p>
+            <input type="text" formControlName="receiverAccount" class="z-input" placeholder="Npr. 111000100012345678" maxlength="18"
+                   [class.border-destructive]="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched" />
+            <p class="z-error" *ngIf="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">Unesite ispravan broj računa (18 cifara).</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="z-label">Iznos</label>
+            <label class="z-label flex items-center gap-1.5">
+              Iznos
+              <button type="button"
+                      (click)="toggleLimitInfo()"
+                      class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-0 cursor-pointer"
+                      [attr.aria-label]="'Preostali limit za placanje'"
+                      [attr.aria-expanded]="showLimitInfo"
+                      title="Preostali limit za placanje">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </button>
+            </label>
             <div class="relative">
               <input type="number" formControlName="amount" class="z-input pr-16" placeholder="0.00"
-                     [class.border-red-400]="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" />
+                     [class.border-destructive]="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" />
               <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded">RSD</span>
             </div>
-            <p class="z-error" *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">Unesite validan iznos veći od 0.</p>
+            <p class="z-error" *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">Unesite validan iznos veci od 0.</p>
+            <div *ngIf="showLimitInfo && selectedAccount"
+                 class="mt-2 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5 text-xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">Preostali dnevni limit</span>
+                <span class="font-mono font-semibold text-emerald-800">
+                  {{ formatAmount(remainingDailyLimit) }} {{ selectedAccount.currency }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">Preostali mesecni limit</span>
+                <span class="font-mono font-semibold text-emerald-800">
+                  {{ formatAmount(remainingMonthlyLimit) }} {{ selectedAccount.currency }}
+                </span>
+              </div>
+              <p class="text-[11px] text-muted-foreground pt-1 border-t border-emerald-200/60">
+                Dnevni limit racuna: {{ formatAmount(selectedAccount.dailyLimit) }} | Mesecni limit racuna: {{ formatAmount(selectedAccount.monthlyLimit) }}
+              </p>
+            </div>
           </div>
           <div>
             <label class="z-label">Šifra plaćanja</label>
             <select formControlName="paymentCode" class="z-select"
-                    [class.border-red-400]="paymentForm.get('paymentCode')?.invalid && paymentForm.get('paymentCode')?.touched">
+                    [class.border-destructive]="paymentForm.get('paymentCode')?.invalid && paymentForm.get('paymentCode')?.touched">
               <option value="220">220 - Promet robe i usluga</option>
               <option value="221">221 - Promet usluga</option>
               <option value="222">222 - Usluge javnih preduzeća</option>
@@ -74,13 +104,13 @@
           <div>
             <label class="z-label">Svrha plaćanja</label>
             <input type="text" formControlName="purpose" class="z-input" placeholder="Npr. Uplata za račun..."
-                   [class.border-red-400]="paymentForm.get('purpose')?.invalid && paymentForm.get('purpose')?.touched" />
+                   [class.border-destructive]="paymentForm.get('purpose')?.invalid && paymentForm.get('purpose')?.touched" />
             <p class="z-error" *ngIf="paymentForm.get('purpose')?.invalid && paymentForm.get('purpose')?.touched">Svrha plaćanja je obavezna.</p>
           </div>
           <div>
             <label class="z-label">Poziv na broj (Opciono)</label>
             <input type="text" formControlName="referenceNumber" class="z-input" placeholder="Npr. 97-123456"
-                   [class.border-red-400]="paymentForm.get('referenceNumber')?.invalid && paymentForm.get('referenceNumber')?.touched" />
+                   [class.border-destructive]="paymentForm.get('referenceNumber')?.invalid && paymentForm.get('referenceNumber')?.touched" />
             <p class="z-error" *ngIf="paymentForm.get('referenceNumber')?.invalid && paymentForm.get('referenceNumber')?.touched">Dozvoljeni su samo brojevi i crtice.</p>
           </div>
         </div>

@@ -4,15 +4,16 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Account } from '../../models/account.model';
 import { Transaction } from '../../models/transaction.model';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { AccountDetailsModalComponent } from '../../modals/account-details-modal/account-details-modal.component';
 import { AccountService } from '../../services/account.service';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 @Component({
   selector: 'app-account-list',
   templateUrl: './account-list.component.html',
   standalone: true,
-  imports: [CommonModule, AccountDetailsModalComponent, NavbarComponent],
+  imports: [CommonModule, AccountDetailsModalComponent, StateComponent],
   styleUrls: ['./account-list.component.scss']
 })
 export class AccountListComponent implements OnInit {
@@ -169,10 +170,6 @@ export class AccountListComponent implements OnInit {
     };
 
     return labels[account.subtype] ?? account.name;
-  }
-
-  public onCreateAccount(): void {
-    this.router.navigate(['/accounts/new']);
   }
 
   private loadTransactions(accountNumber: string): void {

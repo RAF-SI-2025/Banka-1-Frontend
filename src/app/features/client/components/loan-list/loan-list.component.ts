@@ -3,15 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Loan, LoanStatus, LoanTypeLabels } from '../../models/loan.model';
 import { LoanService } from '../../services/loan.service';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 @Component({
   selector: 'app-loan-list',
   standalone: true,
-  imports: [CommonModule, NavbarComponent],
+  imports: [CommonModule, StateComponent],
   templateUrl: './loan-list.component.html',
   styleUrls: ['./loan-list.component.scss']
 })
@@ -49,7 +50,10 @@ export class LoanListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (loans) => {
-          this.loans = loans;
+          // Spec Celina 2: lista kredita sortirana opadajuce po ukupnom iznosu kredita.
+          this.loans = [...loans].sort(
+            (a, b) => (b?.amount ?? 0) - (a?.amount ?? 0)
+          );
           this.isLoading = false;
         },
         error: (err) => {

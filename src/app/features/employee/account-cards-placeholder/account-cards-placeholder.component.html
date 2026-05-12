@@ -1,217 +1,218 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
-    <!-- Header -->
-    <div class="flex items-center gap-3 mb-8">
-      <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors" (click)="goBack()">
-        <svg class="w-5 h-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+<div>
+  <div>
+    <div class="mb-6">
+      <button type="button"
+              (click)="goBack()"
+              class="inline-flex items-center gap-1 text-sm text-primary hover:underline bg-transparent border-0 cursor-pointer">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Nazad
       </button>
-      <h1 class="text-xl font-semibold">KARTICE RAČUNA</h1>
     </div>
 
-    <!-- Main Content Card -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-      <!-- Top Section -->
-      <div class="flex flex-col lg:flex-row gap-12">
-        <!-- Left: Account Details -->
-        <div class="lg:w-2/5">
-          <h2 class="text-sm font-semibold text-primary mb-2">{{ accountType.toUpperCase() || 'TRANSAKCIONI' }} RAČUN</h2>
-          <p class="text-xl font-mono font-medium mb-8">{{ accountNumber }}</p>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Kartice racuna</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          {{ (accountType || 'TRANSAKCIONI') }} racun · upravljanje povezanim karticama.
+        </p>
+      </div>
+      <span class="z-badge z-badge-dot"
+            [ngClass]="status === 'Aktivan' ? 'z-badge-green' : 'z-badge-red'">
+        {{ status || 'Aktivan' }}
+      </span>
+    </div>
 
-          <div class="space-y-4">
-            <div class="border border-gray-200 rounded-xl p-4">
-              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Vlasnik</p>
-              <p class="text-base font-medium text-gray-900">{{ ownerName }}</p>
-            </div>
+    <section class="z-card p-6 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-8">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Detalji racuna</p>
+          <p class="text-2xl font-mono font-bold text-foreground mb-5">{{ accountNumber }}</p>
 
-            <div class="border border-gray-200 rounded-xl p-4">
-              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Povezani računi</p>
-              <p class="text-base font-mono text-gray-900">{{ accountNumber }}</p>
+          <dl class="space-y-3 text-sm">
+            <div class="rounded-xl border border-border bg-muted/30 p-4">
+              <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Vlasnik</dt>
+              <dd class="font-medium text-foreground">{{ ownerName }}</dd>
             </div>
-
-            <div class="border border-gray-200 rounded-xl p-4">
-              <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Status</p>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                    [ngClass]="status === 'Aktivan' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-                {{ status || 'Aktivan' }}
-              </span>
+            <div class="rounded-xl border border-border bg-muted/30 p-4">
+              <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Tip racuna</dt>
+              <dd class="font-medium text-foreground">{{ accountType || 'Tekuci racun' }}</dd>
             </div>
-          </div>
+          </dl>
         </div>
 
-        <!-- Right: Cards Preview -->
-        <div class="lg:w-3/5 lg:border-l lg:pl-12 border-gray-100">
-          <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-6">Vezane kartice</h2>
+        <div class="lg:border-l lg:pl-8 lg:border-border">
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-4">Vezane kartice</p>
 
-          <!-- Loading -->
-          <div *ngIf="isLoading" class="text-center py-12 text-gray-400">Učitavanje kartica...</div>
+          <!-- PR_31 T11: shared StateComponent zameni inline loading/empty markup. -->
+          <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje kartica..."></app-state>
+          <app-state *ngIf="!isLoading && !hasError && cards.length === 0"
+                     mode="empty" title="Nema kartica"
+                     text="Nema kartica vezanih za ovaj racun."></app-state>
 
-          <!-- Empty -->
-          <div *ngIf="!isLoading && !hasError && cards.length === 0" class="text-center py-12 text-gray-400">
-            Nema kartica vezanih za ovaj račun.
-          </div>
-
-          <!-- Cards -->
-          <div *ngIf="!isLoading && !hasError && cards.length > 0" class="space-y-4">
-            <div *ngFor="let card of cards; let i = index" class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-              <div class="flex items-center gap-4">
-                <!-- Card Image with gradient -->
-                <div class="w-16 h-10 rounded-lg shadow-md flex items-center justify-center overflow-hidden"
+          <div *ngIf="!isLoading && !hasError && cards.length > 0" class="space-y-3">
+            <div *ngFor="let card of cards; let i = index"
+                 class="flex items-center justify-between p-3 rounded-xl border border-border hover:border-emerald-300 transition-colors">
+              <div class="flex items-center gap-3">
+                <div class="w-14 h-9 rounded-lg shadow-md flex items-center justify-center overflow-hidden"
                      [style.background]="getCardGradient(i)">
-                  <svg class="w-6 h-6 text-white/90" viewBox="0 0 24 24" fill="currentColor">
+                  <svg class="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-gray-900">{{ card.cardName }}</p>
-                  <p class="text-xs text-gray-400 font-mono">{{ card.cardNumber }}</p>
+                  <p class="text-sm font-semibold text-foreground">{{ card.cardName }}</p>
+                  <p class="text-xs text-muted-foreground font-mono">{{ card.cardNumber }}</p>
                 </div>
               </div>
               <div class="text-right">
-                <p class="text-base font-semibold text-gray-900">{{ card.balance | number:'1.2-2' }}</p>
-                <p class="text-xs text-gray-400">{{ card.currency }}</p>
+                <p class="text-base font-bold font-mono text-foreground">{{ card.balance | number:'1.2-2' }}</p>
+                <p class="text-xs text-muted-foreground">{{ card.currency }}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Divider -->
-      <div class="border-t border-gray-100 my-8"></div>
-
-      <!-- Card Management Table -->
-      <div>
-        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-6">Upravljanje karticama</h2>
-
-        <!-- Loading -->
-        <div *ngIf="isLoading" class="text-center py-12 text-gray-400">Učitavanje...</div>
-
-        <!-- Error -->
-        <div *ngIf="!isLoading && hasError" class="text-center py-12">
-          <p class="text-red-500 mb-4">{{ errorMessage }}</p>
-          <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90" (click)="loadCards()">Pokušaj ponovo</button>
+    <section class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Upravljanje karticama</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Blokirajte, odblokirajte ili deaktivirajte kartice klijenta.</p>
         </div>
-
-        <!-- Empty -->
-        <div *ngIf="!isLoading && !hasError && cards.length === 0" class="text-center py-12 text-gray-400">
-          Nema kartica za upravljanje.
-        </div>
-
-        <!-- Table -->
-        <div *ngIf="!isLoading && !hasError && cards.length > 0" class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-gray-100">
-                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Broj kartice</th>
-                <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Status</th>
-                <th class="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider pb-4">Akcije</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let card of cards; trackBy: trackByCard" class="border-b border-gray-50 last:border-0">
-                <td class="py-5 font-mono text-sm text-gray-900">{{ card.cardNumber }}</td>
-                <td class="py-5">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
-                        [ngClass]="{
-                          'bg-green-100 text-green-700': card.status === 'AKTIVNA',
-                          'bg-red-100 text-red-700': card.status === 'BLOKIRANA',
-                          'bg-gray-100 text-gray-500': card.status === 'DEAKTIVIRANA'
-                        }">
-                    {{ getStatusLabel(card.status) }}
-                  </span>
-                </td>
-                <td class="py-5 text-right">
-                  <div class="flex items-center justify-end gap-3" *ngIf="hasAnyAction(card)">
-                    <button
-                      *ngIf="canBlock(card)"
-                      type="button"
-                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                      (click)="openConfirmModal(card, 'BLOCK')"
-                    >Blokiraj</button>
-
-                    <button
-                      *ngIf="canUnblock(card)"
-                      type="button"
-                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors"
-                      (click)="openConfirmModal(card, 'UNBLOCK')"
-                    >Odblokiraj</button>
-
-                    <button
-                      *ngIf="canDeactivate(card)"
-                      type="button"
-                      class="px-4 py-1.5 text-xs font-semibold rounded-lg border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                      (click)="openConfirmModal(card, 'DEACTIVATE')"
-                    >Deaktiviraj</button>
-                  </div>
-                  <span *ngIf="!hasAnyAction(card)" class="text-xs text-gray-400">-</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <span *ngIf="cards.length > 0" class="z-badge z-badge-blue">{{ cards.length }} kartica</span>
       </div>
-    </div>
+
+      <!-- PR_31 T11: shared StateComponent zameni inline loading/empty markup. Error blok zadrzava custom retry dugme. -->
+      <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje..."></app-state>
+
+      <div *ngIf="!isLoading && hasError" class="py-10 text-center">
+        <p class="text-sm text-destructive mb-4">{{ errorMessage }}</p>
+        <button type="button" class="z-btn-primary z-btn-sm" (click)="loadCards()">Pokusaj ponovo</button>
+      </div>
+
+      <app-state *ngIf="!isLoading && !hasError && cards.length === 0"
+                 mode="empty" title="Nema kartica"
+                 text="Nema kartica za upravljanje."></app-state>
+
+      <div *ngIf="!isLoading && !hasError && cards.length > 0" class="overflow-x-auto">
+        <table class="z-table">
+          <thead>
+            <tr>
+              <th>Broj kartice</th>
+              <th>Status</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let card of cards; trackBy: trackByCard">
+              <td class="font-mono">{{ card.cardNumber }}</td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="{
+                        'z-badge-green': card.status === 'AKTIVNA',
+                        'z-badge-red': card.status === 'BLOKIRANA',
+                        'z-badge-gray': card.status === 'DEAKTIVIRANA'
+                      }">
+                  {{ getStatusLabel(card.status) }}
+                </span>
+              </td>
+              <td>
+                <div class="flex items-center justify-end gap-2" *ngIf="hasAnyAction(card)">
+                  <button *ngIf="canBlock(card)"
+                          type="button"
+                          class="z-btn-destructive z-btn-sm"
+                          (click)="openConfirmModal(card, 'BLOCK')">
+                    Blokiraj
+                  </button>
+                  <button *ngIf="canUnblock(card)"
+                          type="button"
+                          class="z-btn-primary z-btn-sm"
+                          (click)="openConfirmModal(card, 'UNBLOCK')">
+                    Odblokiraj
+                  </button>
+                  <button *ngIf="canDeactivate(card)"
+                          type="button"
+                          class="z-btn-outline z-btn-sm"
+                          (click)="openConfirmModal(card, 'DEACTIVATE')">
+                    Deaktiviraj
+                  </button>
+                </div>
+                <span *ngIf="!hasAnyAction(card)" class="text-xs text-muted-foreground">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- Confirmation Modal -->
-    <div *ngIf="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeConfirmModal()">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4" (click)="$event.stopPropagation()">
-        <div class="flex items-center justify-between p-6 border-b border-gray-100">
-          <h3 class="text-lg font-semibold text-gray-900">{{ getModalTitle() }}</h3>
-          <button type="button" class="text-gray-400 hover:text-gray-600" (click)="closeConfirmModal()">
+    <div *ngIf="showConfirmModal" class="z-overlay" (click)="closeConfirmModal()">
+      <div class="z-modal" (click)="$event.stopPropagation()">
+        <div class="z-modal-header">
+          <h3 class="text-lg font-bold text-foreground">{{ getModalTitle() }}</h3>
+          <button type="button"
+                  class="z-btn-icon"
+                  aria-label="Zatvori dijalog"
+                  title="Zatvori"
+                  (click)="closeConfirmModal()">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
-        <div class="p-6">
-          <p class="text-sm text-gray-600 mb-6">{{ getModalMessage() }}</p>
 
-          <div class="bg-gray-50 rounded-xl p-4 mb-4">
-            <div class="grid grid-cols-2 gap-4">
+        <div class="z-modal-body space-y-4">
+          <p class="text-sm text-muted-foreground">{{ getModalMessage() }}</p>
+
+          <div class="rounded-xl border border-border bg-muted/30 p-4">
+            <dl class="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p class="text-xs text-gray-400 mb-1">Broj kartice</p>
-                <p class="font-mono text-sm font-medium text-gray-900">{{ selectedCard?.cardNumber }}</p>
+                <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Broj kartice</dt>
+                <dd class="font-mono font-semibold text-foreground">{{ selectedCard?.cardNumber }}</dd>
               </div>
               <div>
-                <p class="text-xs text-gray-400 mb-1">Tip kartice</p>
-                <p class="text-sm font-medium text-gray-900">{{ selectedCard?.cardName }}</p>
+                <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Tip</dt>
+                <dd class="font-medium text-foreground">{{ selectedCard?.cardName }}</dd>
               </div>
               <div>
-                <p class="text-xs text-gray-400 mb-1">Vlasnik</p>
-                <p class="text-sm font-medium text-gray-900">{{ selectedCard ? getCardOwnerFullName(selectedCard) : '' }}</p>
+                <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Vlasnik</dt>
+                <dd class="font-medium text-foreground">{{ selectedCard ? getCardOwnerFullName(selectedCard) : '' }}</dd>
               </div>
               <div>
-                <p class="text-xs text-gray-400 mb-1">Email</p>
-                <p class="text-sm text-gray-900">{{ selectedCard?.ownerEmail }}</p>
+                <dt class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1">Email</dt>
+                <dd class="text-foreground">{{ selectedCard?.ownerEmail }}</dd>
               </div>
-            </div>
+            </dl>
           </div>
 
-          <div *ngIf="pendingAction === 'DEACTIVATE'" class="bg-red-50 border border-red-100 rounded-xl p-4 mb-4">
-            <p class="text-sm text-red-700">
-              <strong>Upozorenje:</strong> Deaktivacija kartice je trajna i ne može se poništiti.
-            </p>
+          <div *ngIf="pendingAction === 'DEACTIVATE'" class="z-alert-error">
+            <strong>Upozorenje:</strong> Deaktivacija kartice je trajna i ne moze se ponistiti.
           </div>
 
-          <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p class="text-sm text-blue-700 flex items-center gap-2">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              Vlasnik kartice će dobiti obaveštenje putem emaila.
-            </p>
+          <div class="z-alert-info">
+            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span>Vlasnik kartice ce dobiti obavestenje putem emaila.</span>
           </div>
         </div>
-        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-100">
-          <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors" (click)="closeConfirmModal()" [disabled]="isProcessing">
-            Otkaži
+
+        <div class="z-modal-footer">
+          <button type="button"
+                  class="z-btn-outline"
+                  (click)="closeConfirmModal()"
+                  [disabled]="isProcessing">
+            Otkazi
           </button>
-          <button type="button" class="px-5 py-2.5 text-sm font-medium text-white rounded-xl transition-colors"
-                  [ngClass]="pendingAction === 'UNBLOCK' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
-                  (click)="confirmAction()" [disabled]="isProcessing">
+          <button type="button"
+                  [ngClass]="pendingAction === 'UNBLOCK' ? 'z-btn-primary' : 'z-btn-destructive'"
+                  (click)="confirmAction()"
+                  [disabled]="isProcessing">
             {{ isProcessing ? 'Obrada...' : 'Potvrdi' }}
           </button>
         </div>

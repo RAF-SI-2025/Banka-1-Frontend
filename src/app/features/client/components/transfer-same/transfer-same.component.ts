@@ -7,7 +7,6 @@ import { AccountService } from '../../services/account.service';
 import { TransferService } from '../../services/transfer.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 
 type Step = 'form' | 'confirm' | 'success';
@@ -15,7 +14,7 @@ type Step = 'form' | 'confirm' | 'success';
 @Component({
   selector: 'app-transfer-same',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, VerificationModalComponent],
   templateUrl: './transfer-same.component.html',
   styleUrls: ['./transfer-same.component.scss']
 })

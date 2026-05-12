@@ -57,8 +57,17 @@ export class AccountService {
 
     const currency = item.currency || item.valuta || 'RSD';
 
+    // Use the server-provided primary key when present; only fall back to the legacy
+    // hashAccountNumber bridge if the response is missing `id` for some reason.
+    // Hash-derived ids do not map to anything on the backend and broke order BUY/SELL
+    // accountId resolution in /internal/accounts/id/{accountId}/details (GHI #199).
+    const id =
+      typeof item.id === 'number'
+        ? item.id
+        : this.hashAccountNumber(item.brojRacuna || item.accountNumber || '');
+
     return {
-      id: this.hashAccountNumber(item.brojRacuna),
+      id,
       name: item.nazivRacuna || '',
       accountNumber: (item.brojRacuna || item.accountNumber || '').trim(),
       balance: item.stanjeRacuna || 0,
@@ -69,12 +78,12 @@ export class AccountService {
       subtype: subtype,
       ownerId: item.vlasnik || 0,
       ownerName: '',
-      employeeId: 0,
-      maintenanceFee: 0,
-      dailyLimit: item.dailyLimit || 0,
-      monthlyLimit: item.monthlyLimit || 0,
-      dailySpending: item.dailySpending || 0,
-      monthlySpending: item.monthlySpending || 0,
+      employeeId: item.zaposlen ?? 0,
+      maintenanceFee: Number(item.mesecnoOdrzavanje ?? item.maintenanceFee ?? 0),
+      dailyLimit: Number(item.dnevniLimit ?? item.dailyLimit ?? 0),
+      monthlyLimit: Number(item.mesecniLimit ?? item.monthlyLimit ?? 0),
+      dailySpending: Number(item.dnevnaPotrosnja ?? item.dailySpending ?? 0),
+      monthlySpending: Number(item.mesecnaPotrosnja ?? item.monthlySpending ?? 0),
       createdAt: item.creationDate || new Date().toISOString(),
       expiryDate: item.expirationDate || '',
     } as Account;

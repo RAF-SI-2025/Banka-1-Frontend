@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ['class', '[data-theme="dark"]'],
   content: [
     "./src/**/*.{html,ts}",
   ],
@@ -51,6 +52,10 @@ module.exports = {
         warning: {
           DEFAULT: "var(--warning)",
           foreground: "var(--warning-foreground)",
+        },
+        topbar: {
+          DEFAULT: "var(--topbar)",
+          border: "var(--topbar-border)",
         },
       },
       borderRadius: {

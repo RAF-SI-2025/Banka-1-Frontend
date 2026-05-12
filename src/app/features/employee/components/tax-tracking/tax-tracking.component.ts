@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { TaxService } from '../../services/tax.service';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { TaxUser, TaxUserDisplay } from '../../models/tax-user.model';
@@ -12,7 +11,7 @@ import { TaxUser, TaxUserDisplay } from '../../models/tax-user.model';
   templateUrl: './tax-tracking.component.html',
   styleUrls: ['./tax-tracking.component.css'],
   standalone: true, 
-  imports: [CommonModule, FormsModule, NavbarComponent], 
+  imports: [CommonModule, FormsModule], 
 })
 export class TaxTrackingComponent implements OnInit {
   

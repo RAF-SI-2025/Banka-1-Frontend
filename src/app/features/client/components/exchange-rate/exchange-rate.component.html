@@ -1,22 +1,20 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
 
     <!-- Tab navigation -->
-    <div class="flex items-center gap-0 border-b border-border mb-6">
+    <div class="z-tabs mb-6">
       <button
         type="button"
-        class="tab-btn"
-        [class.tab-btn--active]="activeTab === 'rates'"
+        class="z-tab"
+        [class.z-tab-active]="activeTab === 'rates'"
         (click)="setTab('rates')"
       >
         Kursna lista
       </button>
       <button
         type="button"
-        class="tab-btn"
-        [class.tab-btn--active]="activeTab === 'calculator'"
+        class="z-tab"
+        [class.z-tab-active]="activeTab === 'calculator'"
         (click)="setTab('calculator')"
       >
         Proveri ekvivalentnost
@@ -38,7 +36,7 @@
       </div>
 
       <div *ngIf="error && !isLoading" class="z-card p-8 text-center">
-        <p class="text-sm text-red-500 mb-4">{{ error }}</p>
+        <p class="text-sm text-destructive mb-4">{{ error }}</p>
         <button class="z-btn-primary" (click)="loadRates()">Pokušaj ponovo</button>
       </div>
 
