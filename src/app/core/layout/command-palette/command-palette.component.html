@@ -1,0 +1,41 @@
+<div *ngIf="open" class="z-overlay" (click)="closeModal()">
+  <div
+    class="z-modal max-w-xl w-full"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-label="Komandna paleta"
+  >
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-border">
+      <lucide-icon name="search" [size]="16" class="text-muted-foreground"></lucide-icon>
+      <input
+        #searchInput
+        type="text"
+        [(ngModel)]="query"
+        (input)="onInput()"
+        placeholder="Pretrazi stranice..."
+        class="flex-1 bg-transparent border-0 outline-none text-sm text-foreground placeholder:text-muted-foreground"
+      />
+      <kbd class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">ESC</kbd>
+    </div>
+    <div class="py-2 max-h-[400px] overflow-y-auto">
+      <button
+        type="button"
+        *ngFor="let item of results; let i = index"
+        (click)="select(item)"
+        (mouseenter)="selectedIndex = i"
+        [class.bg-accent]="selectedIndex === i"
+        class="w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer border-0 bg-transparent hover:bg-accent/60"
+      >
+        <lucide-icon [name]="item.icon" [size]="16" class="text-muted-foreground"></lucide-icon>
+        <span class="text-sm text-foreground">{{ item.label }}</span>
+        <span class="ml-auto text-xs text-muted-foreground/60 font-mono">{{ item.route }}</span>
+      </button>
+      <div
+        *ngIf="results.length === 0"
+        class="px-4 py-6 text-center text-sm text-muted-foreground"
+      >
+        Nema rezultata za "{{ query }}"
+      </div>
+    </div>
+  </div>
+</div>
