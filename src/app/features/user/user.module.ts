@@ -4,8 +4,6 @@ import { FormsModule } from '@angular/forms';
 
 import { UserRoutingModule } from './user-routing.module';
 import { UserCreateComponent } from './components/user-create/user-create.component';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
-
 @NgModule({
   declarations: [
     UserCreateComponent
@@ -13,8 +11,7 @@ import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.compone
   imports: [
     CommonModule,
     UserRoutingModule,
-    FormsModule,
-    NavbarComponent
+    FormsModule
   ]
 })
 export class UserModule { }
