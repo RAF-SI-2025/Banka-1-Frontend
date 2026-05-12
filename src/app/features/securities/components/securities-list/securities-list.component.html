@@ -1,44 +1,33 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-foreground">PREGLED HARTIJA OD VREDNOSTI</h1>
     </div>
 
     <div class="z-card">
-      <!-- Tabs -->
-      <div class="flex border-b border-border">
+      <!-- Tabs (PR_31 Phase 7 T22: z-tabs/z-tab/z-tab-active) -->
+      <div class="z-tabs">
         <button
-          class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
-          [class]="
-            activeTab === 'stocks'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          "
+          type="button"
+          class="z-tab"
+          [class.z-tab-active]="activeTab === 'stocks'"
           (click)="setActiveTab('stocks')"
         >
           Akcije
         </button>
         <button
-          class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
-          [class]="
-            activeTab === 'futures'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          "
+          type="button"
+          class="z-tab"
+          [class.z-tab-active]="activeTab === 'futures'"
           (click)="setActiveTab('futures')"
         >
           Fjučersi
         </button>
         <button
           *ngIf="!isClient"
-          class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
-          [class]="
-            activeTab === 'forex'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          "
+          type="button"
+          class="z-tab"
+          [class.z-tab-active]="activeTab === 'forex'"
           (click)="setActiveTab('forex')"
         >
           Forex parovi
@@ -95,13 +84,13 @@
             Osveži
           </button>
 
-          <!-- Mock data toggle -->
+          <!-- Mock data toggle (PR_31 Phase 7 T22: bg-blue-500 -> bg-primary) -->
           <label class="flex items-center gap-2 cursor-pointer select-none ml-2">
             <span class="text-sm text-muted-foreground">{{ useMockData ? 'Mock podaci' : 'Live podaci' }}</span>
             <div class="relative">
               <input type="checkbox" class="sr-only" [checked]="useMockData" (change)="toggleMockData()">
               <div class="w-10 h-6 rounded-full transition-colors"
-                   [ngClass]="useMockData ? 'bg-blue-500' : 'bg-muted-foreground/30'">
+                   [ngClass]="useMockData ? 'bg-primary' : 'bg-muted-foreground/30'">
               </div>
               <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
                    [ngClass]="useMockData ? 'translate-x-4' : 'translate-x-0'">
@@ -110,269 +99,217 @@
           </label>
 
           <!-- Filter button -->
-          <div class="relative">
-            <button
-              type="button"
-              class="z-btn-outline z-btn-sm flex items-center gap-1.5"
-              (click)="toggleFilterPanel()"
+          <button
+            type="button"
+            class="z-btn-outline z-btn-sm flex items-center gap-1.5"
+            (click)="toggleFilterPanel()"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <line x1="4" y1="21" x2="4" y2="14"></line>
-                <line x1="4" y1="10" x2="4" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12" y2="3"></line>
-                <line x1="20" y1="21" x2="20" y2="16"></line>
-                <line x1="20" y1="12" x2="20" y2="3"></line>
-                <line x1="1" y1="14" x2="7" y2="14"></line>
-                <line x1="9" y1="8" x2="15" y2="8"></line>
-                <line x1="17" y1="16" x2="23" y2="16"></line>
-              </svg>
-              Filteri
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            Filteri
+          </button>
+        </div>
+
+        <!-- PR_31 Phase 7 T22: filter drawer (zameni custom popover; 8+ polja). -->
+        <div *ngIf="isFilterOpen" class="z-drawer-overlay" (click)="closeFilterPanel()"></div>
+        <aside *ngIf="isFilterOpen" class="z-drawer-panel" role="dialog" aria-label="Filteri">
+          <header class="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 class="text-lg font-bold tracking-tight">Filteri</h2>
+            <button type="button" class="z-btn-icon" (click)="closeFilterPanel()" aria-label="Zatvori">
+              <lucide-icon name="x" [size]="14"></lucide-icon>
             </button>
+          </header>
 
-            <!-- Backdrop -->
-            <div
-              class="fixed inset-0 z-40"
-              *ngIf="isFilterOpen"
-              (click)="closeFilterPanel()"
-            ></div>
+          <div class="px-6 py-4 space-y-4">
+            <!-- Exchange filter -->
+            <div>
+              <label class="z-label">Berza</label>
+              <input
+                type="text"
+                [(ngModel)]="draftFilters.exchange"
+                placeholder="npr. NASDAQ, NYSE..."
+                class="z-input"
+              />
+            </div>
 
-            <!-- Filter panel -->
-            <div
-              *ngIf="isFilterOpen"
-              class="absolute right-0 top-full mt-2 w-80 z-50 bg-card rounded-xl border border-border shadow-lg p-5 space-y-4"
-            >
-              <div class="flex justify-between items-center">
-                <h3 class="text-sm font-semibold">Filteri</h3>
-                <button
-                  type="button"
-                  class="text-muted-foreground hover:text-foreground"
-                  (click)="closeFilterPanel()"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Exchange filter -->
+            <!-- Price range -->
+            <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="z-label">Berza</label>
+                <label class="z-label">Cena od</label>
                 <input
-                  type="text"
-                  [(ngModel)]="draftFilters.exchange"
-                  placeholder="npr. NASDAQ, NYSE..."
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.priceMin"
+                  placeholder="0.00"
                   class="z-input"
                 />
               </div>
+              <div>
+                <label class="z-label">Cena do</label>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.priceMax"
+                  placeholder="0.00"
+                  class="z-input"
+                />
+              </div>
+            </div>
 
-              <!-- Price range -->
+            <!-- Volume range -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="z-label">Volumen od</label>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.volumeMin"
+                  placeholder="0"
+                  class="z-input"
+                />
+              </div>
+              <div>
+                <label class="z-label">Volumen do</label>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.volumeMax"
+                  placeholder="0"
+                  class="z-input"
+                />
+              </div>
+            </div>
+
+            <!-- Margin range -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="z-label">Marža od</label>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.marginMin"
+                  placeholder="0.00"
+                  class="z-input"
+                />
+              </div>
+              <div>
+                <label class="z-label">Marža do</label>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="draftFilters.marginMax"
+                  placeholder="0.00"
+                  class="z-input"
+                />
+              </div>
+            </div>
+
+            <!-- Settlement date filter for futures -->
+            <ng-container *ngIf="activeTab === 'futures'">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="z-label">Cena od</label>
+                  <label class="z-label">Datum izmirenja od</label>
                   <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.priceMin"
-                    placeholder="0.00"
+                    type="date"
+                    aria-label="Datum izmirenja od"
+                    title="Datum izmirenja od"
+                    [(ngModel)]="draftFilters.settlementDateFrom"
                     class="z-input"
                   />
                 </div>
                 <div>
-                  <label class="z-label">Cena do</label>
+                  <label class="z-label">Datum izmirenja do</label>
                   <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.priceMax"
-                    placeholder="0.00"
+                    type="date"
+                    aria-label="Datum izmirenja do"
+                    title="Datum izmirenja do"
+                    [(ngModel)]="draftFilters.settlementDateTo"
                     class="z-input"
                   />
                 </div>
               </div>
+            </ng-container>
 
-              <!-- Volume range -->
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="z-label">Volumen od</label>
-                  <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.volumeMin"
-                    placeholder="0"
-                    class="z-input"
-                  />
-                </div>
-                <div>
-                  <label class="z-label">Volumen do</label>
-                  <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.volumeMax"
-                    placeholder="0"
-                    class="z-input"
-                  />
-                </div>
+            <!-- Bid/Ask filter for all types -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="z-label">Bid od</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="draftFilters.bidMin"
+                  placeholder="0.00"
+                  class="z-input"
+                />
               </div>
-
-              <!-- Margin range -->
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="z-label">Marža od</label>
-                  <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.marginMin"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
-                <div>
-                  <label class="z-label">Marža do</label>
-                  <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="draftFilters.marginMax"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
+              <div>
+                <label class="z-label">Bid do</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="draftFilters.bidMax"
+                  placeholder="0.00"
+                  class="z-input"
+                />
               </div>
-
-              <!-- Settlement date filter for futures -->
-              <ng-container *ngIf="activeTab === 'futures'">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="z-label">Datum izmirenja od</label>
-                    <input
-                      type="date"
-                      [(ngModel)]="draftFilters.settlementDateFrom"
-                      class="z-input"
-                    />
-                  </div>
-                  <div>
-                    <label class="z-label">Datum izmirenja do</label>
-                    <input
-                      type="date"
-                      [(ngModel)]="draftFilters.settlementDateTo"
-                      class="z-input"
-                    />
-                  </div>
-                </div>
-              </ng-container>
-
-              <!-- Bid/Ask filter for all types -->
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="z-label">Bid od</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    [(ngModel)]="draftFilters.bidMin"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
-                <div>
-                  <label class="z-label">Bid do</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    [(ngModel)]="draftFilters.bidMax"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="z-label">Ask od</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="draftFilters.askMin"
+                  placeholder="0.00"
+                  class="z-input"
+                />
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="z-label">Ask od</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    [(ngModel)]="draftFilters.askMin"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
-                <div>
-                  <label class="z-label">Ask do</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    [(ngModel)]="draftFilters.askMax"
-                    placeholder="0.00"
-                    class="z-input"
-                  />
-                </div>
-              </div>
-
-              <div class="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  class="z-btn-ghost z-btn-sm flex-1"
-                  (click)="clearFilters()"
-                >
-                  Reset
-                </button>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm flex-1"
-                  (click)="applyFilters()"
-                >
-                  Primeni
-                </button>
+              <div>
+                <label class="z-label">Ask do</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="draftFilters.askMax"
+                  placeholder="0.00"
+                  class="z-input"
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Loading state -->
-        <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-          <svg
-            class="w-8 h-8 text-primary animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-          </svg>
-        </div>
+          <footer class="px-6 py-4 border-t border-border flex justify-between gap-2">
+            <button type="button" class="z-btn-outline" (click)="clearFilters()">Resetuj</button>
+            <button type="button" class="z-btn-primary" (click)="applyFilters()">Primeni</button>
+          </footer>
+        </aside>
 
-        <!-- Error state -->
-        <div
-          *ngIf="!isLoading && errorMessage"
-          class="text-center p-12 text-red-500 text-sm"
-        >
-          <p>{{ errorMessage }}</p>
-        </div>
-
-        <!-- Empty state -->
-        <div
-          *ngIf="!isLoading && !errorMessage && securities.length === 0"
-          class="text-center p-12 text-muted-foreground text-sm"
-        >
-          <p>Nema hartija od vrednosti za zadate filtere.</p>
-        </div>
+        <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup. -->
+        <app-state *ngIf="isLoading" mode="loading" text="Učitavanje hartija..."></app-state>
+        <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
+        <app-state *ngIf="!isLoading && !errorMessage && securities.length === 0"
+                   mode="empty" title="Nema hartija"
+                   text="Nema hartija od vrednosti za zadate filtere."></app-state>
 
         <!-- Stocks table -->
         <table
@@ -412,12 +349,12 @@
               <td class="font-semibold">{{ security.ticker }}</td>
               <td>{{ security.name }}</td>
               <td class="text-muted-foreground">{{ security.exchange }}</td>
-              <td class="font-medium">{{ formatPrice(security.price) }} {{ security.currency }}</td>
-              <td [ngClass]="getChangeClass(security.change)">
+              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }} {{ security.currency }}</td>
+              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
                 {{ formatChange(security.change, security.changePercent) }}
               </td>
-              <td class="text-muted-foreground">{{ formatVolume(security.volume) }}</td>
-              <td class="font-medium">{{ formatPrice(security.initialMarginCost) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
+              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td>
                 <button
                   type="button"
@@ -470,12 +407,12 @@
               <td class="font-semibold">{{ security.ticker }}</td>
               <td>{{ security.name }}</td>
               <td class="text-muted-foreground">{{ security.exchange }}</td>
-              <td class="font-medium">{{ formatPrice(security.price) }} {{ security.currency }}</td>
-              <td [ngClass]="getChangeClass(security.change)">
+              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }} {{ security.currency }}</td>
+              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
                 {{ formatChange(security.change, security.changePercent) }}
               </td>
-              <td class="text-muted-foreground">{{ formatVolume(security.volume) }}</td>
-              <td class="font-medium">{{ formatPrice(security.initialMarginCost) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
+              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td class="text-muted-foreground">{{ asFuture(security).settlementDate }}</td>
               <td>
                 <button
@@ -526,14 +463,14 @@
             >
               <td class="font-semibold">{{ security.ticker }}</td>
               <td>{{ security.name }}</td>
-              <td class="font-medium">{{ formatPrice(security.price) }}</td>
-              <td [ngClass]="getChangeClass(security.change)">
+              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }}</td>
+              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
                 {{ formatChange(security.change, security.changePercent) }}
               </td>
-              <td class="text-muted-foreground">{{ asForex(security).bid.toFixed(4) }}</td>
-              <td class="text-muted-foreground">{{ asForex(security).ask.toFixed(4) }}</td>
-              <td class="text-muted-foreground">{{ asForex(security).spread.toFixed(4) }}</td>
-              <td class="text-muted-foreground">{{ formatVolume(security.volume) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).bid.toFixed(4) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).ask.toFixed(4) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).spread.toFixed(4) }}</td>
+              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td>
                 <button
                   type="button"
@@ -557,41 +494,12 @@
           Prikazuje se {{ currentPage * pageSize + 1 }} do
           {{ getLastItem() }} od {{ totalElements }} stavki
         </span>
-        <div class="flex items-center gap-1">
-          <button
-            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            [disabled]="currentPage === 0"
-            (click)="goToPage(currentPage - 1)"
-          >
-            <svg
-              class="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <span class="px-3 py-1 text-sm font-medium bg-primary text-white rounded-lg">
-            {{ currentPage + 1 }}
-          </span>
-          <button
-            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            [disabled]="currentPage >= totalPages - 1"
-            (click)="goToPage(currentPage + 1)"
-          >
-            <svg
-              class="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
+        <app-pagination
+          [total]="totalElements"
+          [pageSize]="pageSize"
+          [page]="currentPage + 1"
+          (pageChange)="goToPage($event - 1)">
+        </app-pagination>
       </div>
     </div>
   </div>

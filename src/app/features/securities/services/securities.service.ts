@@ -29,28 +29,48 @@ export class SecuritiesService {
   ) {}
 
   // ===== MOCK DATA =====
+  // PR_29: dodato eksplicitno `currency` polje po stavci. Pre PR_29 mock-mapper hardkodirao
+  // 'USD' za sve mock instrumente, sto je prikazivalo VOD.L (London) sa $ umesto £, i
+  // forex parove kao USD umesto njihove quote-currency (npr. USD/JPY → JPY).
   private readonly mockStocks: any[] = [
-    { listingId: 1, ticker: 'AAPL', name: 'Apple Inc.', exchangeMICCode: 'XNYS', price: 174.50, change: 2.50, volume: 50000000, initialMarginCost: 15000 },
-    { listingId: 2, ticker: 'MSFT', name: 'Microsoft Corporation', exchangeMICCode: 'XNGS', price: 380.50, change: -1.20, volume: 25000000, initialMarginCost: 30000 },
-    { listingId: 3, ticker: 'GOOGL', name: 'Alphabet Inc.', exchangeMICCode: 'XNGS', price: 140.30, change: 3.10, volume: 18000000, initialMarginCost: 11000 },
-    { listingId: 4, ticker: 'AMZN', name: 'Amazon.com Inc.', exchangeMICCode: 'XNGS', price: 170.85, change: 1.50, volume: 35000000, initialMarginCost: 13000 },
-    { listingId: 5, ticker: 'NVDA', name: 'NVIDIA Corporation', exchangeMICCode: 'XNGS', price: 875.20, change: 5.40, volume: 40000000, initialMarginCost: 70000 },
-    { listingId: 6, ticker: 'VOD.L', name: 'Vodafone Group', exchangeMICCode: 'XLON', price: 68.45, change: -0.50, volume: 15000000, initialMarginCost: 5000 },
+    { listingId: 1, ticker: 'AAPL', name: 'Apple Inc.', exchangeMICCode: 'XNYS', currency: 'USD', price: 174.50, change: 2.50, volume: 50000000, initialMarginCost: 15000 },
+    { listingId: 2, ticker: 'MSFT', name: 'Microsoft Corporation', exchangeMICCode: 'XNGS', currency: 'USD', price: 380.50, change: -1.20, volume: 25000000, initialMarginCost: 30000 },
+    { listingId: 3, ticker: 'GOOGL', name: 'Alphabet Inc.', exchangeMICCode: 'XNGS', currency: 'USD', price: 140.30, change: 3.10, volume: 18000000, initialMarginCost: 11000 },
+    { listingId: 4, ticker: 'AMZN', name: 'Amazon.com Inc.', exchangeMICCode: 'XNGS', currency: 'USD', price: 170.85, change: 1.50, volume: 35000000, initialMarginCost: 13000 },
+    { listingId: 5, ticker: 'NVDA', name: 'NVIDIA Corporation', exchangeMICCode: 'XNGS', currency: 'USD', price: 875.20, change: 5.40, volume: 40000000, initialMarginCost: 70000 },
+    { listingId: 6, ticker: 'VOD.L', name: 'Vodafone Group', exchangeMICCode: 'XLON', currency: 'GBP', price: 68.45, change: -0.50, volume: 15000000, initialMarginCost: 5000 },
   ];
 
   private readonly mockFutures: any[] = [
-    { listingId: 101, ticker: 'ESZ23', name: 'E-mini S&P 500', exchangeMICCode: 'XCME', price: 4500.25, change: 125.50, volume: 2000000, initialMarginCost: 10000, settlementDate: '2024-12-20' },
-    { listingId: 102, ticker: 'NQZ23', name: 'E-mini Nasdaq', exchangeMICCode: 'XCME', price: 14500.75, change: 300.25, volume: 1500000, initialMarginCost: 15000, settlementDate: '2024-12-20' },
-    { listingId: 103, ticker: 'CLZ23', name: 'Crude Oil', exchangeMICCode: 'XCME', price: 85.50, change: 1.25, volume: 3000000, initialMarginCost: 5000, settlementDate: '2024-12-20' },
-    { listingId: 104, ticker: 'GCZ23', name: 'Gold', exchangeMICCode: 'XCME', price: 2050.50, change: 25.00, volume: 500000, initialMarginCost: 8000, settlementDate: '2024-12-20' },
+    { listingId: 101, ticker: 'ESZ23', name: 'E-mini S&P 500', exchangeMICCode: 'XCME', currency: 'USD', price: 4500.25, change: 125.50, volume: 2000000, initialMarginCost: 10000, settlementDate: '2024-12-20' },
+    { listingId: 102, ticker: 'NQZ23', name: 'E-mini Nasdaq', exchangeMICCode: 'XCME', currency: 'USD', price: 14500.75, change: 300.25, volume: 1500000, initialMarginCost: 15000, settlementDate: '2024-12-20' },
+    { listingId: 103, ticker: 'CLZ23', name: 'Crude Oil', exchangeMICCode: 'XCME', currency: 'USD', price: 85.50, change: 1.25, volume: 3000000, initialMarginCost: 5000, settlementDate: '2024-12-20' },
+    { listingId: 104, ticker: 'GCZ23', name: 'Gold', exchangeMICCode: 'XCME', currency: 'USD', price: 2050.50, change: 25.00, volume: 500000, initialMarginCost: 8000, settlementDate: '2024-12-20' },
   ];
 
   private readonly mockForex: any[] = [
-    { listingId: 201, ticker: 'EUR/USD', name: 'Euro vs US Dollar', exchangeMICCode: 'FXEM', price: 1.0850, change: 0.0050, volume: 5000000, initialMarginCost: 1000 },
-    { listingId: 202, ticker: 'GBP/USD', name: 'British Pound vs US Dollar', exchangeMICCode: 'FXEM', price: 1.2650, change: -0.0025, volume: 3000000, initialMarginCost: 1000 },
-    { listingId: 203, ticker: 'USD/JPY', name: 'US Dollar vs Japanese Yen', exchangeMICCode: 'FXEM', price: 149.50, change: 0.75, volume: 4000000, initialMarginCost: 1000 },
-    { listingId: 204, ticker: 'AUD/USD', name: 'Australian Dollar vs US Dollar', exchangeMICCode: 'FXEM', price: 0.6850, change: -0.0010, volume: 2000000, initialMarginCost: 1000 },
+    // Forex price je kotiran u quote currency (drugi deo para). EUR/USD 1.0850 znaci 1 EUR = 1.0850 USD.
+    { listingId: 201, ticker: 'EUR/USD', name: 'Euro vs US Dollar', exchangeMICCode: 'FXEM', currency: 'USD', price: 1.0850, change: 0.0050, volume: 5000000, initialMarginCost: 1000 },
+    { listingId: 202, ticker: 'GBP/USD', name: 'British Pound vs US Dollar', exchangeMICCode: 'FXEM', currency: 'USD', price: 1.2650, change: -0.0025, volume: 3000000, initialMarginCost: 1000 },
+    { listingId: 203, ticker: 'USD/JPY', name: 'US Dollar vs Japanese Yen', exchangeMICCode: 'FXEM', currency: 'JPY', price: 149.50, change: 0.75, volume: 4000000, initialMarginCost: 1000 },
+    { listingId: 204, ticker: 'AUD/USD', name: 'Australian Dollar vs US Dollar', exchangeMICCode: 'FXEM', currency: 'USD', price: 0.6850, change: -0.0010, volume: 2000000, initialMarginCost: 1000 },
   ];
+
+  /**
+   * PR_29: Helper za fallback valute kada backend response nema `currency` polje.
+   * Za forex parove izvlaci quote currency iz tickera (npr. 'EUR/USD' -> 'USD').
+   * Za ostale instrumente vraca prazno ('') sto UI prikazuje kao "—" umesto da
+   * laze sa "USD".
+   */
+  private fallbackCurrency(item: any): string {
+    if (item?.currency) return String(item.currency).toUpperCase();
+    const ticker: string = item?.ticker ?? '';
+    if (ticker.includes('/')) {
+      const parts = ticker.split('/');
+      if (parts.length === 2 && parts[1]) return parts[1].toUpperCase();
+    }
+    return '';
+  }
 
   // ===== MOCK DATA METHODS =====
   private getMockStocksPage(filters: SecuritiesFilters = {}, page = 0, size = 10, sort?: SortConfig): SecuritiesPage<Stock> {
@@ -60,7 +80,7 @@ export class SecuritiesService {
       name: item.name,
       exchange: item.exchangeMICCode,
       price: item.price,
-      currency: 'USD',
+      currency: this.fallbackCurrency(item),
       change: item.change,
       changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
       volume: item.volume,
@@ -109,7 +129,7 @@ export class SecuritiesService {
       name: item.name,
       exchange: item.exchangeMICCode,
       price: item.price,
-      currency: 'USD',
+      currency: this.fallbackCurrency(item),
       change: item.change,
       changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
       volume: item.volume,
@@ -161,7 +181,7 @@ export class SecuritiesService {
       name: item.name,
       exchange: item.exchangeMICCode,
       price: item.price,
-      currency: 'USD',
+      currency: this.fallbackCurrency(item),
       change: item.change,
       changePercent: item.price > 0 ? (item.change / item.price) * 100 : 0,
       volume: item.volume,
@@ -217,7 +237,7 @@ export class SecuritiesService {
       name: item.name ?? '',
       exchange: item.exchangeMICCode ?? '',
       price: item.price ?? 0,
-      currency: item.currency ?? 'USD',
+      currency: this.fallbackCurrency(item),
       change: item.change ?? 0,
       changePercent: item.price > 0 ? ((item.change ?? 0) / item.price) * 100 : 0,
       volume: item.volume ?? 0,
@@ -396,7 +416,7 @@ export class SecuritiesService {
             name: item.name,
             exchange: item.exchangeMICCode,
             price: price,
-            currency: item.currency ?? 'USD',
+            currency: this.fallbackCurrency(item),
             change: change,
             changePercent: changePercent,
             volume: item.volume || 0,
@@ -484,7 +504,7 @@ export class SecuritiesService {
             name: item.name,
             exchange: item.exchangeMICCode,
             price: price,
-            currency: item.currency ?? 'USD',
+            currency: this.fallbackCurrency(item),
             change: change,
             changePercent: changePercent,
             volume: item.volume || 0,
@@ -563,7 +583,7 @@ private mapListingDetailsToSecurity(item: any): Security {
         name: item.name ?? '',
         exchange: item.exchangeMICCode ?? '',
         price: item.price ?? 0,
-        currency: item.currency ?? 'USD',
+        currency: this.fallbackCurrency(item),
         change: item.change ?? 0,
         changePercent: item.changePercent ?? 0,
         volume: item.volume ?? 0,
@@ -611,7 +631,7 @@ private mapListingDetailsToSecurity(item: any): Security {
           name: item.name,
           exchange: item.exchangeMICCode,
           price: price,
-          currency: item.currency ?? 'USD',
+          currency: this.fallbackCurrency(item),
           change: change,
           changePercent: changePercent,
           volume: item.volume || 0,
@@ -651,7 +671,7 @@ private mapListingDetailsToSecurity(item: any): Security {
           name: item.name,
           exchange: item.exchangeMICCode,
           price: price,
-          currency: item.currency ?? 'USD',
+          currency: this.fallbackCurrency(item),
           change: change,
           changePercent: changePercent,
           volume: item.volume || 0,

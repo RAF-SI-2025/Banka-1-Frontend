@@ -1,132 +1,116 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
-    <!-- Back link and title -->
-    <div class="flex items-center gap-4 mb-6">
+<div>
+  <div>
+    <div class="mb-6">
       <button
         type="button"
-        class="text-muted-foreground hover:text-foreground transition-colors"
+        class="z-btn-ghost h-8 px-2 -ml-2 text-xs"
         (click)="goBack()"
+        aria-label="Nazad"
       >
-        <svg
-          class="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <polyline points="15 18 9 12 15 6"></polyline>
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
+        Nazad na listu
       </button>
-      <h1 class="text-2xl font-bold text-foreground" *ngIf="security">
-        {{ securityType === 'future' ? 'DETALJAN PRIKAZ FJUČERSA' : 'DETALJAN PRIKAZ FOREX PARA' }}
+      <h1 class="text-2xl font-bold text-foreground mt-4" *ngIf="security">
+        {{ securityType === 'future' ? 'Detaljan prikaz fjucersa' : 'Detaljan prikaz forex para' }}
       </h1>
+      <p class="text-sm text-muted-foreground mt-1" *ngIf="security">
+        Cenovni grafikon i kljucni atributi instrumenta.
+      </p>
     </div>
 
-    <!-- Loading state -->
-    <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-      <svg
-        class="w-8 h-8 text-primary animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="!isLoading && errorMessage" class="text-center p-12 text-red-500 text-sm">
-      <p>{{ errorMessage }}</p>
-    </div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading/error markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Učitavanje hartije..."></app-state>
+    <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
 
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && security">
-      <!-- Security name -->
-      <h2 class="text-xl font-semibold text-foreground mb-6">
-        {{ security.ticker }} - {{ security.name }}
-      </h2>
+      <div class="flex items-baseline gap-3 mb-6 flex-wrap">
+        <h2 class="text-2xl font-bold text-foreground">{{ security.ticker }}</h2>
+        <span class="text-base text-muted-foreground">{{ security.name }}</span>
+        <span class="z-badge z-badge-blue">{{ security.exchange }}</span>
+      </div>
 
-      <!-- Main info card with chart -->
-      <div class="z-card mb-6">
-        <!-- Info row -->
-        <div class="grid grid-cols-6 divide-x divide-border border-b border-border">
+      <div class="z-card mb-6 overflow-hidden">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-border border-b border-border">
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Ticker</div>
-            <div class="font-semibold">{{ security.ticker }}</div>
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Ticker</div>
+            <div class="font-bold text-foreground font-mono">{{ security.ticker }}</div>
           </div>
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Berza</div>
-            <div class="font-semibold">{{ security.exchange }}</div>
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Berza</div>
+            <div class="font-bold text-foreground">{{ security.exchange }}</div>
           </div>
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cena</div>
-            <div class="font-semibold">{{ formatPrice(security.price) }} {{ security.currency }}</div>
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Cena</div>
+            <div class="font-bold font-mono text-foreground">{{ formatPrice(security.price) }} <span class="text-xs text-muted-foreground font-sans">{{ security.currency }}</span></div>
           </div>
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Promena</div>
-            <div class="font-semibold" [ngClass]="getChangeClass(security.change)">
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Promena</div>
+            <div class="font-bold font-mono" [ngClass]="getChangeClass(security.change)">
               {{ formatChange(security.change, security.changePercent) }}
             </div>
           </div>
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Volumen</div>
-            <div class="font-semibold">{{ formatVolume(security.volume) }}</div>
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Volumen</div>
+            <div class="font-bold font-mono text-foreground">{{ formatVolume(security.volume) }}</div>
           </div>
           <div class="p-4 text-center">
-            <div class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Početna marža</div>
-            <div class="font-semibold">{{ formatPrice(security.initialMarginCost) }}</div>
+            <div class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Pocetna marza</div>
+            <div class="font-bold font-mono text-foreground">{{ formatPrice(security.initialMarginCost) }}</div>
           </div>
         </div>
 
-        <!-- Period selector and chart -->
         <div class="p-5">
-          <div class="flex gap-2 mb-4">
+          <div class="flex gap-2 mb-4 flex-wrap">
             <button
               *ngFor="let period of periods"
               type="button"
-              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-              [class]="selectedPeriod === period.value
-                ? 'bg-primary text-white'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+              [class]="selectedPeriod === period.value ? 'z-btn-primary z-btn-sm' : 'z-btn-ghost z-btn-sm'"
               (click)="selectPeriod(period.value)"
             >
               {{ period.label }}
             </button>
           </div>
 
-          <div *ngIf="priceHistory?.data?.length === 1" class="text-xs text-muted-foreground mb-3 italic">
-            Ograničeni istorijski podaci - prikazana je trenutna cena
+          <!-- PR_31 Phase 7 T24: tailwind hardkode amber paleta -> z-callout-warning. -->
+          <div *ngIf="priceHistory?.data?.length === 1" class="z-callout-warning mb-3">
+            <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Ograniceni istorijski podaci — prikazana je trenutna cena.</span>
           </div>
 
-          <div class="chart-container">
-            <canvas #chartCanvas></canvas>
-          </div>
+          <!-- PR_31 Phase 7 T24: ApexCharts zameni Canvas drawChart(). -->
+          <app-price-chart [series]="priceSeries" [type]="'area'" [height]="320"></app-price-chart>
         </div>
       </div>
 
-      <!-- Details section -->
-      <div class="z-card">
-        <div class="p-5">
-          <h3 class="text-base font-semibold text-foreground mb-4">DETALJI</h3>
-          <table class="w-full">
+      <section class="z-card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Detalji instrumenta</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="z-table">
             <thead>
-              <tr class="border-b border-border">
-                <th class="text-left text-xs text-muted-foreground uppercase tracking-wide py-2">Atribut</th>
-                <th class="text-right text-xs text-muted-foreground uppercase tracking-wide py-2">Vrednost</th>
+              <tr>
+                <th>Atribut</th>
+                <th class="text-right">Vrednost</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of detailRows" class="border-b border-border last:border-0">
-                <td class="py-3 text-muted-foreground">{{ row.label }}</td>
-                <td class="py-3 text-right font-medium">{{ row.value }}</td>
+              <tr *ngFor="let row of detailRows">
+                <td class="text-muted-foreground">{{ row.label }}</td>
+                <td class="text-right font-medium font-mono">{{ row.value }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </div>
