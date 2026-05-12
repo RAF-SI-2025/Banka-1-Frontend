@@ -1,8 +1,13 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+
+import { AuthService } from '@/core/services/auth.service';
+import { ToastService } from '@/shared/services/toast.service';
+import { environment } from 'src/environments/environment';
+
 import {
   AccountDto,
   AuthorizedPersonGender,
@@ -10,18 +15,18 @@ import {
   CardRequestRecipientType,
   CardService,
 } from '../../services/card.service';
-import { NavbarComponent } from '@/shared/components/navbar/navbar.component';
-import { environment } from 'src/environments/environment';
-import { AuthService } from '@/core/services/auth.service';
-import { ToastService } from '@/shared/services/toast.service';
 
 type FlowStep = 1 | 2 | 3;
 type ResultState = 'success' | 'error' | '';
 
+/** Spec limit: licni racun = max 2 kartice, poslovni vlasnik = max 1. */
+const MAX_CARDS_PERSONAL = 2;
+const MAX_CARDS_BUSINESS_OWNER = 1;
+
 @Component({
   selector: 'app-request-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './request-card.component.html',
   styleUrls: ['./request-card.component.scss'],
 })
@@ -61,16 +66,14 @@ export class RequestCardComponent implements OnInit {
     { value: 'VISA', label: 'Visa' },
     { value: 'MASTERCARD', label: 'MasterCard' },
     { value: 'DINACARD', label: 'DinaCard' },
-    { value: 'AMEX', label: 'AmEx' },
-  ];
+    { value: 'AMEX', label: 'AmEx' }];
 
   public readonly recipientOptions: {
     value: CardRequestRecipientType;
     label: string;
   }[] = [
     { value: 'OWNER', label: 'Vlasnik računa' },
-    { value: 'AUTHORIZED_PERSON', label: 'Ovlašćeno lice' },
-  ];
+    { value: 'AUTHORIZED_PERSON', label: 'Ovlašćeno lice' }];
 
   public readonly genderOptions: {
     value: AuthorizedPersonGender;
@@ -78,10 +81,8 @@ export class RequestCardComponent implements OnInit {
   }[] = [
     { value: 'MALE', label: 'Muški' },
     { value: 'FEMALE', label: 'Ženski' },
-    { value: 'OTHER', label: 'Drugo' },
-  ];
+    { value: 'OTHER', label: 'Drugo' }];
 
-  private isSendingCode = false;
   private sessionId: number | null = null;
 
   constructor(
@@ -183,7 +184,7 @@ export class RequestCardComponent implements OnInit {
 
     if (this.hasPersonalLimitReached()) {
       this.errorMessage =
-        'Za lični račun već je dostignut maksimalan broj kartica (2).';
+        `Za lični račun već je dostignut maksimalan broj kartica (${MAX_CARDS_PERSONAL}).`;
       return;
     }
 
@@ -210,7 +211,6 @@ export class RequestCardComponent implements OnInit {
   }
 
   private sendVerificationCode(): void {
-    this.isSendingCode = true;
     this.errorMessage = '';
 
     const clientId = this.authService.getUserIdFromToken();
@@ -218,7 +218,6 @@ export class RequestCardComponent implements OnInit {
 
     if (!clientId || !clientEmail || !this.selectedAccount) {
       this.toastService.error('Nije moguće poslati verifikacioni kod.');
-      this.isSendingCode = false;
       return;
     }
 
@@ -235,11 +234,9 @@ export class RequestCardComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.sessionId = res.sessionId;
-          this.isSendingCode = false;
           this.toastService.info('Verifikacioni kod je poslat na vaš email.');
         },
         error: () => {
-          this.isSendingCode = false;
           this.toastService.error('Greška pri slanju verifikacionog koda.');
         },
       });
@@ -373,7 +370,7 @@ export class RequestCardComponent implements OnInit {
     return (
       !!this.selectedAccount &&
       !this.isBusinessSelected() &&
-      this.cardCountForSelectedAccount >= 2
+      this.cardCountForSelectedAccount >= MAX_CARDS_PERSONAL
     );
   }
 
@@ -382,7 +379,7 @@ export class RequestCardComponent implements OnInit {
       !!this.selectedAccount &&
       this.isBusinessSelected() &&
       this.recipientType === 'OWNER' &&
-      this.cardCountForSelectedAccount >= 1
+      this.cardCountForSelectedAccount >= MAX_CARDS_BUSINESS_OWNER
     );
   }
 

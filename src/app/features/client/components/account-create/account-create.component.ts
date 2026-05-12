@@ -5,7 +5,6 @@ import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AccountService } from '../../services/account.service';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { type ClientDto, ClientService } from '../../services/client.service';
 import { exactDigitsValidator } from '../../../../shared/utils/validators';
 /**
@@ -92,7 +91,7 @@ interface CreateClientNavigationState {
   templateUrl: './account-create.component.html',
   styleUrls: ['./account-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent]
+  imports: [CommonModule, ReactiveFormsModule, RouterModule]
 })
 export class AccountCreateComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
@@ -363,7 +362,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
       }
 
       this.accountService.createFxAccount(payload).subscribe({
-        next: () => this.router.navigate(['/employees']),
+        next: () => this.router.navigate(['/account-management']),
         error: (err: unknown) => {
           console.error('Failed to create FX account', err);
         }
@@ -394,7 +393,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
       }
 
       this.accountService.createCheckingAccount(payload).subscribe({
-        next: () => this.router.navigate(['/employees']),
+        next: () => this.router.navigate(['/account-management']),
         error: (err: unknown) => {
           console.error('Failed to create checking account', err);
         }

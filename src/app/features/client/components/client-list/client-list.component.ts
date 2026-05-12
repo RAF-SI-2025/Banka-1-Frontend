@@ -3,15 +3,16 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { ClientDto, ClientFilters, ClientPageResponse, ClientService } from '../../services/client.service';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 
 @Component({
   selector: 'app-client-list',
   templateUrl: './client-list.component.html',
   styleUrls: ['./client-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, StateComponent],
 })
 export class ClientListComponent implements OnInit, OnDestroy {
   public clients: ClientDto[] = [];

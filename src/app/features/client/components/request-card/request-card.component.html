@@ -1,179 +1,211 @@
-<app-navbar />
+<div class="z-stagger max-w-3xl mx-auto space-y-6">
+  <header>
+    <h1 class="text-2xl font-bold tracking-tight text-foreground">Zatraži novu karticu</h1>
+    <p class="text-sm text-muted-foreground mt-1">
+      Kreiranje zahteva kroz tri koraka — kartica stiže za 5–7 radnih dana.
+    </p>
+  </header>
 
-<div class="page-layout">
-  <div class="page-content">
-    <div class="page-header">
+  <!-- Stepper -->
+  <div class="z-stepper">
+    <div class="z-stepper-step"
+         [class.z-stepper-step-active]="step === 1"
+         [class.z-stepper-step-done]="step > 1">
+      <div class="z-stepper-dot"
+           [class.z-stepper-dot-active]="step === 1"
+           [class.z-stepper-dot-done]="step > 1">{{ step > 1 ? '✓' : 1 }}</div>
+      <span>Forma</span>
+    </div>
+    <div class="z-stepper-line" [class.z-stepper-line-done]="step > 1"></div>
+    <div class="z-stepper-step"
+         [class.z-stepper-step-active]="step === 2"
+         [class.z-stepper-step-done]="step > 2">
+      <div class="z-stepper-dot"
+           [class.z-stepper-dot-active]="step === 2"
+           [class.z-stepper-dot-done]="step > 2">{{ step > 2 ? '✓' : 2 }}</div>
+      <span>Verifikacija</span>
+    </div>
+    <div class="z-stepper-line" [class.z-stepper-line-done]="step > 2"></div>
+    <div class="z-stepper-step"
+         [class.z-stepper-step-active]="step === 3">
+      <div class="z-stepper-dot"
+           [class.z-stepper-dot-active]="step === 3">3</div>
+      <span>Rezultat</span>
+    </div>
+  </div>
+
+  <!-- Inline error -->
+  <div *ngIf="errorMessage && step !== 3" class="z-alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- STEP 1: Forma -->
+  <div *ngIf="step === 1" class="z-card p-6 space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2">
+        <label class="z-label" for="rc-account">Račun</label>
+        <select id="rc-account" class="z-select" [(ngModel)]="selectedAccountNumber" (ngModelChange)="onAccountChange()" title="Izaberite račun">
+          <option value="">Izaberite račun</option>
+          <option *ngFor="let account of accounts" [value]="account.brojRacuna">
+            {{ getAccountLabel(account) }}
+          </option>
+        </select>
+      </div>
+
       <div>
-        <h1 class="page-title">Zatraži novu karticu</h1>
-        <p class="page-subtitle">Kreiranje zahteva za novu karticu kroz tri koraka</p>
+        <label class="z-label" for="rc-brand">Brend kartice</label>
+        <select id="rc-brand" class="z-select" [(ngModel)]="cardBrand" title="Brend kartice">
+          <option *ngFor="let brand of brandOptions" [value]="brand.value">
+            {{ brand.label }}
+          </option>
+        </select>
       </div>
-    </div>
 
-    <div class="stepper">
-      <div class="step" [class.step--active]="step === 1" [class.step--done]="step > 1">
-        <span class="step__number">1</span>
-        <span class="step__label">Forma</span>
+      <div>
+        <label class="z-label" for="rc-limit">Limit kartice</label>
+        <input id="rc-limit" class="z-input" type="number" min="1" [(ngModel)]="cardLimit" placeholder="Unesite limit" title="Limit kartice" />
       </div>
-      <div class="step" [class.step--active]="step === 2" [class.step--done]="step > 2">
-        <span class="step__number">2</span>
-        <span class="step__label">Verifikacija</span>
-      </div>
-      <div class="step" [class.step--active]="step === 3">
-        <span class="step__number">3</span>
-        <span class="step__label">Rezultat</span>
-      </div>
-    </div>
 
-    <div *ngIf="errorMessage && step !== 3" class="z-card error-box">
-      {{ errorMessage }}
-    </div>
-
-    <!-- STEP 1 -->
-    <div *ngIf="step === 1" class="z-card form-card">
-      <div class="form-grid">
-        <div class="field full">
-          <label>Račun</label>
-          <select [(ngModel)]="selectedAccountNumber" (ngModelChange)="onAccountChange()">
-            <option value="">Izaberite račun</option>
-            <option *ngFor="let account of accounts" [value]="account.brojRacuna">
-              {{ getAccountLabel(account) }}
-            </option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Brend kartice</label>
-          <select [(ngModel)]="cardBrand">
-            <option *ngFor="let brand of brandOptions" [value]="brand.value">
-              {{ brand.label }}
-            </option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Limit kartice</label>
-          <input type="number" min="1" [(ngModel)]="cardLimit" placeholder="Unesite limit" />
-        </div>
-
-        <div class="field full" *ngIf="selectedAccount">
-          <div class="account-summary">
-            <div>
-              <span class="summary-label">Izabrani račun</span>
-              <strong>{{ selectedAccount.nazivRacuna }}</strong>
-              <p>{{ selectedAccount.brojRacuna }}</p>
-            </div>
-
-            <div class="summary-right">
-              <span class="summary-label">Postojeće kartice</span>
-              <strong>{{ cardCountForSelectedAccount }}</strong>
-            </div>
+      <div class="sm:col-span-2" *ngIf="selectedAccount">
+        <div class="rounded-xl border border-border bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <span class="block text-xs uppercase tracking-wider text-muted-foreground">Izabrani račun</span>
+            <strong class="block text-sm text-foreground mt-0.5">{{ selectedAccount.nazivRacuna }}</strong>
+            <p class="text-xs text-muted-foreground font-mono mt-0.5">{{ selectedAccount.brojRacuna }}</p>
+          </div>
+          <div class="sm:text-right">
+            <span class="block text-xs uppercase tracking-wider text-muted-foreground">Postojeće kartice</span>
+            <strong class="text-lg font-bold text-foreground tabular-nums">{{ cardCountForSelectedAccount }}</strong>
           </div>
         </div>
+      </div>
 
-        <div class="field full" *ngIf="isBusinessSelected()">
-          <label>Za koga se izdaje kartica</label>
-          <select [(ngModel)]="recipientType">
-            <option *ngFor="let option of recipientOptions" [value]="option.value">
+      <div class="sm:col-span-2" *ngIf="isBusinessSelected()">
+        <label class="z-label" for="rc-recipient">Za koga se izdaje kartica</label>
+        <select id="rc-recipient" class="z-select" [(ngModel)]="recipientType" title="Za koga se izdaje kartica">
+          <option *ngFor="let option of recipientOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="isBusinessSelected() && recipientType === 'AUTHORIZED_PERSON'" class="pt-5 border-t border-border space-y-4">
+      <h3 class="text-base font-bold text-foreground">Ovlašćeno lice</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="z-label" for="rc-ap-firstName">Ime</label>
+          <input id="rc-ap-firstName" class="z-input" type="text" [(ngModel)]="authorizedPerson.firstName" placeholder="Ime" title="Ime" />
+        </div>
+
+        <div>
+          <label class="z-label" for="rc-ap-lastName">Prezime</label>
+          <input id="rc-ap-lastName" class="z-input" type="text" [(ngModel)]="authorizedPerson.lastName" placeholder="Prezime" title="Prezime" />
+        </div>
+
+        <div>
+          <label class="z-label" for="rc-ap-dob">Datum rođenja</label>
+          <input id="rc-ap-dob" class="z-input" type="date" [(ngModel)]="authorizedPerson.dateOfBirth" title="Datum rođenja" />
+        </div>
+
+        <div>
+          <label class="z-label" for="rc-ap-gender">Pol</label>
+          <select id="rc-ap-gender" class="z-select" [(ngModel)]="authorizedPerson.gender" title="Pol">
+            <option *ngFor="let option of genderOptions" [value]="option.value">
               {{ option.label }}
             </option>
           </select>
         </div>
-      </div>
 
-      <div *ngIf="isBusinessSelected() && recipientType === 'AUTHORIZED_PERSON'" class="authorized-section">
-        <h3>Ovlašćeno lice</h3>
-
-        <div class="form-grid">
-          <div class="field">
-            <label>Ime</label>
-            <input type="text" [(ngModel)]="authorizedPerson.firstName" />
-          </div>
-
-          <div class="field">
-            <label>Prezime</label>
-            <input type="text" [(ngModel)]="authorizedPerson.lastName" />
-          </div>
-
-          <div class="field">
-            <label>Datum rođenja</label>
-            <input type="date" [(ngModel)]="authorizedPerson.dateOfBirth" />
-          </div>
-
-          <div class="field">
-            <label>Pol</label>
-            <select [(ngModel)]="authorizedPerson.gender">
-              <option *ngFor="let option of genderOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Email adresa</label>
-            <input type="email" [(ngModel)]="authorizedPerson.email" />
-          </div>
-
-          <div class="field">
-            <label>Broj telefona</label>
-            <input type="text" [(ngModel)]="authorizedPerson.phone" />
-          </div>
-
-          <div class="field full">
-            <label>Adresa</label>
-            <input type="text" [(ngModel)]="authorizedPerson.address" />
-          </div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <a routerLink="/home/cards" class="z-btn-outline z-btn-sm">Nazad</a>
-        <button type="button" class="z-btn-primary z-btn-sm"
-                (click)="nextFromStepOne()"
-                [disabled]="!canContinueToVerification()">
-          Nastavi na verifikaciju
-        </button>
-      </div>
-    </div>
-
-    <!-- STEP 2 -->
-    <div *ngIf="step === 2" class="z-card form-card">
-      <div class="verification-box">
-        <div class="verification-icon">
-          <span class="material-icons">verified_user</span>
+        <div>
+          <label class="z-label" for="rc-ap-email">Email adresa</label>
+          <input id="rc-ap-email" class="z-input" type="email" [(ngModel)]="authorizedPerson.email" placeholder="ime@primer.com" title="Email adresa" />
         </div>
 
-        <h2>Verifikacija</h2>
-        <p>
-          Unesite kod koji ste dobili na email.
-        </p>
-
-        <div class="field verification-field">
-          <label>Verifikacioni kod</label>
-          <input type="text" [(ngModel)]="verificationCode" placeholder="Unesite kod" />
+        <div>
+          <label class="z-label" for="rc-ap-phone">Broj telefona</label>
+          <input id="rc-ap-phone" class="z-input" type="text" [(ngModel)]="authorizedPerson.phone" placeholder="+381 60 123 4567" title="Broj telefona" />
         </div>
 
-        <div class="verification-actions">
-          <button type="button" class="z-btn-outline z-btn-sm" (click)="backToStepOne()">Nazad</button>
-          <button type="button" class="z-btn-secondary z-btn-sm" (click)="resendVerificationCode()">Pošalji ponovo</button>
-          <button type="button" class="z-btn-primary z-btn-sm" (click)="confirmVerification()">Potvrdi</button>
+        <div class="sm:col-span-2">
+          <label class="z-label" for="rc-ap-address">Adresa</label>
+          <input id="rc-ap-address" class="z-input" type="text" [(ngModel)]="authorizedPerson.address" placeholder="Ulica i broj, grad" title="Adresa" />
         </div>
       </div>
     </div>
 
-    <!-- STEP 3 -->
-    <div *ngIf="step === 3" class="z-card result-card">
-      <div class="result-state" [class.result-state--success]="resultState === 'success'" [class.result-state--error]="resultState === 'error'">
-        <span class="material-icons">
-          {{ resultState === 'success' ? 'check_circle' : 'error' }}
-        </span>
+    <div class="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
+      <a routerLink="/home/cards" class="z-btn-outline z-btn-sm text-center">Nazad</a>
+      <button type="button"
+              class="z-btn-primary z-btn-sm"
+              (click)="nextFromStepOne()"
+              [disabled]="!canContinueToVerification()">
+        Nastavi na verifikaciju
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Verifikacija -->
+  <div *ngIf="step === 2" class="z-card p-8">
+    <div class="max-w-md mx-auto text-center space-y-5">
+      <div class="rc-verification-icon w-16 h-16 mx-auto rounded-2xl flex items-center justify-center">
+        <svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <polyline points="9 12 11 14 15 10"></polyline>
+        </svg>
       </div>
 
-      <h2>{{ resultState === 'success' ? 'Uspešno' : 'Greška' }}</h2>
-      <p>{{ resultState === 'success' ? successMessage : errorMessage }}</p>
+      <div>
+        <h2 class="text-xl font-bold text-foreground">Verifikacija</h2>
+        <p class="text-sm text-muted-foreground mt-1">Unesite kod koji ste dobili na email.</p>
+      </div>
 
-      <div class="form-actions justify-center">
+      <div class="text-left">
+        <label class="z-label" for="rc-otp">Verifikacioni kod</label>
+        <input id="rc-otp"
+               class="z-input text-center tracking-[0.4em] font-mono text-lg font-bold"
+               type="text"
+               [(ngModel)]="verificationCode"
+               placeholder="000000"
+               maxlength="6"
+               title="Verifikacioni kod" />
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-2 pt-2">
+        <button type="button" class="z-btn-outline z-btn-sm" (click)="backToStepOne()">Nazad</button>
+        <button type="button" class="z-btn-secondary z-btn-sm" (click)="resendVerificationCode()">Pošalji ponovo</button>
+        <button type="button" class="z-btn-primary z-btn-sm" (click)="confirmVerification()">Potvrdi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Rezultat -->
+  <div *ngIf="step === 3" class="z-card p-8">
+    <div class="max-w-md mx-auto text-center space-y-5">
+      <div class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center"
+           [class.bg-emerald-50]="resultState === 'success'"
+           [class.text-primary]="resultState === 'success'"
+           [class.bg-red-50]="resultState === 'error'"
+           [class.text-destructive]="resultState === 'error'">
+        <svg *ngIf="resultState === 'success'" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <svg *ngIf="resultState === 'error'" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-bold text-foreground">{{ resultState === 'success' ? 'Uspešno' : 'Greška' }}</h2>
+        <p class="text-sm text-muted-foreground mt-1">{{ resultState === 'success' ? successMessage : errorMessage }}</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-2 pt-2">
         <button type="button" class="z-btn-outline z-btn-sm" (click)="startNewRequest()">Novi zahtev</button>
-        <a routerLink="/home/cards" class="z-btn-primary z-btn-sm">Nazad na kartice</a>
+        <a routerLink="/home/cards" class="z-btn-primary z-btn-sm text-center">Nazad na kartice</a>
       </div>
     </div>
   </div>

@@ -1,7 +1,5 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-foreground">PREGLED PLAĆANJA</h1>
       
@@ -41,25 +39,19 @@
 
     <div class="z-card">
       <!-- Tabs -->
-      <div class="flex border-b border-border">
+      <div class="z-tabs">
         <button
-          class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
-          [class]="
-            activeTab === 'domestic'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          "
+          type="button"
+          class="z-tab"
+          [class.z-tab-active]="activeTab === 'domestic'"
           (click)="setActiveTab('domestic')"
         >
           Domaća plaćanja
         </button>
         <button
-          class="px-5 py-3 text-sm font-medium transition-colors border-b-2"
-          [class]="
-            activeTab === 'transfers'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          "
+          type="button"
+          class="z-tab"
+          [class.z-tab-active]="activeTab === 'transfers'"
           (click)="setActiveTab('transfers')"
         >
           Transferi
@@ -209,32 +201,12 @@
           </div>
         </div>
 
-        <!-- Table states -->
-        <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-          <svg
-            class="w-8 h-8 text-primary animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-          </svg>
-        </div>
-
-        <div
-          *ngIf="!isLoading && errorMessage"
-          class="text-center p-12 text-red-500 text-sm"
-        >
-          <p>{{ errorMessage }}</p>
-        </div>
-
-        <div
-          *ngIf="!isLoading && !errorMessage && payments.length === 0"
-          class="text-center p-12 text-muted-foreground text-sm"
-        >
-          <p>Nema plaćanja za zadate filtere.</p>
-        </div>
+        <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup. -->
+        <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje plaćanja..."></app-state>
+        <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
+        <app-state *ngIf="!isLoading && !errorMessage && payments.length === 0"
+                   mode="empty" title="Nema plaćanja"
+                   text="Nema plaćanja za zadate filtere."></app-state>
 
         <table
           *ngIf="!isLoading && !errorMessage && payments.length > 0"

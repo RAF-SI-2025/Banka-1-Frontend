@@ -1,7 +1,5 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <!-- Header -->
     <div class="flex justify-between items-start mb-6">
       <div>
@@ -37,17 +35,12 @@
 
     <!-- Table -->
     <div class="z-card overflow-hidden">
-      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-      </div>
-
-      <div *ngIf="!isLoading && errorMessage" class="text-center p-12 text-red-500 text-sm">
-        <p>{{ errorMessage }}</p>
-      </div>
-
-      <div *ngIf="!isLoading && !errorMessage && clients.length === 0" class="text-center p-12 text-muted-foreground text-sm">
-        <p>Nema klijenata za zadate filtere.</p>
-      </div>
+      <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup. -->
+      <app-state *ngIf="isLoading" mode="loading" text="Učitavanje klijenata..."></app-state>
+      <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
+      <app-state *ngIf="!isLoading && !errorMessage && clients.length === 0"
+                 mode="empty" title="Nema klijenata"
+                 text="Nema klijenata za zadate filtere."></app-state>
 
       <table *ngIf="!isLoading && !errorMessage && clients.length > 0" class="z-table">
         <thead>
