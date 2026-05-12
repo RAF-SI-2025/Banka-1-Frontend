@@ -1,76 +1,150 @@
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-950 via-green-800 to-green-600 p-6 relative overflow-hidden">
-  <!-- Background decoration -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute w-[600px] h-[600px] -top-48 -right-24 rounded-full bg-white/[0.04] animate-float-slow"></div>
-    <div class="absolute w-[400px] h-[400px] -bottom-24 -left-24 rounded-full bg-white/[0.04] animate-float-mid"></div>
-    <div class="absolute w-[250px] h-[250px] top-1/2 left-[60%] rounded-full bg-white/[0.04] animate-float-fast"></div>
-  </div>
+<!--
+  Landing — javna pristupna strana. Aurora-emerald hero levo (kao login),
+  CTA panel + features desno. Konzistentna sa /login estetikom.
+-->
+<div class="z-aurora-scene grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] min-h-screen">
 
-  <div class="relative z-10 w-full max-w-[480px]">
-    <!-- Card -->
-    <div class="bg-white/[0.97] rounded-2xl p-10 text-center shadow-2xl backdrop-blur-sm border border-white/30 animate-fade-in">
-      <div class="w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center logo-glow">
-        <img src="assets/images/logo.png" alt="Banka 1 Logo" class="w-20 h-20 object-contain drop-shadow-md" />
+  <!-- LEFT: Brand hero -->
+  <aside class="relative hidden lg:flex flex-col justify-between p-12 z-10">
+    <div class="z-stagger">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center"
+             style="background: var(--gradient-gold); box-shadow: var(--shadow-gold);">
+          <img src="assets/images/logo.png" alt="" aria-hidden="true" class="w-7 h-7 object-contain" />
+        </div>
+        <span class="z-wordmark text-3xl text-white">
+          <span class="z-wordmark-banka">Banka</span>
+          <span class="z-wordmark-num">1</span>
+        </span>
       </div>
+      <p class="text-emerald-200/80 text-sm tracking-wide uppercase">RAF Bank · Beograd</p>
+    </div>
 
-      <h1 class="text-3xl font-extrabold text-green-950 tracking-tight mb-1">Banka 1</h1>
-      <p class="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Sistem za upravljanje zaposlenima</p>
-      <p class="text-sm text-muted-foreground leading-relaxed mb-7">
-        Bezbedno upravljajte zaposlenima, ulogama i dozvolama.<br/>
-        Pristupite admin portalu da biste započeli.
+    <div class="z-stagger max-w-xl">
+      <h1 class="text-5xl xl:text-6xl text-white font-bold mb-5 leading-[1.05]"
+          style="letter-spacing: -0.045em;">
+        Bankarstvo
+        <span class="block italic font-light"
+              style="font-family: var(--font-numeric); color: var(--gold-300);">
+          bez kompromisa.
+        </span>
+      </h1>
+      <p class="text-emerald-100/80 text-lg leading-relaxed max-w-md">
+        Tekuci i devizni racuni, kartice, krediti, hartije od vrednosti, marzni
+        racuni, OTC i fondovi — celokupno bankarsko iskustvo u jednom mestu.
       </p>
 
-      <button type="button"
-              (click)="goToLogin()"
-              class="inline-flex items-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-green-700 via-green-600 to-green-500 text-white rounded-xl text-[15px] font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-green-600/40 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-600/50 active:translate-y-0 border-0">
-        <span>Prijavite se na nalog</span>
-        <svg class="w-[18px] h-[18px] transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </button>
+      <div class="z-divider-gold"
+           style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18) 20%, rgba(255,255,255,0.18) 80%, transparent); margin-top: 2.5rem;">
+      </div>
+
+      <dl class="grid grid-cols-3 gap-6 mt-6">
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.16em] text-emerald-200/60 font-semibold mb-1">Aktivni klijenti</dt>
+          <dd class="text-3xl font-bold text-white tabular"
+              style="font-family: var(--font-numeric); letter-spacing: -0.02em;">240k+</dd>
+        </div>
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.16em] text-emerald-200/60 font-semibold mb-1">Godina rada</dt>
+          <dd class="text-3xl font-bold text-white tabular"
+              style="font-family: var(--font-numeric); letter-spacing: -0.02em;">38</dd>
+        </div>
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.16em] text-emerald-200/60 font-semibold mb-1">Uptime</dt>
+          <dd class="text-3xl font-bold tabular"
+              style="font-family: var(--font-numeric); letter-spacing: -0.02em;
+                     background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; color: transparent;">
+            99.97%
+          </dd>
+        </div>
+      </dl>
     </div>
 
-    <!-- Features -->
-    <div class="mt-5 flex flex-col gap-3">
-      <div class="flex items-start gap-4 px-5 py-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-all hover:bg-white/[0.16] hover:translate-x-1">
-        <div class="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-semibold text-white mb-1">Upravljanje zaposlenima</h3>
-          <p class="text-[13px] text-white/75 leading-snug">Kreirajte, menjajte i upravljajte nalozima zaposlenih s lakoćom.</p>
-        </div>
-      </div>
-      <div class="flex items-start gap-4 px-5 py-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-all hover:bg-white/[0.16] hover:translate-x-1">
-        <div class="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-semibold text-white mb-1">Bezbedan pristup</h3>
-          <p class="text-[13px] text-white/75 leading-snug">Dozvole zasnovane na ulogama sa JWT autentifikacijom.</p>
-        </div>
-      </div>
-      <div class="flex items-start gap-4 px-5 py-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-all hover:bg-white/[0.16] hover:translate-x-1">
-        <div class="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="3" y1="9" x2="21" y2="9"></line>
-            <line x1="9" y1="21" x2="9" y2="9"></line>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-semibold text-white mb-1">Kontrolna tabla</h3>
-          <p class="text-[13px] text-white/75 leading-snug">Pregled svih zaposlenih, odeljenja i uloga.</p>
-        </div>
-      </div>
+    <div class="z-stagger flex items-center justify-between text-emerald-200/50 text-xs">
+      <span>© 2026 Banka 1 · RAF Software Inženjering</span>
+      <span class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        Sistemi operativni
+      </span>
     </div>
-  </div>
+  </aside>
+
+  <!-- RIGHT: CTA + features -->
+  <main class="relative flex items-center justify-center p-6 lg:p-12 z-10 bg-background lg:bg-transparent">
+    <div class="w-full max-w-md z-stagger">
+      <div class="lg:hidden mb-8 text-center">
+        <span class="z-wordmark text-3xl text-foreground">
+          <span class="z-wordmark-banka">Banka</span>
+          <span class="z-wordmark-num">1</span>
+        </span>
+      </div>
+
+      <div class="z-card p-8 lg:p-10 mb-5"
+           style="box-shadow: var(--shadow-xl);">
+        <header class="mb-6">
+          <h2 class="text-3xl font-bold text-foreground mb-1.5"
+              style="letter-spacing: -0.035em;">
+            Dobrodosli
+          </h2>
+          <p class="text-sm text-muted-foreground">
+            Prijavite se na svoj nalog ili posetite najblizu filijalu.
+          </p>
+        </header>
+
+        <button type="button"
+                (click)="goToLogin()"
+                class="z-btn-primary z-btn-lg z-btn-full">
+          Prijavi se
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+
+        <div class="z-divider-gold"></div>
+
+        <p class="text-center text-xs text-muted-foreground">
+          Bez naloga? Otvaranje racuna u filijali traje &lt; 15 minuta.
+        </p>
+      </div>
+
+      <ul class="space-y-3" aria-label="Kljucni servisi">
+        <li class="flex items-start gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-emerald-300 transition-colors">
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-50 text-emerald-700">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="6" width="18" height="13" rx="2"></rect>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </span>
+          <div>
+            <h3 class="text-sm font-semibold text-foreground">Tekuci, devizni i marzni racuni</h3>
+            <p class="text-xs text-muted-foreground mt-0.5">Otvaranje, transferi, placanja u 7 valuta.</p>
+          </div>
+        </li>
+        <li class="flex items-start gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-emerald-300 transition-colors">
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style="background: var(--gold-100); color: var(--gold-700);">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </span>
+          <div>
+            <h3 class="text-sm font-semibold text-foreground">Berza i hartije od vrednosti</h3>
+            <p class="text-xs text-muted-foreground mt-0.5">Akcije, forex, futures, opcije, OTC.</p>
+          </div>
+        </li>
+        <li class="flex items-start gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-emerald-300 transition-colors">
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-50 text-emerald-700">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </span>
+          <div>
+            <h3 class="text-sm font-semibold text-foreground">Bezbedan pristup</h3>
+            <p class="text-xs text-muted-foreground mt-0.5">JWT autentifikacija, role-based permisije, OTP verifikacija.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </main>
 </div>

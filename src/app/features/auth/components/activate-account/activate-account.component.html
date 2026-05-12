@@ -1,144 +1,171 @@
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-950 via-green-800 to-green-600 p-6">
-  <div class="w-full max-w-md bg-card rounded-2xl shadow-2xl border border-border/30 p-8 animate-fade-in">
-
-    <!-- Success state -->
-    <div *ngIf="successMessage" class="text-center py-4">
-      <div class="w-[72px] h-[72px] mx-auto mb-4 rounded-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center shadow-md success-pop">
-        <svg class="w-9 h-9 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-foreground mb-2">Nalog aktiviran!</h2>
-      <p class="text-sm text-muted-foreground">Vaš nalog je aktiviran. Preusmeravanje na prijavu...</p>
+<div class="z-aurora-scene min-h-screen flex items-center justify-center p-6">
+  <div class="relative z-10 w-full max-w-md">
+    <div class="text-center mb-6">
+      <span class="z-wordmark text-3xl text-white">
+        <span class="z-wordmark-banka">Banka</span>
+        <span class="z-wordmark-num">1</span>
+      </span>
     </div>
 
-    <!-- Invalid token -->
-    <div *ngIf="!hasValidActivationToken && !successMessage">
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-red-50 flex items-center justify-center shadow-sm">
-          <svg class="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="z-card p-8 lg:p-10 z-stagger" style="box-shadow: var(--shadow-xl);">
+      <!-- Success state -->
+      <div *ngIf="successMessage" class="text-center py-2">
+        <div class="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center success-pop"
+             style="background: var(--gradient-gold); box-shadow: var(--shadow-gold);">
+          <svg class="w-8 h-8 text-emerald-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-foreground mb-2" style="letter-spacing: -0.02em;">
+          Nalog aktiviran!
+        </h2>
+        <p class="text-sm text-muted-foreground leading-relaxed">
+          Vas nalog je aktiviran. Preusmeravanje na prijavu...
+        </p>
+      </div>
+
+      <!-- Invalid token -->
+      <div *ngIf="!hasValidActivationToken && !successMessage">
+        <header class="mb-7">
+          <div class="w-12 h-12 mb-4 rounded-xl flex items-center justify-center bg-red-50">
+            <svg class="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-foreground mb-1.5" style="letter-spacing: -0.025em;">
+            Nevalidan link
+          </h1>
+          <p class="text-sm text-muted-foreground">
+            Ovaj aktivacioni link je nevalidan ili je istekao. Kontaktirajte administratora.
+          </p>
+        </header>
+
+        <div *ngIf="generalErrorMessage"
+             class="flex items-start gap-2.5 p-3.5 mb-5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm"
+             role="alert">
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ generalErrorMessage }}</span>
+        </div>
+
+        <button type="button" (click)="goToLogin()" class="z-btn-primary z-btn-full">
+          Idi na prijavu
+        </button>
+      </div>
+
+      <!-- Valid token -->
+      <div *ngIf="hasValidActivationToken && !successMessage">
+        <header class="mb-7">
+          <div class="w-12 h-12 mb-4 rounded-xl flex items-center justify-center"
+               style="background: linear-gradient(135deg, var(--emerald-50) 0%, var(--emerald-100) 100%);">
+            <svg class="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-foreground mb-1.5" style="letter-spacing: -0.025em;">
+            Aktivirajte nalog
+          </h1>
+          <p class="text-sm text-muted-foreground">
+            Kreirajte lozinku da biste aktivirali nalog.
+          </p>
+        </header>
+
+        <div *ngIf="generalErrorMessage"
+             class="flex items-start gap-2.5 p-3.5 mb-5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm"
+             role="alert">
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="15" y1="9" x2="9" y2="15"></line>
             <line x1="9" y1="9" x2="15" y2="15"></line>
           </svg>
+          <span>{{ generalErrorMessage }}</span>
         </div>
-        <h1 class="text-2xl font-bold text-foreground">Nevalidan link</h1>
-        <p class="text-sm text-muted-foreground mt-1">Ovaj aktivacioni link je nevalidan ili je istekao. Kontaktirajte administratora.</p>
-      </div>
 
-      <div *ngIf="generalErrorMessage"
-           class="flex items-center gap-2.5 p-3 mb-5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        <span>{{ generalErrorMessage }}</span>
-      </div>
-
-      <button type="button" (click)="goToLogin()"
-              class="z-btn-primary z-btn-full">
-        Idi na prijavu
-      </button>
-    </div>
-
-    <!-- Valid token - show form -->
-    <div *ngIf="hasValidActivationToken && !successMessage">
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-secondary flex items-center justify-center shadow-sm">
-          <svg class="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="8.5" cy="7" r="4"></circle>
-            <polyline points="17 11 19 13 23 9"></polyline>
-          </svg>
-        </div>
-        <h1 class="text-2xl font-bold text-foreground">Aktivirajte nalog</h1>
-        <p class="text-sm text-muted-foreground mt-1">Kreirajte lozinku da biste aktivirali nalog</p>
-      </div>
-
-      <div *ngIf="generalErrorMessage"
-           class="flex items-center gap-2.5 p-3 mb-5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="15" y1="9" x2="9" y2="15"></line>
-          <line x1="9" y1="9" x2="15" y2="15"></line>
-        </svg>
-        <span>{{ generalErrorMessage }}</span>
-      </div>
-
-      <form (ngSubmit)="onSubmit()" novalidate class="space-y-4">
-        <div class="space-y-1.5">
-          <label for="password" class="z-label">Lozinka</label>
-          <div class="relative">
-            <input id="password" [type]="isPasswordVisible ? 'text' : 'password'"
-                   name="password" [(ngModel)]="password" placeholder="Kreirajte lozinku" autocomplete="new-password"
-                   (input)="onPasswordInput()" (blur)="onPasswordBlur()"
-                   class="z-input pr-10" />
-            <button type="button" (click)="togglePasswordVisibility()"
-                    class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer">
-              <svg *ngIf="!isPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg *ngIf="isPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
-            </button>
+        <form (ngSubmit)="onSubmit()" novalidate class="space-y-4">
+          <div class="space-y-1.5">
+            <label for="password" class="z-label">Lozinka</label>
+            <div class="relative">
+              <input id="password" [type]="isPasswordVisible ? 'text' : 'password'"
+                     name="password" [(ngModel)]="password" placeholder="Kreirajte lozinku" autocomplete="new-password"
+                     (input)="onPasswordInput()" (blur)="onPasswordBlur()"
+                     class="z-input pr-11" />
+              <button type="button" (click)="togglePasswordVisibility()"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer"
+                      aria-label="Prikazi/sakrij lozinku">
+                <svg *ngIf="!isPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg *ngIf="isPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+            <p *ngIf="passwordTouched && passwordErrorMessage" class="z-error">{{ passwordErrorMessage }}</p>
           </div>
-          <p *ngIf="passwordTouched && passwordErrorMessage" class="z-error">{{ passwordErrorMessage }}</p>
-        </div>
 
-        <!-- Password strength -->
-        <div *ngIf="password.length > 0" [ngClass]="strengthClass" class="z-strength-bar">
-          <div class="z-strength-track">
-            <div class="z-strength-fill" [style.width.%]="strengthPercent"></div>
+          <div *ngIf="password.length > 0" [ngClass]="strengthClass" class="z-strength-bar">
+            <div class="z-strength-track">
+              <div class="z-strength-fill" [style.width.%]="strengthPercent"></div>
+            </div>
+            <span class="text-xs font-semibold" [ngClass]="{
+              'text-destructive': strengthClass === 'strength-weak',
+              'text-warning': strengthClass === 'strength-medium',
+              'text-success': strengthClass === 'strength-strong' || strengthClass === 'strength-good'
+            }">{{ strengthLabel }}</span>
           </div>
-          <span class="text-xs font-semibold" [ngClass]="{
-            'text-red-500': strengthClass === 'strength-weak',
-            'text-amber-500': strengthClass === 'strength-medium',
-            'text-green-500': strengthClass === 'strength-strong' || strengthClass === 'strength-good'
-          }">{{ strengthLabel }}</span>
-        </div>
 
-        <ul class="z-password-rules">
-          <li [class.rule-valid]="hasMinLength">Najmanje 8 karaktera</li>
-          <li [class.rule-valid]="hasMaxLength">Najviše 32 karaktera</li>
-          <li [class.rule-valid]="hasUppercaseLetter">Najmanje jedno veliko slovo</li>
-          <li [class.rule-valid]="hasLowercaseLetter">Najmanje jedno malo slovo</li>
-          <li [class.rule-valid]="hasTwoDigits">Najmanje dve cifre</li>
-          <li [class.rule-valid]="hasNoSpaces">Bez razmaka</li>
-        </ul>
+          <ul class="z-password-rules">
+            <li [class.rule-valid]="hasMinLength">Najmanje 8 karaktera</li>
+            <li [class.rule-valid]="hasMaxLength">Najvise 32 karaktera</li>
+            <li [class.rule-valid]="hasUppercaseLetter">Najmanje jedno veliko slovo</li>
+            <li [class.rule-valid]="hasLowercaseLetter">Najmanje jedno malo slovo</li>
+            <li [class.rule-valid]="hasTwoDigits">Najmanje dve cifre</li>
+            <li [class.rule-valid]="hasNoSpaces">Bez razmaka</li>
+          </ul>
 
-        <div class="space-y-1.5">
-          <label for="confirmPassword" class="z-label">Potvrdite lozinku</label>
-          <div class="relative">
-            <input id="confirmPassword" [type]="isConfirmPasswordVisible ? 'text' : 'password'"
-                   name="confirmPassword" [(ngModel)]="confirmPassword" placeholder="Potvrdite lozinku"
-                   autocomplete="new-password" (input)="onConfirmPasswordInput()" (blur)="onConfirmPasswordBlur()"
-                   class="z-input pr-10" />
-            <button type="button" (click)="toggleConfirmPasswordVisibility()"
-                    class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer">
-              <svg *ngIf="!isConfirmPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg *ngIf="isConfirmPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
-            </button>
+          <div class="space-y-1.5">
+            <label for="confirmPassword" class="z-label">Potvrdite lozinku</label>
+            <div class="relative">
+              <input id="confirmPassword" [type]="isConfirmPasswordVisible ? 'text' : 'password'"
+                     name="confirmPassword" [(ngModel)]="confirmPassword" placeholder="Potvrdite lozinku"
+                     autocomplete="new-password" (input)="onConfirmPasswordInput()" (blur)="onConfirmPasswordBlur()"
+                     class="z-input pr-11" />
+              <button type="button" (click)="toggleConfirmPasswordVisibility()"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer"
+                      aria-label="Prikazi/sakrij lozinku">
+                <svg *ngIf="!isConfirmPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg *ngIf="isConfirmPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+            <p *ngIf="confirmPasswordTouched && confirmPasswordErrorMessage" class="z-error">{{ confirmPasswordErrorMessage }}</p>
           </div>
-          <p *ngIf="confirmPasswordTouched && confirmPasswordErrorMessage" class="z-error">{{ confirmPasswordErrorMessage }}</p>
-        </div>
 
-        <button type="submit" [disabled]="isLoading || !isFormValid"
-                class="z-btn-primary z-btn-full flex items-center justify-center gap-2">
-          <svg *ngIf="isLoading" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-          </svg>
-          {{ isLoading ? 'Aktivacija...' : 'Aktiviraj nalog' }}
-        </button>
-      </form>
+          <button type="submit" [disabled]="isLoading || !isFormValid"
+                  class="z-btn-primary z-btn-lg z-btn-full mt-2">
+            <svg *ngIf="isLoading" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            {{ isLoading ? 'Aktivacija...' : 'Aktiviraj nalog' }}
+            <svg *ngIf="!isLoading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
