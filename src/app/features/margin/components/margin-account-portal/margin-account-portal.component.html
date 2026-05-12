@@ -1,0 +1,183 @@
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Marzni racun</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Stanje marznog racuna, uplata sa tekuceg, isplata na tekuci i istorija pokretanja sredstava.
+        </p>
+      </div>
+      <button *ngIf="account"
+              type="button"
+              class="z-btn-secondary"
+              (click)="loadAccount()"
+              [disabled]="loading">
+        <span *ngIf="!loading">Osvezi</span>
+        <span *ngIf="loading">Ucitavanje...</span>
+      </button>
+    </div>
+
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="loading && !account" mode="loading" text="Ucitavanje racuna..."></app-state>
+
+    <ng-container *ngIf="account">
+      <!-- PR_31 Phase 7 T27: hand-rolled KPI -> z-stat-card tokeni. -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="z-stat-card">
+          <span class="z-stat-label">Inicijalna margina</span>
+          <p class="z-stat-value-mono">{{ account.initialMargin | number:'1.2-2' }}</p>
+          <p class="z-stat-hint">RSD</p>
+        </div>
+
+        <div class="z-stat-card">
+          <span class="z-stat-label">Dug prema banci</span>
+          <p class="z-stat-value-mono"
+             [class.text-warning]="account.loanValue > 0">
+            {{ account.loanValue | number:'1.2-2' }}
+          </p>
+          <p class="z-stat-hint">RSD loan vrednost</p>
+        </div>
+
+        <div class="z-stat-card">
+          <span class="z-stat-label">Status</span>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="z-badge z-badge-dot"
+                  [ngClass]="account.active ? 'z-badge-green' : 'z-badge-red'">
+              {{ account.active ? 'Aktivan' : 'Blokiran' }}
+            </span>
+          </div>
+          <p *ngIf="!account.active" class="z-stat-hint">
+            Initial margin ispod maintenance praga.
+          </p>
+          <p *ngIf="account.active" class="z-stat-hint">
+            Dovoljno pokrice — sva uplata/isplata dozvoljena.
+          </p>
+        </div>
+      </section>
+
+      <section class="z-card p-5 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Detalji racuna</p>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+          <div>
+            <dt class="text-muted-foreground">Broj racuna</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ account.accountNumber }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Maintenance margina</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ account.maintenanceMargin | number:'1.2-2' }} RSD</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Bank participation</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ (account.bankParticipation * 100) | number:'1.2-2' }}%</dd>
+          </div>
+        </dl>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+        <form [formGroup]="addForm" (ngSubmit)="onAdd()"
+              class="z-card p-5"
+              data-testid="margin-add-form">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-green">Uplata</span>
+            <h3 class="text-lg font-bold text-foreground">Sa tekuceg na marzni</h3>
+          </div>
+          <label for="margin-add-amount" class="z-label">Iznos (RSD)</label>
+          <input id="margin-add-amount"
+                 type="number"
+                 step="0.01"
+                 formControlName="amount"
+                 placeholder="0.00"
+                 class="z-input font-mono"
+                 data-testid="margin-add-amount" />
+          <button type="submit"
+                  [disabled]="addForm.invalid"
+                  class="z-btn-primary w-full mt-4"
+                  data-testid="margin-add-submit">
+            Uplati
+          </button>
+        </form>
+
+        <form [formGroup]="withdrawForm" (ngSubmit)="onWithdraw()"
+              class="z-card p-5"
+              data-testid="margin-withdraw-form">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-yellow">Isplata</span>
+            <h3 class="text-lg font-bold text-foreground">Sa marznog na tekuci</h3>
+          </div>
+          <label for="margin-withdraw-amount" class="z-label">Iznos (RSD)</label>
+          <input id="margin-withdraw-amount"
+                 type="number"
+                 step="0.01"
+                 formControlName="amount"
+                 placeholder="0.00"
+                 class="z-input font-mono"
+                 data-testid="margin-withdraw-amount" />
+          <button type="submit"
+                  [disabled]="withdrawForm.invalid || !account.active"
+                  class="z-btn-secondary w-full mt-4"
+                  data-testid="margin-withdraw-submit">
+            Isplati
+          </button>
+          <!-- PR_31 Phase 7 T27: text-red-600 -> text-destructive (Tailwind alias). Emoji uklonjen. -->
+          <p *ngIf="!account.active"
+             class="text-xs text-destructive mt-3"
+             data-testid="margin-blocked-warning">
+            Racun je blokiran; isplata nije moguca dok stanje ne pokrije maintenance margin.
+          </p>
+        </form>
+      </div>
+
+      <!-- PR_31 Phase 7 T27: tailwind hardkode red paleta -> z-alert-error. -->
+      <div *ngIf="error" class="z-alert-error mb-6">
+        {{ error }}
+      </div>
+
+      <section class="z-card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Istorija transakcija</p>
+            <p class="text-sm text-muted-foreground mt-0.5">Pokreti sredstava na marznom racunu (uplata, isplata, naplata pozajmice).</p>
+          </div>
+          <span class="z-badge z-badge-blue">{{ transactions.length }} stavki</span>
+        </div>
+
+        <div *ngIf="transactions.length === 0" class="py-10 text-center text-sm text-muted-foreground">
+          Nema transakcija na ovom racunu.
+        </div>
+
+        <div *ngIf="transactions.length > 0" class="overflow-x-auto">
+          <table class="z-table">
+            <thead>
+              <tr>
+                <th>Vreme</th>
+                <th>Tip</th>
+                <th class="text-right">Iznos</th>
+                <th>Opis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of transactions">
+                <td class="text-muted-foreground whitespace-nowrap">{{ tx.occurredAt | date:'short' }}</td>
+                <td>
+                  <span class="z-badge z-badge-gray">{{ tx.transactionType }}</span>
+                </td>
+                <!-- PR_31 Phase 7 T27: text-green-700/red-700 -> text-success/destructive (Tailwind alias-i). -->
+                <td class="text-right font-mono tabular-nums font-semibold"
+                    [class.text-success]="tx.amount > 0"
+                    [class.text-destructive]="tx.amount < 0">
+                  {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number:'1.2-2' }}
+                </td>
+                <td class="text-foreground">{{ tx.description }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- PR_31 T11: shared StateComponent zameni inline empty markup (uklonjen emoji). -->
+    <app-state *ngIf="!loading && !account"
+               mode="empty" title="Nemate marzni racun"
+               text="Obratite se zaposlenom banke da bi vam otvorio marzni racun za margin trgovanje."></app-state>
+  </div>
+</div>
