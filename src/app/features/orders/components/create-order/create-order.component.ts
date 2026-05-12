@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { SecuritiesService } from '../../../securities/services/securities.service';
 import { Security } from '../../../securities/models/security.model';
 import { Account } from '../../../client/models/account.model';
@@ -11,11 +10,12 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { OrderService } from '../../services/order.service';
 import { OrderDirection, OrderResponse, OrderType } from '../../models/order.model';
+import { PortfolioService } from '../../../client/services/portfolio.service';
 
 @Component({
   selector: 'app-create-order',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './create-order.component.html',
   styleUrls: ['./create-order.component.scss'],
 })
@@ -39,6 +39,9 @@ export class CreateOrderComponent implements OnInit {
   draftOrder: OrderResponse | null = null;
   showConfirmation = false;
 
+  /** Spec Sc 37: korisnik ne moze prodati vise nego sto poseduje. 0 = ucitavanje. */
+  public maxSellQuantity = 0;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -47,6 +50,7 @@ export class CreateOrderComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly orderService: OrderService,
     private readonly toastService: ToastService,
+    private readonly portfolioService: PortfolioService,
   ) {}
 
   ngOnInit(): void {
@@ -54,6 +58,34 @@ export class CreateOrderComponent implements OnInit {
     this.listingId = Number(this.route.snapshot.paramMap.get('listingId'));
 
     this.loadSecurity();
+
+    if (this.direction === 'SELL') {
+      this.loadSellableQuantity();
+    }
+  }
+
+  /**
+   * Spec Sc 37: za SELL ucitavamo koliko korisnik ima u portfoliju za ovaj listing
+   * i postavljamo to kao [max] na quantity input. Sprecava klijent-side over-sell.
+   */
+  private loadSellableQuantity(): void {
+    this.portfolioService.getPortfolio().subscribe({
+      next: summary => {
+        const entry = summary.holdings?.find(h => h.listingId === this.listingId);
+        this.maxSellQuantity = entry?.quantity ?? 0;
+      },
+      error: () => {
+        this.maxSellQuantity = 0;
+      },
+    });
+  }
+
+  /**
+   * Spec Sc 63: margin order zahteva permisiju MARGIN_TRADE; klijent sa odobrenim
+   * kreditom dobija ovu permisiju automatski. Aktuari je takodje moraju imati.
+   */
+  public get canUseMargin(): boolean {
+    return this.authService.hasPermission('MARGIN_TRADE');
   }
 
   private loadSecurity(): void {
@@ -152,10 +184,16 @@ export class CreateOrderComponent implements OnInit {
   }
 
   get canSubmit(): boolean {
-    return !!this.security
-      && this.quantity > 0
-      && !!this.selectedAccountId
-      && this.pricePerUnit > 0;
+    if (!this.security || this.quantity <= 0 || !this.selectedAccountId || this.pricePerUnit <= 0) {
+      return false;
+    }
+    if (this.margin && !this.canUseMargin) {
+      return false;
+    }
+    if (this.direction === 'SELL' && this.maxSellQuantity > 0 && this.quantity > this.maxSellQuantity) {
+      return false;
+    }
+    return true;
   }
 
   createDraftOrder(): void {
