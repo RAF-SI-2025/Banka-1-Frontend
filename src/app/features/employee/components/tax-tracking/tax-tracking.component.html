@@ -1,68 +1,91 @@
-<app-navbar></app-navbar>
-
-<div class="tax-page-wrapper">
-  <div class="tax-container">
-    
-    <div class="tax-header">
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
       <div>
-        <h1>POREZ TRACKING</h1>
-        <p>Pregled dugovanja i manuelno pokretanje naplate poreza na kapitalnu dobit</p>
+        <h1 class="text-2xl font-bold text-foreground">Porez tracking</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled dugovanja po klijentima i aktuarima, manuelno pokretanje naplate poreza na kapitalnu dobit (15%).
+        </p>
       </div>
-      
-      <button (click)="startTaxCalculation()" [disabled]="isProcessing" class="btn-primary">
-        <span class="material-icons">account_balance</span>
-        <span>{{ isProcessing ? 'Obračun u toku...' : 'Pokreni obračun' }}</span>
+      <button type="button"
+              class="z-btn-gold"
+              [disabled]="isProcessing"
+              (click)="startTaxCalculation()">
+        <svg *ngIf="!isProcessing" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="6" width="18" height="13" rx="2"></rect>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <svg *ngIf="isProcessing" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+        {{ isProcessing ? 'Obracun u toku...' : 'Pokreni obracun' }}
       </button>
     </div>
 
-    <div class="tax-filters">
-      <div class="filter-group flex-1">
-        <label>Pretraga korisnika</label>
-        <div class="input-wrapper">
-          <span class="material-icons search-icon">search</span>
-          <input type="text" [(ngModel)]="searchTerm" (input)="filterData()" placeholder="Unesite ime ili prezime...">
+    <div class="z-card p-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4 items-end">
+        <div>
+          <label for="tax-search" class="z-label">Pretraga korisnika</label>
+          <input id="tax-search"
+                 type="text"
+                 [(ngModel)]="searchTerm"
+                 (input)="filterData()"
+                 class="z-input"
+                 placeholder="Ime ili prezime..." />
+        </div>
+        <div>
+          <label for="tax-type" class="z-label">Tip korisnika</label>
+          <select id="tax-type"
+                  [(ngModel)]="userTypeFilter"
+                  (change)="filterData()"
+                  class="z-select">
+            <option value="ALL">Svi korisnici</option>
+            <option value="CLIENT">Klijenti</option>
+            <option value="ACTUARY">Aktuari</option>
+          </select>
         </div>
       </div>
+    </div>
 
-      <div class="filter-group w-64">
-        <label>Tip korisnika</label>
-        <select [(ngModel)]="userTypeFilter" (change)="filterData()">
-          <option value="ALL">Svi korisnici</option>
-          <option value="CLIENT">Klijenti</option>
-          <option value="ACTUARY">Aktuari</option>
-        </select>
+    <section class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Dugovanja</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Iznos poreza 15% nad osnovicom (kapitalna dobit), konvertovano u RSD.</p>
+        </div>
+        <span *ngIf="filteredUsers.length > 0" class="z-badge z-badge-blue">{{ filteredUsers.length }} korisnika</span>
       </div>
-    </div>
 
-    <div class="table-container">
-      <table class="tax-table">
-        <thead>
-          <tr>
-            <th>Ime i Prezime</th>
-            <th>Tip Korisnika</th>
-            <th>Osnovica (Poslednji obračun)</th>
-            <th>Dugovanje (15% Porez)</th>
-            <th>Valuta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="filteredUsers.length === 0">
-            <td colspan="5" class="empty-state">Nema pronađenih dugovanja za zadati filter.</td>
-          </tr>
-          <tr *ngFor="let user of filteredUsers">
-            <td class="font-medium">{{ user.firstName }} {{ user.lastName }}</td>
-            <td>
-              <span class="badge" [ngClass]="user.type === 'CLIENT' ? 'badge-client' : 'badge-actuary'">
-                {{ user.type === 'CLIENT' ? 'Klijent' : 'Aktuar' }}
-              </span>
-            </td>
-            <td class="text-gray">{{ (user.taxDebt / 0.15) | number:'1.2-2' }} RSD</td>
-            <td class="text-danger font-semibold">{{ user.taxDebt | number:'1.2-2' }} RSD</td>
-            <td class="text-gray">RSD (Konvertovano)</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div *ngIf="filteredUsers.length === 0" class="py-10 text-center text-sm text-muted-foreground">
+        Nema pronadjenih dugovanja za zadati filter.
+      </div>
 
+      <div *ngIf="filteredUsers.length > 0" class="overflow-x-auto">
+        <table class="z-table">
+          <thead>
+            <tr>
+              <th>Ime i prezime</th>
+              <th>Tip</th>
+              <th class="text-right">Osnovica</th>
+              <th class="text-right">Dugovanje (15%)</th>
+              <th>Valuta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers">
+              <td class="font-medium">{{ user.firstName }} {{ user.lastName }}</td>
+              <td>
+                <span class="z-badge" [ngClass]="user.type === 'CLIENT' ? 'z-badge-blue' : 'z-badge-gold'">
+                  {{ user.type === 'CLIENT' ? 'Klijent' : 'Aktuar' }}
+                </span>
+              </td>
+              <td class="text-right font-mono text-muted-foreground">{{ (user.taxDebt / 0.15) | number:'1.2-2' }}</td>
+              <td class="text-right font-mono font-semibold text-destructive">{{ user.taxDebt | number:'1.2-2' }}</td>
+              <td class="text-muted-foreground">RSD</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>

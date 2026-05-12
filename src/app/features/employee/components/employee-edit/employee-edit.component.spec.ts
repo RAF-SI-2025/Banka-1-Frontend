@@ -3,6 +3,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { EmployeeEditComponent } from './employee-edit.component';
 import { Employee } from '../../models/employee';
 
+// PR_31 phase 1: spec rewritten to match current EmployeeEditComponent
+// (no togglePermission/email/permisije in editForm — only ime/prezime/brojTelefona/
+// adresa/pozicija/departman/role/aktivan/margin).
 describe('EmployeeEditComponent', () => {
   let component: EmployeeEditComponent;
   let fixture: ComponentFixture<EmployeeEditComponent>;
@@ -16,14 +19,15 @@ describe('EmployeeEditComponent', () => {
     pol: 'M',
     brojTelefona: '+381601234567',
     pozicija: 'Developer',
+    role: 'EMPLOYEE',
     aktivan: true,
-    permisije: ['CREATE', 'EDIT']
+    permisije: ['CREATE', 'EDIT'],
   };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [EmployeeEditComponent],
-      imports: [ReactiveFormsModule]
+      imports: [ReactiveFormsModule],
     });
     fixture = TestBed.createComponent(EmployeeEditComponent);
     component = fixture.componentInstance;
@@ -33,8 +37,8 @@ describe('EmployeeEditComponent', () => {
         currentValue: mockEmployee,
         previousValue: null,
         firstChange: true,
-        isFirstChange: () => true
-      }
+        isFirstChange: () => true,
+      },
     });
     fixture.detectChanges();
   });
@@ -43,40 +47,16 @@ describe('EmployeeEditComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // ─── ngOnChanges ────────────────────────────────────────────────────────────
-
   describe('ngOnChanges', () => {
     it('should patch form with employee data', () => {
       expect(component.editForm.get('ime')?.value).toBe('Petar');
       expect(component.editForm.get('prezime')?.value).toBe('Petrović');
-      expect(component.editForm.get('email')?.value).toBe('petar@test.com');
+      expect(component.editForm.get('brojTelefona')?.value).toBe('+381601234567');
+      expect(component.editForm.get('pozicija')?.value).toBe('Developer');
+      expect(component.editForm.get('role')?.value).toBe('EMPLOYEE');
       expect(component.editForm.get('aktivan')?.value).toBeTrue();
     });
-
-    it('should copy permissions array without mutating original', () => {
-      const formPermissions = component.editForm.get('permisije')?.value;
-      expect(formPermissions).toEqual(['CREATE', 'EDIT']);
-      expect(formPermissions).not.toBe(mockEmployee.permisije);
-    });
   });
-
-  // ─── togglePermission ───────────────────────────────────────────────────────
-
-  describe('togglePermission', () => {
-    it('should add permission when checkbox is checked', () => {
-      const event = { target: { checked: true } } as any;
-      component.togglePermission('DELETE', event);
-      expect(component.editForm.get('permisije')?.value).toContain('DELETE');
-    });
-
-    it('should remove permission when checkbox is unchecked', () => {
-      const event = { target: { checked: false } } as any;
-      component.togglePermission('CREATE', event);
-      expect(component.editForm.get('permisije')?.value).not.toContain('CREATE');
-    });
-  });
-
-  // ─── onSave ─────────────────────────────────────────────────────────────────
 
   describe('onSave', () => {
     it('should emit save event with updated employee', () => {
@@ -85,26 +65,25 @@ describe('EmployeeEditComponent', () => {
       component.editForm.patchValue({
         ime: 'Nikola',
         prezime: 'Petrović',
-        email: 'petar@test.com'
+        brojTelefona: '+381601234567',
       });
       component.onSave();
 
       expect(saveSpy).toHaveBeenCalledOnceWith(
-        jasmine.objectContaining({ ime: 'Nikola', id: 1 })
+        jasmine.objectContaining({ ime: 'Nikola', id: 1 }),
       );
     });
 
     it('should not emit if form is invalid', () => {
       const saveSpy = spyOn(component.save, 'emit');
 
-      component.editForm.patchValue({ email: 'invalid-email' });
+      // ime has minLength(2) — single char invalidates the form.
+      component.editForm.patchValue({ ime: 'X' });
       component.onSave();
 
       expect(saveSpy).not.toHaveBeenCalled();
     });
   });
-
-  // ─── onCancel ───────────────────────────────────────────────────────────────
 
   describe('onCancel', () => {
     it('should emit cancel event', () => {

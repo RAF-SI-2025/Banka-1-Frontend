@@ -1,7 +1,5 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <!-- Back link -->
     <button type="button" routerLink="/employees"
             class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-4">
@@ -27,25 +25,25 @@
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="ime" class="z-label">Ime <span class="text-red-500">*</span></label>
+            <label for="ime" class="z-label">Ime <span class="text-destructive">*</span></label>
             <input id="ime" type="text" formControlName="ime" placeholder="Unesite ime" class="z-input" />
             <p class="z-error" *ngIf="employeeForm.get('ime')?.touched && employeeForm.get('ime')?.invalid">
               Ime je obavezno (min 2 karaktera).
             </p>
           </div>
           <div>
-            <label for="prezime" class="z-label">Prezime <span class="text-red-500">*</span></label>
+            <label for="prezime" class="z-label">Prezime <span class="text-destructive">*</span></label>
             <input id="prezime" type="text" formControlName="prezime" placeholder="Unesite prezime" class="z-input" />
             <p class="z-error" *ngIf="employeeForm.get('prezime')?.touched && employeeForm.get('prezime')?.invalid">
               Prezime je obavezno (min 2 karaktera).
             </p>
           </div>
           <div>
-            <label for="datumRodjenja" class="z-label">Datum rođenja <span class="text-red-500">*</span></label>
+            <label for="datumRodjenja" class="z-label">Datum rođenja <span class="text-destructive">*</span></label>
             <input id="datumRodjenja" type="date" formControlName="datumRodjenja" class="z-input" />
           </div>
           <div>
-            <label for="pol" class="z-label">Pol <span class="text-red-500">*</span></label>
+            <label for="pol" class="z-label">Pol <span class="text-destructive">*</span></label>
             <select id="pol" formControlName="pol" class="z-select">
               <option value="M">Muški</option>
               <option value="Z">Ženski</option>
@@ -62,14 +60,14 @@
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="email" class="z-label">Email <span class="text-red-500">*</span></label>
+            <label for="email" class="z-label">Email <span class="text-destructive">*</span></label>
             <input id="email" type="email" formControlName="email" placeholder="Unesite email adresu" class="z-input" />
             <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.invalid">
               Validan email je obavezan.
             </p>
           </div>
           <div>
-            <label for="brojTelefona" class="z-label">Broj telefona <span class="text-red-500">*</span></label>
+            <label for="brojTelefona" class="z-label">Broj telefona <span class="text-destructive">*</span></label>
             <input id="brojTelefona" type="text" formControlName="brojTelefona" placeholder="+381..." class="z-input" />
           </div>
           <div class="md:col-span-2">
@@ -87,15 +85,15 @@
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label for="pozicija" class="z-label">Pozicija <span class="text-red-500">*</span></label>
+            <label for="pozicija" class="z-label">Pozicija <span class="text-destructive">*</span></label>
             <input id="pozicija" type="text" formControlName="pozicija" placeholder="npr. Software Developer" class="z-input" />
           </div>
           <div>
-            <label for="departman" class="z-label">Odeljenje <span class="text-red-500">*</span></label>
+            <label for="departman" class="z-label">Odeljenje <span class="text-destructive">*</span></label>
             <input id="departman" type="text" formControlName="departman" placeholder="npr. IT" class="z-input" />
           </div>
           <div>
-            <label for="role" class="z-label">Uloga <span class="text-red-500">*</span></label>
+            <label for="role" class="z-label">Uloga <span class="text-destructive">*</span></label>
             <select id="role" formControlName="role" class="z-select">
               <option value="BASIC">Basic</option>
               <option value="AGENT">Agent</option>
@@ -107,7 +105,7 @@
       </div>
 
       <!-- Info notice -->
-      <div class="flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+      <div class="z-alert-info">
         <svg class="w-5 h-5 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="16" x2="12" y2="12"></line>
