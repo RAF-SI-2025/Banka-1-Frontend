@@ -1,0 +1,70 @@
+<div>
+  <div>
+    <div class="mb-6">
+      <a routerLink="/funds" class="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+        <span aria-hidden="true">←</span> Nazad na fondove
+      </a>
+    </div>
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Kreiraj investicioni fond</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Dostupno samo zaposlenima sa <span class="font-semibold text-foreground">FUND_AGENT_MANAGE</span> permisijom.
+        </p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="z-card p-6 max-w-2xl">
+      <div class="space-y-5">
+        <div>
+          <label for="fund-naziv" class="z-label">Naziv fonda</label>
+          <input id="fund-naziv"
+                 formControlName="naziv"
+                 maxlength="64"
+                 class="z-input"
+                 placeholder="Alpha Growth Fund" />
+          <p class="text-xs text-muted-foreground mt-1">Maks. 64 karaktera.</p>
+        </div>
+
+        <div>
+          <label for="fund-opis" class="z-label">Opis i investiciona strategija</label>
+          <textarea id="fund-opis"
+                    formControlName="opis"
+                    maxlength="1024"
+                    rows="4"
+                    class="z-input min-h-[110px] py-3"
+                    placeholder="Fond fokusiran na IT sektor — agresivna alokacija, srednjoročni horizont..."></textarea>
+          <p class="text-xs text-muted-foreground mt-1">Opis je vidljiv klijentima u listi fondova.</p>
+        </div>
+
+        <div>
+          <label for="fund-min" class="z-label">Minimalni ulog (RSD)</label>
+          <input id="fund-min"
+                 type="number"
+                 formControlName="minimumContribution"
+                 min="0"
+                 class="z-input font-mono"
+                 placeholder="1000" />
+          <p class="text-xs text-muted-foreground mt-1">
+            Klijent ne moze investirati manje od ovog iznosa pri svakoj uplati.
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="z-alert-error mt-5">
+        {{ error }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-border">
+        <a routerLink="/funds" class="z-btn-outline">Otkazi</a>
+        <button type="submit"
+                class="z-btn-gold"
+                [disabled]="form.invalid || loading">
+          <span *ngIf="!loading">Kreiraj fond</span>
+          <span *ngIf="loading">Kreiranje...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

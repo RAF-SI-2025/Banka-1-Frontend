@@ -1,0 +1,132 @@
+<div>
+  <div>
+    <div class="mb-6">
+      <a (click)="router.navigate(['/funds'])"
+         class="inline-flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer">
+        <span aria-hidden="true">←</span> Nazad na sve fondove
+      </a>
+    </div>
+
+    <!-- PR_31 T11: shared StateComponent zameni inline loading/error markup. -->
+    <app-state *ngIf="loading" mode="loading" text="Ucitavanje fonda..."></app-state>
+    <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+    <ng-container *ngIf="fund && !loading">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-foreground">{{ fund.naziv }}</h1>
+        <p class="text-sm text-muted-foreground mt-2 max-w-3xl">{{ fund.opis || 'Bez opisa.' }}</p>
+      </header>
+
+      <!-- PR_31 T28: hand-coded z-card KPI blocks migrirani na z-stat-card token (Fraunces serif + gold-emerald hairline). -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="z-stat-card">
+          <span class="z-stat-label">Likvidna sredstva</span>
+          <span class="z-stat-value">{{ fund.likvidnaSredstva | number:'1.0-2' }}</span>
+          <p class="z-stat-hint">RSD spreman za isplatu</p>
+        </div>
+
+        <div class="z-stat-card">
+          <span class="z-stat-label">Ukupna vrednost</span>
+          <span class="z-stat-value">{{ fund.totalValue | number:'1.0-2' }}</span>
+          <p class="z-stat-hint">RSD (priblizno)</p>
+        </div>
+
+        <div class="z-stat-card">
+          <span class="z-stat-label">Profit</span>
+          <span class="z-stat-value"
+                [class.text-success]="fund.profit > 0"
+                [class.text-destructive]="fund.profit < 0">
+            {{ fund.profit >= 0 ? '+' : '' }}{{ fund.profit | number:'1.0-2' }}
+          </span>
+          <p class="z-stat-hint">RSD od kreiranja</p>
+        </div>
+      </section>
+
+      <section class="z-card p-5 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Detalji fonda</p>
+        <dl class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <dt class="text-muted-foreground">Min. ulog</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ fund.minimumContribution | number:'1.0-2' }} RSD</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Datum kreiranja</dt>
+            <dd class="font-medium text-foreground mt-0.5">{{ fund.datumKreiranja }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">ID fonda</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">#{{ fund.id }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <section class="z-card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-green">Uplata</span>
+            <h2 class="text-lg font-bold text-foreground">Investiraj u fond</h2>
+          </div>
+          <form [formGroup]="investForm" (ngSubmit)="onInvest()" class="space-y-4">
+            <div>
+              <label for="invest-amount" class="z-label">Iznos (RSD)</label>
+              <input id="invest-amount"
+                     type="number"
+                     step="0.01"
+                     formControlName="amount"
+                     class="z-input font-mono"
+                     placeholder="0.00" />
+              <p class="text-xs text-muted-foreground mt-1.5">
+                Min. ulog: {{ fund.minimumContribution | number:'1.0-2' }} RSD
+              </p>
+            </div>
+            <div>
+              <label for="invest-account" class="z-label">Sa tekuceg racuna</label>
+              <input id="invest-account"
+                     formControlName="fromAccountNumber"
+                     class="z-input font-mono"
+                     placeholder="19-cifren broj racuna" />
+            </div>
+            <button type="submit"
+                    class="z-btn-primary w-full"
+                    [disabled]="investForm.invalid">
+              Investiraj
+            </button>
+          </form>
+        </section>
+
+        <section class="z-card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-yellow">Isplata</span>
+            <h2 class="text-lg font-bold text-foreground">Povuci sredstva</h2>
+          </div>
+          <form [formGroup]="redeemForm" (ngSubmit)="onRedeem()" class="space-y-4">
+            <div>
+              <label for="redeem-amount" class="z-label">Iznos (RSD)</label>
+              <input id="redeem-amount"
+                     type="number"
+                     step="0.01"
+                     formControlName="amount"
+                     class="z-input font-mono"
+                     placeholder="0.00" />
+            </div>
+            <div>
+              <label for="redeem-account" class="z-label">Na tekuci racun</label>
+              <input id="redeem-account"
+                     formControlName="toAccountNumber"
+                     class="z-input font-mono"
+                     placeholder="19-cifren broj racuna" />
+            </div>
+            <button type="submit"
+                    class="z-btn-secondary w-full"
+                    [disabled]="redeemForm.invalid">
+              Povuci sredstva
+            </button>
+            <p class="text-xs text-muted-foreground mt-1">
+              Ako fond nema dovoljno likvidnih sredstava, automatski ce se likvidirati hartije; ovo moze potrajati.
+            </p>
+          </form>
+        </section>
+      </div>
+    </ng-container>
+  </div>
+</div>
