@@ -1,0 +1,129 @@
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Sklopljeni opcioni ugovori</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Vasi OTC ugovori sa live mark-to-market profit kalkulacijom (osvezava se na 30 sekundi).
+        </p>
+      </div>
+      <a routerLink="/otc/offers" class="z-btn-outline">
+        Aktivne ponude
+      </a>
+    </div>
+
+    <div class="z-card p-4 mb-6">
+      <div class="flex items-center gap-4 flex-wrap">
+        <label class="z-label mb-0 whitespace-nowrap">Filter po statusu</label>
+        <select [formControl]="statusFilter"
+                class="z-select max-w-[200px]"
+                aria-label="Filter ugovora po statusu"
+                data-testid="status-filter">
+          <option value="ACTIVE">Vazeci</option>
+          <option value="EXERCISED">Iskorisceni</option>
+          <option value="EXPIRED">Istekli</option>
+          <option value="ALL">Svi</option>
+        </select>
+
+        <!-- PR_33 Phase B: filter banaka (intra/inter-bank). -->
+        <label class="z-label mb-0 whitespace-nowrap" for="contractBankFilter">Filter banke</label>
+        <select id="contractBankFilter"
+                class="z-select max-w-[220px]"
+                aria-label="Filter ugovora po banci"
+                data-testid="bank-filter"
+                [ngModel]="bankFilter"
+                (ngModelChange)="setBankFilter($event)">
+          <option value="all">Svi ugovori</option>
+          <option value="local">Naša banka</option>
+          <option value="banka2">Banka 2</option>
+        </select>
+
+        <span class="text-xs text-muted-foreground">
+          Prikazano {{ visibleContracts.length }} od {{ contracts.length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup (uklonjen emoji). -->
+    <app-state *ngIf="loading" mode="loading" text="Ucitavanje ugovora..."></app-state>
+    <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+    <ng-container *ngIf="!loading && !error">
+      <app-state *ngIf="visibleContracts.length === 0"
+                 mode="empty" title="Nema ugovora za izabrani filter"
+                 text="Promeniti filter ili poslati novu ponudu da bi se kreirao prvi ugovor."></app-state>
+
+      <div *ngIf="visibleContracts.length > 0" class="z-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="z-table min-w-[1020px]" data-testid="otc-contracts-table">
+            <thead>
+              <tr>
+                <th>Akcija</th>
+                <!-- PR_33 Phase B: nova "Banka" kolona pre Kolicine. -->
+                <th>Banka</th>
+                <th class="text-right">Kolicina</th>
+                <th class="text-right">Strike</th>
+                <th class="text-right">Live profit</th>
+                <th>Settlement</th>
+                <th>Druga strana</th>
+                <th>Sklopljen</th>
+                <th>Status</th>
+                <th class="text-right">Akcije</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of visibleContracts"
+                  [attr.data-testid]="c.interbank ? 'contract-row-interbank' : 'contract-row-local'">
+                <td class="font-semibold">{{ c.stockTicker }}</td>
+                <td>
+                  <span *ngIf="c.interbank" class="z-badge z-badge-gold" data-testid="bank-badge-interbank">
+                    {{ c.counterpartyBankName || 'Banka 2' }}
+                  </span>
+                  <span *ngIf="!c.interbank" class="z-badge z-badge-gray" data-testid="bank-badge-local">
+                    Naša
+                  </span>
+                </td>
+                <td class="text-right font-mono">{{ c.amount | number }}</td>
+                <td class="text-right font-mono">{{ c.pricePerStock | number:'1.2-2' }}</td>
+                <td class="text-right font-mono font-semibold"
+                    [class.text-success]="c.liveProfit !== undefined && c.liveProfit > 0"
+                    [class.text-destructive]="c.liveProfit !== undefined && c.liveProfit < 0"
+                    [class.text-muted-foreground]="c.liveProfit === undefined">
+                  {{ c.liveProfit !== undefined ? (c.liveProfit | number:'1.2-2') : '—' }}
+                </td>
+                <td class="whitespace-nowrap">{{ c.settlementDate }}</td>
+                <td>
+                  <span class="z-badge"
+                        [ngClass]="c.counterpartyRole === 'SELLER' ? 'z-badge-blue' : 'z-badge-gold'">
+                    #{{ c.counterpartyId }} · {{ c.counterpartyRole === 'SELLER' ? 'Prodavac' : 'Kupac' }}
+                  </span>
+                </td>
+                <td class="text-muted-foreground whitespace-nowrap">{{ c.createdAt | date:'short' }}</td>
+                <td>
+                  <span class="z-badge"
+                        [ngClass]="{
+                          'z-badge-green': c.status === 'ACTIVE',
+                          'z-badge-blue': c.status === 'EXERCISED',
+                          'z-badge-gray': c.status === 'EXPIRED'
+                        }">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <button type="button"
+                          *ngIf="isActive(c)"
+                          (click)="exercise(c)"
+                          class="z-btn-gold z-btn-sm"
+                          data-testid="exercise-btn">
+                    Iskoristi
+                  </button>
+                  <span *ngIf="!isActive(c)" class="text-xs text-muted-foreground">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
