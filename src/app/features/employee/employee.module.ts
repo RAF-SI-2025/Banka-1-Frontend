@@ -14,6 +14,8 @@ import { LoanRequestManagementComponent } from './components/loan-request-manage
 import { LoanManagementComponent } from './components/loan-management/loan-management.component';
 import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { OrdersOverviewComponent } from './components/orders-overview/orders-overview.component';
+import { ActuaryPerformancesComponent } from './components/actuary-performances/actuary-performances.component';
+import { FundPositionsComponent } from './components/fund-positions/fund-positions.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +27,8 @@ import { OrdersOverviewComponent } from './components/orders-overview/orders-ove
     LoanRequestManagementComponent,
     LoanManagementComponent,
     OrdersOverviewComponent,
+    ActuaryPerformancesComponent,
+    FundPositionsComponent,
   ],
   imports: [
     CommonModule,

@@ -53,6 +53,8 @@ export class NavbarComponent implements OnInit {
   private readonly supervisorLinks: NavLink[] = [
     { label: 'Upravljanje aktuarima', route: '/actuary-management', icon: 'supervisor_account' },
     { label: 'Porez', route: '/tax-tracking', icon: 'account_balance' },
+    { label: 'Performanse aktuara', route: '/actuary-performances', icon: 'leaderboard' },
+    { label: 'Pozicije fondova', route: '/fund-positions', icon: 'account_balance_wallet' },
   ];
 
   constructor(private authService: AuthService) {}

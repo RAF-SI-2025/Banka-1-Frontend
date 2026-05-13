@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Actuary } from '../models/actuary';
 import { environment } from '../../../../environments/environment';
+import { ActuaryPerformance } from '../models/actuary-performance';
 
 @Injectable({
   providedIn: 'root'
@@ -40,5 +41,8 @@ export class ActuaryService {
 updateNeedApproval(id: number, needApproval: boolean): Observable<void> {
   // Koristimo apiUrl (koji je već .../order/actuaries) i samo dodajemo /agents/...
   return this.http.put<void>(`${this.apiUrl}/agents/${id}/need-approval`, { needApproval });
+}
+getActuaryPerformances(): Observable<ActuaryPerformance[]> {
+  return this.http.get<ActuaryPerformance[]>(`${this.apiUrl}/performances`);
 }
 }
