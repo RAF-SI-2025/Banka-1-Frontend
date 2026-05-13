@@ -31,12 +31,9 @@
         <tbody>
           <tr *ngFor="let fund of fundPositions">
             <td>
-              <button
-                type="button"
-                class="font-semibold text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
-                (click)="openFundDetails(fund)">
-                {{ fund.nazivFonda }}
-              </button>
+              <span class="font-semibold">
+            {{ fund.nazivFonda }}
+</span>
             </td>
 
             <td>
