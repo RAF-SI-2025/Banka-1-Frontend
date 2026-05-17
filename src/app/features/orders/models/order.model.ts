@@ -10,6 +10,8 @@ export type OrderStatus =
   | 'DONE'
   | 'CANCELLED';
 
+export type PurchaseFor = 'INVESTMENT_FUND' | 'BANK';
+
 export interface CreateOrderRequest {
   listingId: number;
   quantity: number;
@@ -18,6 +20,8 @@ export interface CreateOrderRequest {
   allOrNone: boolean;
   margin: boolean;
   accountId: number;
+  purchaseFor?: PurchaseFor;
+  fundId?: number;
 }
 
 export interface OrderResponse {

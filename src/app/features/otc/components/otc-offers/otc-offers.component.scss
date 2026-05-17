@@ -3,3 +3,16 @@
   margin: 0 auto;
   padding: 1.5rem;
 }
+
+.otc-deviation-low {
+  color: var(--success);
+}
+
+.otc-deviation-mid {
+  color: var(--gold-600);
+}
+
+.otc-deviation-high {
+  color: var(--destructive);
+  font-weight: 700;
+}

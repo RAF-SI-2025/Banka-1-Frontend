@@ -2,14 +2,14 @@
 <div>
   <h1 class="text-2xl font-bold text-foreground mb-2">Profit Banke</h1>
   <p class="text-sm text-muted-foreground mb-5">
-    Pregled bankine zarade — kombinuje trading komisije (od izvrsenih naloga aktuara)
-    i profit od investicionih fondova.
+    Pregled bankine zarade — trading komisije i profit od investicionih fondova.
   </p>
 
   <app-state *ngIf="loading" mode="loading" text="Agregacija profit metrika..."></app-state>
   <app-state *ngIf="error" mode="error" [text]="error"></app-state>
 
   <ng-container *ngIf="!loading && !error">
+    <!-- Summary KPIs -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="z-stat-card">
         <span class="z-stat-label">Trading komisije</span>
@@ -23,13 +23,13 @@
       </div>
 
       <div class="z-stat-card">
-        <span class="z-stat-label">Fund profit</span>
+        <span class="z-stat-label">Profit iz fondova</span>
         <span class="z-stat-value"
               [class.text-success]="fundsProfit > 0"
               [class.text-destructive]="fundsProfit < 0">
-          {{ fundsProfit | number:'1.2-2' }} RSD
+          {{ fundsProfit >= 0 ? '+' : '' }}{{ fundsProfit | number:'1.2-2' }} RSD
         </span>
-        <p class="z-stat-hint">{{ funds.length }} fondova</p>
+        <p class="z-stat-hint">{{ bankPositions.length }} fond pozicija</p>
       </div>
 
       <div class="z-stat-card">
@@ -42,37 +42,85 @@
       </div>
     </section>
 
-    <h2 class="text-lg font-semibold text-foreground mb-3">Pojedinacni fondovi</h2>
+    <!-- Bank fund positions -->
+    <h2 class="text-lg font-semibold text-foreground mb-3">Pozicije banke u fondovima</h2>
 
-    <div *ngIf="funds.length > 0" class="z-card overflow-hidden">
+    <div *ngIf="bankPositions.length > 0" class="z-card overflow-hidden">
       <table class="z-table">
         <thead>
           <tr>
             <th class="text-left">Fond</th>
-            <th class="text-right">Likvidno</th>
-            <th class="text-right">Ukupno</th>
+            <th class="text-right">Ulozeno</th>
+            <th class="text-right">Tren. vrednost</th>
             <th class="text-right">Profit</th>
+            <th class="text-right">% udeo</th>
+            <th class="text-right">Akcije</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let f of funds">
-            <td class="font-medium">{{ f.naziv }}</td>
-            <td class="text-right font-mono">{{ f.likvidnaSredstva | number:'1.2-2' }}</td>
-            <td class="text-right font-mono">{{ f.totalValue | number:'1.2-2' }}</td>
+          <tr *ngFor="let p of bankPositions">
+            <td class="font-medium">
+              <a [routerLink]="['/funds', p.fundId]" class="text-primary hover:underline">
+                {{ fundName(p.fundId) }}
+              </a>
+            </td>
+            <td class="text-right font-mono">{{ p.totalInvested | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono">{{ p.currentPositionValue | number:'1.2-2' }} RSD</td>
             <td class="text-right font-mono"
-                [class.text-success]="f.profit > 0"
-                [class.text-destructive]="f.profit < 0">
-              {{ f.profit | number:'1.2-2' }}
+                [class.text-success]="p.clientProfit > 0"
+                [class.text-destructive]="p.clientProfit < 0">
+              {{ p.clientProfit >= 0 ? '+' : '' }}{{ p.clientProfit | number:'1.2-2' }} RSD
+            </td>
+            <td class="text-right">
+              <span class="z-badge z-badge-blue">{{ (p.percentageOfFund * 100) | number:'1.2-2' }}%</span>
+            </td>
+            <td class="text-right space-x-2 whitespace-nowrap">
+              <button type="button" class="z-btn-primary z-btn-sm" (click)="openInvest(p)">
+                Uplati
+              </button>
+              <button type="button" class="z-btn-destructive z-btn-sm"
+                      (click)="openRedeem(p)" [disabled]="p.currentPositionValue <= 0">
+                Povuci
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <app-state *ngIf="funds.length === 0"
-               mode="empty" icon="building" title="Nema fondova"
-               text="Banka jos uvek nema kreirane investicione fondove.">
+    <app-state *ngIf="bankPositions.length === 0"
+               mode="empty" icon="building" title="Banka nema fond pozicija"
+               text="Banka jos uvek nije investirala ni u jedan fond.">
     </app-state>
   </ng-container>
+
+  <!-- Bank invest/redeem modal -->
+  <app-form-modal *ngIf="modal.open"
+                  [title]="(modal.mode === 'invest' ? 'Uplata banke u fond' : 'Isplata banke iz fonda') + ': ' + (modal.fund?.naziv || ('Fond #' + modal.position?.fundId))"
+                  [submitting]="modal.submitting"
+                  [errorMessage]="modal.errorMessage"
+                  (close)="closeModal()"
+                  (confirm)="submitModal()">
+    <div class="z-form-row">
+      <label for="bank-amount-input" class="z-label">Iznos (RSD)</label>
+      <input id="bank-amount-input" type="number" min="0" step="0.01"
+             [(ngModel)]="modal.amount" name="amount"
+             placeholder="0.00"
+             class="z-input">
+      <p *ngIf="modal.mode === 'redeem' && modal.position" class="z-help">
+        Max: {{ modal.position.currentPositionValue | number:'1.2-2' }} RSD
+      </p>
+    </div>
+
+    <div class="z-form-row">
+      <label for="bank-account-input" class="z-label">
+        {{ modal.mode === 'invest' ? 'Bankini racun (zaduzenje)' : 'Bankini racun (uplata)' }}
+      </label>
+      <input id="bank-account-input" type="text"
+             [(ngModel)]="modal.account" name="account"
+             placeholder="Broj bankovnog racuna"
+             class="z-input font-mono">
+    </div>
+  </app-form-modal>
 </div>
 </div>

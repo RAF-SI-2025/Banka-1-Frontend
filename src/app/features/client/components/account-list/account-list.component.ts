@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Account } from '../../models/account.model';
-import { Transaction } from '../../models/transaction.model';
+import { Transaction, TransactionPage } from '../../models/transaction.model';
 import { AccountDetailsModalComponent } from '../../modals/account-details-modal/account-details-modal.component';
 import { AccountService } from '../../services/account.service';
 // PR_31 T11: shared StateComponent za loading/empty/error markup.
 import { StateComponent } from '../../../../shared/components/state/state.component';
+import { AppPaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-account-list',
   templateUrl: './account-list.component.html',
   standalone: true,
-  imports: [CommonModule, AccountDetailsModalComponent, StateComponent],
+  imports: [CommonModule, AccountDetailsModalComponent, StateComponent, AppPaginationComponent],
   styleUrls: ['./account-list.component.scss']
 })
 export class AccountListComponent implements OnInit {
@@ -25,6 +26,10 @@ export class AccountListComponent implements OnInit {
   public errorMessage = '';
   public transactions: Transaction[] = [];
   public transactionsLoading = false;
+  public transactionsPage = 0;
+  public transactionsPageSize = 10;
+  public transactionsTotalElements = 0;
+  public transactionsTotalPages = 0;
 
   constructor(
     private readonly accountService: AccountService,
@@ -78,7 +83,8 @@ export class AccountListComponent implements OnInit {
    */
   public selectAccount(account: Account): void {
     this.selectedAccount = account;
-    this.loadTransactions(account.accountNumber);
+    this.transactionsPage = 0;
+    this.loadTransactions(account.accountNumber, this.transactionsPage);
   }
 
   /**
@@ -172,17 +178,44 @@ export class AccountListComponent implements OnInit {
     return labels[account.subtype] ?? account.name;
   }
 
-  private loadTransactions(accountNumber: string): void {
+  public goToTransactionsPage(page: number): void {
+    if (
+      !this.selectedAccount ||
+      page < 0 ||
+      page === this.transactionsPage ||
+      (this.transactionsTotalPages > 0 && page >= this.transactionsTotalPages)
+    ) {
+      return;
+    }
+
+    this.transactionsPage = page;
+    this.loadTransactions(this.selectedAccount.accountNumber, page);
+  }
+
+  public getTransactionsLastItem(): number {
+    return Math.min(
+      (this.transactionsPage + 1) * this.transactionsPageSize,
+      this.transactionsTotalElements,
+    );
+  }
+
+  private loadTransactions(accountNumber: string, page = 0): void {
     this.transactionsLoading = true;
     this.transactions = [];
 
-    this.accountService.getTransactions(accountNumber, 0, 5).subscribe({
-      next: (data: Transaction[]) => {
-        this.transactions = data ?? [];
+    this.accountService.getTransactionsPage(accountNumber, page, this.transactionsPageSize).subscribe({
+      next: (data: TransactionPage) => {
+        this.transactions = data.content ?? [];
+        this.transactionsPage = data.number ?? page;
+        this.transactionsPageSize = data.size ?? this.transactionsPageSize;
+        this.transactionsTotalElements = data.totalElements ?? this.transactions.length;
+        this.transactionsTotalPages = data.totalPages ?? 0;
         this.transactionsLoading = false;
       },
       error: () => {
         this.transactions = [];
+        this.transactionsTotalElements = 0;
+        this.transactionsTotalPages = 0;
         this.transactionsLoading = false;
       }
     });

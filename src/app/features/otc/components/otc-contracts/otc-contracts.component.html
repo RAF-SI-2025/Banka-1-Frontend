@@ -19,10 +19,7 @@
                 class="z-select max-w-[200px]"
                 aria-label="Filter ugovora po statusu"
                 data-testid="status-filter">
-          <option value="ACTIVE">Vazeci</option>
-          <option value="EXERCISED">Iskorisceni</option>
-          <option value="EXPIRED">Istekli</option>
-          <option value="ALL">Svi</option>
+          <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
         </select>
 
         <!-- PR_33 Phase B: filter banaka (intra/inter-bank). -->
@@ -102,22 +99,24 @@
                 <td>
                   <span class="z-badge"
                         [ngClass]="{
-                          'z-badge-green': c.status === 'ACTIVE',
-                          'z-badge-blue': c.status === 'EXERCISED',
-                          'z-badge-gray': c.status === 'EXPIRED'
+                          'z-badge-green':  c.status === 'ACTIVE',
+                          'z-badge-yellow': c.status === 'PENDING_PREMIUM',
+                          'z-badge-blue':   c.status === 'EXERCISED',
+                          'z-badge-gray':   c.status === 'EXPIRED',
+                          'z-badge-red':    c.status === 'CANCELED'
                         }">
                     {{ c.status }}
                   </span>
                 </td>
                 <td class="text-right">
                   <button type="button"
-                          *ngIf="isActive(c)"
+                          *ngIf="canExercise(c)"
                           (click)="exercise(c)"
                           class="z-btn-gold z-btn-sm"
                           data-testid="exercise-btn">
                     Iskoristi
                   </button>
-                  <span *ngIf="!isActive(c)" class="text-xs text-muted-foreground">—</span>
+                  <span *ngIf="!canExercise(c)" class="text-xs text-muted-foreground">—</span>
                 </td>
               </tr>
             </tbody>

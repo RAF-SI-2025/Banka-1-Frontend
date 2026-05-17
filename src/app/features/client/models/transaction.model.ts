@@ -6,6 +6,8 @@ export interface Transaction {
   id: number;
   /** ID računa sa kojeg je transakcija */
   fromAccountId: number;
+  /** Broj računa sa kojeg je transakcija */
+  fromAccountNumber: string;
   /** Broj računa primaoca */
   toAccountNumber: string;
   /** Ime primaoca */

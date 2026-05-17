@@ -174,7 +174,7 @@ export class OrdersOverviewComponent implements OnInit {
       return;
     }
     const order = this.cancelTarget;
-    const raw = this.cancelQuantityInput.trim();
+    const raw = String(this.cancelQuantityInput ?? '').trim();
     let quantity: number | undefined;
 
     if (raw !== '') {

@@ -1,5 +1,6 @@
-export type OtcOfferStatus = 'PENDING_BUYER' | 'PENDING_SELLER' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
-export type OptionContractStatus = 'ACTIVE' | 'EXERCISED' | 'EXPIRED';
+export type OtcOfferStatus = 'PENDING_BUYER' | 'PENDING_SELLER' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'EXPIRED';
+export type OtcPositionStatus = 'ACTIVE' | 'REMOVED';
+export type OptionContractStatus = 'ACTIVE' | 'EXERCISED' | 'EXPIRED' | 'PENDING_PREMIUM' | 'CANCELED';
 
 export interface OtcOffer {
   id: number;
@@ -39,6 +40,44 @@ export interface CreateOtcOfferRequest {
   pricePerStock: number;
   premium: number;
   settlementDate: string;
+}
+
+/** Raw API response shape from GET /otc/public-stocks — grouped by ticker. */
+export interface OtcPublicStockGroup {
+  ticker: string;
+  sellers: {
+    sellerId: number;
+    sellerName: string;
+    availableQuantity: number;
+  }[];
+}
+
+/** Flat view-model used by the Available Stocks table (one row per seller entry). */
+export interface OtcPublicStockEntry {
+  ticker: string;
+  sellerId: number;
+  sellerName: string;
+  availableQuantity: number;
+}
+
+/** A seller's OTC position — returned by GET /otc/my-positions. */
+export interface OtcPosition {
+  id: number;
+  listingId: number;
+  stockTicker: string;
+  totalQuantity: number;
+  reservedQuantity: number;
+  publicQuantity: number;
+  availableQuantity: number;
+}
+
+export interface CreateOtcPositionRequest {
+  listingId: number;
+  publicQuantity: number;
+}
+
+export interface UpdateOtcPositionRequest {
+  publicQuantity: number;
 }
 
 export interface CounterOfferRequest {

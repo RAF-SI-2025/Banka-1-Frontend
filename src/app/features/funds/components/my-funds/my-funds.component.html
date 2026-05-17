@@ -2,60 +2,111 @@
 <div>
   <h1 class="text-2xl font-bold text-foreground mb-5">Moji fondovi</h1>
 
-  <!-- PR_19 C19.7: shared StateComponent zameni inline loading/empty/error markup. -->
-  <app-state *ngIf="loading" mode="loading" text="Ucitavanje pozicija..."></app-state>
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje..."></app-state>
   <app-state *ngIf="error" mode="error" [text]="error"></app-state>
 
-  <div *ngIf="!loading && !error && rows.length > 0" class="z-card overflow-hidden">
-    <table class="z-table">
-      <thead>
-        <tr>
-          <th class="text-left">Fond</th>
-          <th class="text-right">Ukupno ulozeno</th>
-          <th class="text-right">Trenutna vrednost fonda</th>
-          <th class="text-right">Moj % udeo</th>
-          <th class="text-left">Prva uplata</th>
-          <th class="text-right">Akcije</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let r of rows">
-          <td>
-            <a [routerLink]="['/funds', r.position.fundId]" class="text-primary hover:underline font-medium">
-              {{ r.fund?.naziv ?? ('Fond #' + r.position.fundId) }}
-            </a>
-          </td>
-          <td class="text-right font-mono">{{ r.position.totalInvested | number:'1.2-2' }} RSD</td>
-          <td class="text-right font-mono">{{ (r.fund?.totalValue ?? 0) | number:'1.2-2' }} RSD</td>
-          <td class="text-right">
-            <span class="z-badge z-badge-blue">{{ (r.pctOfFund ?? 0) | number:'1.2-2' }}%</span>
-          </td>
-          <td>{{ r.position.firstInvestedAt | date:'short' }}</td>
-          <td class="text-right space-x-2 whitespace-nowrap">
-            <button type="button" class="z-btn-primary z-btn-sm"
-                    (click)="openInvest(r)" [disabled]="!r.fund"
-                    data-testid="invest-btn">
-              Uplati
-            </button>
-            <button type="button" class="z-btn-destructive z-btn-sm"
-                    (click)="openRedeem(r)" [disabled]="!r.fund || r.position.totalInvested <= 0"
-                    data-testid="redeem-btn">
-              Povuci
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- ── Client view ── -->
+  <ng-container *ngIf="!loading && !error && !isSupervisor">
+    <div *ngIf="positions.length > 0" class="z-card overflow-hidden">
+      <table class="z-table">
+        <thead>
+          <tr>
+            <th class="text-left">Fond</th>
+            <th class="text-right">Vrednost fonda</th>
+            <th class="text-right">Ulozeno</th>
+            <th class="text-right">Tren. vrednost</th>
+            <th class="text-right">Profit</th>
+            <th class="text-right">% udeo</th>
+            <th class="text-left">Prva uplata</th>
+            <th class="text-right">Akcije</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of positions">
+            <td>
+              <a [routerLink]="['/funds', p.fundId]" class="text-primary hover:underline font-medium">
+                {{ p.fundNaziv ?? ('Fond #' + p.fundId) }}
+              </a>
+              <p *ngIf="p.fundOpis" class="text-xs text-muted-foreground mt-0.5 line-clamp-2">{{ p.fundOpis }}</p>
+            </td>
+            <td class="text-right font-mono">{{ (p.fundTotalValue ?? 0) | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono">{{ p.totalInvested | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono">{{ p.currentPositionValue | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono"
+                [class.text-success]="p.clientProfit > 0"
+                [class.text-destructive]="p.clientProfit < 0">
+              {{ p.clientProfit >= 0 ? '+' : '' }}{{ p.clientProfit | number:'1.2-2' }} RSD
+            </td>
+            <td class="text-right">
+              <span class="z-badge z-badge-blue">{{ (p.percentageOfFund * 100) | number:'1.2-2' }}%</span>
+            </td>
+            <td>{{ p.firstInvestedAt | date:'short' }}</td>
+            <td class="text-right space-x-2 whitespace-nowrap">
+              <button type="button" class="z-btn-primary z-btn-sm"
+                      (click)="openInvest(p)"
+                      data-testid="invest-btn">
+                Uplati
+              </button>
+              <button type="button" class="z-btn-destructive z-btn-sm"
+                      (click)="openRedeem(p)"
+                      [disabled]="p.currentPositionValue <= 0"
+                      data-testid="redeem-btn">
+                Povuci
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <app-state *ngIf="!loading && !error && rows.length === 0"
-             mode="empty" icon="briefcase" title="Nema pozicija"
-             text="Niste investirali ni u jedan fond. Otidite na 'Discover' za pregled dostupnih fondova.">
-  </app-state>
+    <app-state *ngIf="positions.length === 0"
+               mode="empty" icon="briefcase" title="Nema pozicija"
+               text="Niste investirali ni u jedan fond. Otidite na 'Discover' za pregled dostupnih fondova.">
+    </app-state>
+  </ng-container>
 
-  <!-- PR_19 C19.7: shared FormModalComponent zameni hand-coded native HTML modal. -->
+  <!-- ── Supervisor view ── -->
+  <ng-container *ngIf="!loading && !error && isSupervisor">
+    <div *ngIf="supervisedFunds.length > 0" class="z-card overflow-hidden">
+      <table class="z-table">
+        <thead>
+          <tr>
+            <th class="text-left">Fond</th>
+            <th class="text-right">Vrednost fonda</th>
+            <th class="text-right">Likvidnost</th>
+            <th class="text-right">Profit</th>
+            <th class="text-left">Kreiran</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of supervisedFunds">
+            <td>
+              <a [routerLink]="['/funds', f.id]" class="text-primary hover:underline font-medium">
+                {{ f.naziv }}
+              </a>
+              <p *ngIf="f.opis" class="text-xs text-muted-foreground mt-0.5 line-clamp-2">{{ f.opis }}</p>
+            </td>
+            <td class="text-right font-mono">{{ f.totalValue | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono">{{ f.likvidnaSredstva | number:'1.2-2' }} RSD</td>
+            <td class="text-right font-mono"
+                [class.text-success]="f.profit > 0"
+                [class.text-destructive]="f.profit < 0">
+              {{ f.profit >= 0 ? '+' : '' }}{{ f.profit | number:'1.2-2' }} RSD
+            </td>
+            <td>{{ f.datumKreiranja | date:'shortDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <app-state *ngIf="supervisedFunds.length === 0"
+               mode="empty" title="Nema fondova"
+               text="Ne upravljate nijednim fondom.">
+    </app-state>
+  </ng-container>
+
   <app-form-modal *ngIf="modal.open"
-                  [title]="(modal.mode === 'invest' ? 'Uplata u fond' : 'Isplata iz fonda') + ': ' + (modal.row?.fund?.naziv || '')"
+                  [title]="(modal.mode === 'invest' ? 'Uplata u fond' : 'Isplata iz fonda') + ': ' + (modal.position?.fundNaziv || '')"
                   [submitting]="modal.submitting"
                   [errorMessage]="modal.errorMessage"
                   (close)="closeModal()"
@@ -64,15 +115,11 @@
       <label for="amount-input" class="z-label">Iznos (RSD)</label>
       <input id="amount-input" type="number" min="0" step="0.01"
              [(ngModel)]="modal.amount" name="amount"
-             aria-label="Iznos transakcije u RSD"
              placeholder="0.00"
              data-testid="amount-input"
              class="z-input">
-      <p *ngIf="modal.mode === 'invest' && modal.row?.fund" class="z-help">
-        Min: {{ modal.row?.fund?.minimumContribution | number:'1.2-2' }} RSD
-      </p>
-      <p *ngIf="modal.mode === 'redeem' && modal.row" class="z-help">
-        Max: {{ modal.row?.position?.totalInvested | number:'1.2-2' }} RSD
+      <p *ngIf="modal.mode === 'redeem' && modal.position" class="z-help">
+        Max: {{ modal.position!.currentPositionValue | number:'1.2-2' }} RSD
       </p>
     </div>
 

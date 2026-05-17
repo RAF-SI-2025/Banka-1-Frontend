@@ -19,7 +19,27 @@
       </div>
     </div>
 
-    <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup (uklonjen emoji). -->
+    <!-- Filter / sort bar -->
+    <div class="flex flex-wrap items-center gap-3 mb-5">
+      <input [(ngModel)]="search" (ngModelChange)="apply()"
+             class="z-input flex-1 min-w-[200px]" placeholder="Pretrazi po nazivu ili opisu..." />
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-muted-foreground">Sortiraj:</span>
+        <button class="z-btn-outline-sm" (click)="setSort('naziv')">
+          Naziv <span *ngIf="sortField === 'naziv'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('totalValue')">
+          Vrednost <span *ngIf="sortField === 'totalValue'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('profit')">
+          Profit <span *ngIf="sortField === 'profit'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('minimumContribution')">
+          Min. ulog <span *ngIf="sortField === 'minimumContribution'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+      </div>
+    </div>
+
     <app-state *ngIf="loading" mode="loading" text="Ucitavanje fondova..."></app-state>
     <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
 

@@ -62,21 +62,69 @@
             Ako ostavite limit/stop polja prazna, koristi se market order po trenutnoj tržišnoj ceni.
           </p>
 
-          <div>
-            <label class="z-label" for="create-order-account">Račun</label>
-            <select id="create-order-account" class="z-select" [(ngModel)]="selectedAccountId">
-              <option [ngValue]="null" disabled>Izaberite račun</option>
-              <option *ngFor="let account of accounts" [ngValue]="account.accountNumber">
-                {{ account.name || account.accountNumber }} -
-                {{ account.currency }} -
-                {{ formatMoney(account.availableBalance || account.balance) }}
-              </option>
-            </select>
-            <!-- PR_31 Phase 7 T26: yellow tailwind hardkode -> z-callout-warning. -->
-            <div *ngIf="accounts.length === 0 && !isLoading" class="z-callout-warning mt-2">
-              Nema dostupnih računa za ovu operaciju.
+          <!-- Supervisor BUY: choose purchase target -->
+          <div *ngIf="isSupervisor && direction === 'BUY'">
+            <label class="z-label">Kupuje za</label>
+            <div class="flex gap-4 mt-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" [(ngModel)]="purchaseFor" value="BANK" (ngModelChange)="onPurchaseForChange()" />
+                <span>Banku</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" [(ngModel)]="purchaseFor" value="INVESTMENT_FUND" (ngModelChange)="onPurchaseForChange()" />
+                <span>Investicioni fond</span>
+              </label>
             </div>
           </div>
+
+          <!-- Fund selector (supervisor, INVESTMENT_FUND) -->
+          <div *ngIf="isSupervisor && direction === 'BUY' && purchaseFor === 'INVESTMENT_FUND'">
+            <label class="z-label" for="create-order-fund">Fond</label>
+            <select id="create-order-fund" class="z-select" [(ngModel)]="selectedFundId" (ngModelChange)="onFundChange()">
+              <option [ngValue]="null" disabled>Izaberite fond</option>
+              <option *ngFor="let f of supervisedFunds" [ngValue]="f.id">
+                {{ f.naziv }} — {{ formatMoney(f.likvidnaSredstva) }} RSD likvidno
+              </option>
+            </select>
+            <div *ngIf="supervisedFunds.length === 0" class="z-callout-warning mt-2">
+              Nemate fondova kojima upravljate.
+            </div>
+          </div>
+
+          <!-- Fund purchase: show fund account as read-only, no selector needed -->
+          <div *ngIf="isSupervisor && direction === 'BUY' && purchaseFor === 'INVESTMENT_FUND'; else accountSelector">
+            <label class="z-label">Račun fonda</label>
+            <div *ngIf="selectedFund; else noFundSelected" class="z-input font-mono bg-muted text-muted-foreground cursor-default">
+              {{ selectedFund.accountNumber }} — {{ formatMoney(selectedFund.likvidnaSredstva) }} RSD likvidno
+            </div>
+            <ng-template #noFundSelected>
+              <div class="z-input bg-muted text-muted-foreground cursor-default">Izaberite fond iznad</div>
+            </ng-template>
+            <div *ngIf="isResolvingFundAccount" class="text-xs text-muted-foreground mt-2">
+              Ucitavanje accountId za račun fonda...
+            </div>
+            <div *ngIf="fundAccountError" class="z-callout-warning mt-2">
+              {{ fundAccountError }}
+            </div>
+          </div>
+
+          <ng-template #accountSelector>
+            <div>
+              <label class="z-label" for="create-order-account">Račun</label>
+              <select id="create-order-account" class="z-select" [(ngModel)]="selectedAccountId">
+                <option [ngValue]="null" disabled>Izaberite račun</option>
+                <option *ngFor="let account of accounts" [ngValue]="account.id">
+                  {{ account.name || account.accountNumber }} -
+                  {{ account.currency }} -
+                  {{ formatMoney(account.availableBalance || account.balance) }}
+                </option>
+              </select>
+              <!-- PR_31 Phase 7 T26: yellow tailwind hardkode -> z-callout-warning. -->
+              <div *ngIf="accounts.length === 0 && !isLoading" class="z-callout-warning mt-2">
+                Nema dostupnih računa za ovu operaciju.
+              </div>
+            </div>
+          </ng-template>
 
           <label class="flex items-center gap-2">
             <input type="checkbox" [(ngModel)]="allOrNone" />
@@ -195,8 +243,16 @@
         <dt class="text-muted-foreground">Margin:</dt>
         <dd>{{ draftOrder.margin ? 'Da' : 'Ne' }}</dd>
 
-        <dt *ngIf="selectedAccount" class="text-muted-foreground">Račun:</dt>
-        <dd *ngIf="selectedAccount" class="font-mono">{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</dd>
+        <ng-container *ngIf="purchaseFor === 'INVESTMENT_FUND' && selectedFund; else showBankAccount">
+          <dt class="text-muted-foreground">Fond:</dt>
+          <dd class="font-semibold">{{ selectedFund.naziv }}</dd>
+          <dt class="text-muted-foreground">Račun fonda:</dt>
+          <dd class="font-mono">{{ selectedFund.accountNumber }}</dd>
+        </ng-container>
+        <ng-template #showBankAccount>
+          <dt *ngIf="selectedAccount" class="text-muted-foreground">Račun:</dt>
+          <dd *ngIf="selectedAccount" class="font-mono">{{ selectedAccount!.accountNumber }} ({{ selectedAccount!.currency }})</dd>
+        </ng-template>
       </dl>
     </div>
 

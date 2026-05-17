@@ -9,10 +9,14 @@ import {
   CounterOfferRequest,
   CreateInterbankNegotiationRequest,
   CreateOtcOfferRequest,
+  CreateOtcPositionRequest,
   InterbankNegotiationView,
   OptionContract,
   OptionContractStatus,
   OtcOffer,
+  OtcPosition,
+  OtcPublicStockGroup,
+  UpdateOtcPositionRequest,
 } from '../models/otc.model';
 
 /**
@@ -48,6 +52,30 @@ export class OtcService {
 
   activeForCurrentUser(): Observable<OtcOffer[]> {
     return this.http.get<OtcOffer[]>(`${this.baseUrl}/offers/active`);
+  }
+
+  getPublicStocks(): Observable<OtcPublicStockGroup[]> {
+    return this.http.get<OtcPublicStockGroup[]>(`${this.baseUrl}/public-stocks`);
+  }
+
+  getMyPositions(): Observable<OtcPosition[]> {
+    return this.http.get<OtcPosition[]>(`${this.baseUrl}/my-positions`);
+  }
+
+  createPosition(req: CreateOtcPositionRequest): Observable<OtcPosition> {
+    return this.http.post<OtcPosition>(`${this.baseUrl}/positions`, req);
+  }
+
+  updatePosition(id: number, req: UpdateOtcPositionRequest): Observable<OtcPosition> {
+    return this.http.put<OtcPosition>(`${this.baseUrl}/positions/${id}`, req);
+  }
+
+  deletePosition(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/positions/${id}`);
+  }
+
+  withdrawOffer(offerId: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/offers/${offerId}/withdraw`, null);
   }
 
   exercise(contractId: number): Observable<void> {

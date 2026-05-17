@@ -1,6 +1,6 @@
 /**
  * PR_11 C11.11: OTC vizualizacija odstupanja po spec-u Celina 4.txt:
- *   - zelena: ±5%
+ *   - zelena: <±5%
  *   - zuta:   ±5–20%
  *   - crvena: >±20%
  *
@@ -14,7 +14,7 @@ export type DeviationLevel = 'GREEN' | 'YELLOW' | 'RED';
 export function deviationLevel(offerPrice: number, marketPrice: number): DeviationLevel {
   if (marketPrice <= 0) return 'YELLOW';
   const pct = Math.abs((offerPrice - marketPrice) / marketPrice) * 100;
-  if (pct <= 5) return 'GREEN';
+  if (pct < 5) return 'GREEN';
   if (pct <= 20) return 'YELLOW';
   return 'RED';
 }

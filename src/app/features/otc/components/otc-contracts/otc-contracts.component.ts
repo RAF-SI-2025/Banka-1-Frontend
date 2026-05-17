@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { OtcService } from '../../services/otc.service';
 import { StockPriceService } from '../../services/stock-price.service';
 import { OptionContract, OptionContractStatus } from '../../models/otc.model';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface OptionContractView {
   id: number;
@@ -57,15 +58,23 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
   error: string | null = null;
 
   statusFilter = new FormControl<OptionContractStatus | 'ALL'>('ACTIVE');
+  readonly statusOptions: Array<{ value: OptionContractStatus | 'ALL'; label: string }> = [
+    { value: 'ACTIVE',          label: 'Važeći' },
+    { value: 'PENDING_PREMIUM', label: 'Čeka premiju' },
+    { value: 'EXERCISED',       label: 'Iskorišćeni' },
+    { value: 'EXPIRED',         label: 'Istekli' },
+    { value: 'CANCELED',        label: 'Otkazani' },
+    { value: 'ALL',             label: 'Svi' },
+  ];
   /** PR_33 Phase B: filter banaka (intra/inter-bank). */
   bankFilter: OtcContractFilterMode = 'all';
 
   private priceSub?: Subscription;
-  private currentUserId = Number(localStorage.getItem('userId') || 0);
 
   constructor(
     private otcService: OtcService,
     private stockPriceService: StockPriceService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -123,8 +132,10 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
     });
   }
 
-  isActive(c: OptionContractView): boolean {
-    return c.status === 'ACTIVE' && new Date(c.settlementDate) >= new Date();
+  canExercise(c: OptionContractView): boolean {
+    return c.status === 'ACTIVE'
+      && new Date(c.settlementDate) >= new Date()
+      && c.counterpartyRole === 'SELLER'; // I am the buyer
   }
 
   /**
@@ -152,7 +163,7 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
   }
 
   private toView(c: OptionContract): OptionContractView {
-    const iAmBuyer = c.buyerId === this.currentUserId;
+    const iAmBuyer = c.buyerId === this.authService.getUserIdFromToken();
     return {
       id: c.id,
       stockTicker: c.stockTicker,

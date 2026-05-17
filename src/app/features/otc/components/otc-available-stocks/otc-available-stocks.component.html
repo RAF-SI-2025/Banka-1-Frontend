@@ -1,0 +1,163 @@
+<div>
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje dostupnih akcija..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+
+    <!-- Banka 2 public-stock discovery (collapsible) -->
+    <div class="z-card p-4 mb-6">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 class="text-base font-semibold text-foreground">
+            <span class="z-badge z-badge-gold mr-2">Banka 2</span>
+            Javne akcije iz partner banke
+          </h2>
+          <p class="text-xs text-muted-foreground mt-0.5">
+            Prikaži ponude iz Banke 2 i pripremi cross-bank pregovor.
+          </p>
+        </div>
+        <button type="button" class="z-btn-outline z-btn-sm" (click)="toggleBanka2Section()">
+          {{ banka2Expanded ? 'Sakrij' : 'Prikaži' }}
+        </button>
+      </div>
+
+      <ng-container *ngIf="banka2Expanded">
+        <hr class="my-3 border-border" />
+        <app-state *ngIf="banka2Loading" mode="loading" text="Ucitavam Banka 2 javne akcije..."></app-state>
+        <app-state *ngIf="banka2Error && !banka2Loading" mode="error" [text]="banka2Error"></app-state>
+        <app-state *ngIf="!banka2Loading && !banka2Error && banka2PublicStock.length === 0"
+                   mode="empty" title="Banka 2 trenutno nema javnih akcija"
+                   text="Pokusajte ponovo kasnije."></app-state>
+
+        <div *ngIf="!banka2Loading && banka2PublicStock.length > 0" class="overflow-x-auto">
+          <table class="z-table min-w-[720px]">
+            <thead>
+              <tr>
+                <th>Akcija</th>
+                <th>Prodavac (Banka 2)</th>
+                <th class="text-right">Dostupno</th>
+                <th class="text-right">Cena/akciji</th>
+                <th class="text-right">Akcije</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let row of banka2PublicStock">
+                <tr *ngFor="let s of row.sellers">
+                  <td class="font-semibold">{{ row.ticker }}</td>
+                  <td><span class="font-mono">{{ s.id }}</span></td>
+                  <td class="text-right font-mono">{{ s.amount | number }}</td>
+                  <td class="text-right font-mono">{{ s.pricePerUnit | number:'1.2-2' }} {{ s.currency }}</td>
+                  <td class="text-right">
+                    <a class="z-btn-gold z-btn-sm"
+                       [routerLink]="['/otc/create']"
+                       [queryParams]="{ mode: 'banka2', ticker: row.ticker, sellerForeignId: s.id }">
+                      Pripremi ponudu
+                    </a>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Local public offers -->
+    <app-state *ngIf="entries.length === 0"
+               mode="empty" title="Nema dostupnih akcija za OTC trading"
+               text="Prodavci još nisu izložili akcije. Proverite ponovo kasnije."></app-state>
+
+    <div *ngIf="entries.length > 0" class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">OTC Marketplace</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Akcije izložene za OTC pregovore. Kliknite "Pošalji ponudu" da inicirate pregovor.</p>
+        </div>
+        <span class="z-badge z-badge-blue">{{ entries.length }} ponuda</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[820px]">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Prodavac</th>
+              <th class="text-right">Dostupno</th>
+              <th class="text-right">Tržišna cena</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of entries">
+              <td class="font-semibold font-mono">{{ e.ticker }}</td>
+              <td>{{ e.sellerName }}</td>
+              <td class="text-right font-mono">{{ e.availableQuantity | number }}</td>
+              <td class="text-right font-mono">
+                {{ marketPriceFor(e.ticker) ? (marketPriceFor(e.ticker) | number:'1.2-2') + ' USD' : '—' }}
+              </td>
+              <td class="text-right">
+                <button type="button" class="z-btn-gold z-btn-sm" (click)="openSendOffer(e)">
+                  Pošalji ponudu
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Send Offer modal -->
+<div *ngIf="offerTarget" class="z-overlay" (click)="closeSendOffer()">
+  <div class="z-modal w-full max-w-md" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div>
+        <h2 class="text-lg font-semibold">Pošalji ponudu — {{ offerTarget.ticker }}</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Prodavac: {{ offerTarget.sellerName || ('#' + offerTarget.sellerId) }} · Dostupno: {{ offerTarget.availableQuantity | number }}
+        </p>
+      </div>
+      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none"
+              (click)="closeSendOffer()" aria-label="Zatvori">
+        <span>&times;</span>
+      </button>
+    </div>
+    <div class="z-modal-body space-y-4">
+      <div>
+        <label for="offerQuantity" class="z-label">Količina akcija</label>
+        <input id="offerQuantity" name="offerQuantity" class="z-input" type="number" min="1"
+               [max]="offerTarget.availableQuantity"
+               placeholder="Broj akcija" [(ngModel)]="offerDraft.quantity" />
+      </div>
+      <div>
+        <label for="offerPrice" class="z-label">Cena po akciji</label>
+        <input id="offerPrice" name="offerPrice" class="z-input" type="number" min="0.01" step="0.01"
+               placeholder="0.00" [(ngModel)]="offerDraft.pricePerStock" />
+        <p class="text-xs text-muted-foreground mt-1">
+          Tržišna cena: {{ marketPriceFor(offerTarget.ticker) ? (marketPriceFor(offerTarget.ticker) | number:'1.2-2') + ' USD' : '—' }}
+        </p>
+      </div>
+      <div>
+        <label for="offerPremium" class="z-label">Premium</label>
+        <input id="offerPremium" name="offerPremium" class="z-input" type="number" min="0" step="0.01"
+               placeholder="0.00" [(ngModel)]="offerDraft.premium" />
+        <p class="text-xs text-muted-foreground mt-1">Iznos koji plaćate odmah za pravo na opciju.</p>
+      </div>
+      <div>
+        <label for="offerSettlement" class="z-label">Datum isteka opcije</label>
+        <input id="offerSettlement" name="offerSettlement" class="z-input" type="date"
+               [(ngModel)]="offerDraft.settlementDate" />
+      </div>
+      <p *ngIf="offerError" class="z-error">{{ offerError }}</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="z-btn-outline" (click)="closeSendOffer()" [disabled]="offerSubmitting">
+          Odustani
+        </button>
+        <button type="button" class="z-btn-gold" (click)="submitSendOffer()" [disabled]="offerSubmitting">
+          {{ offerSubmitting ? 'Slanje...' : 'Pošalji ponudu' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

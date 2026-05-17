@@ -1,0 +1,133 @@
+<div>
+  <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+    <div>
+      <p class="text-sm text-muted-foreground mt-1">
+        Akcije koje ste izložili za OTC trading. Kupci mogu da iniciraju pregovore sa vama.
+      </p>
+    </div>
+    <button type="button" class="z-btn-gold" (click)="openAdd()">
+      <span aria-hidden="true">＋</span>
+      Dodaj akcije u OTC
+    </button>
+  </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje OTC pozicija..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <app-state *ngIf="positions.length === 0"
+               mode="empty" title="Nemate OTC pozicija"
+               text='Kliknite "Dodaj akcije u OTC" da izložite akcije za pregovore.'></app-state>
+
+    <div *ngIf="positions.length > 0" class="z-card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[720px]">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th class="text-right">Ukupno</th>
+              <th class="text-right">Javno izloženo</th>
+              <th class="text-right">Rezervisano</th>
+              <th class="text-right">Slobodno</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of positions">
+              <td class="font-semibold font-mono">{{ p.stockTicker }}</td>
+              <td class="text-right font-mono">{{ p.totalQuantity | number }}</td>
+              <td class="text-right font-mono">{{ p.publicQuantity | number }}</td>
+              <td class="text-right font-mono">
+                <span [ngClass]="p.reservedQuantity > 0 ? 'text-warning font-semibold' : 'text-muted-foreground'">
+                  {{ p.reservedQuantity | number }}
+                </span>
+              </td>
+              <td class="text-right font-mono font-semibold">{{ p.availableQuantity | number }}</td>
+              <td class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button type="button" class="z-btn-secondary z-btn-sm" (click)="openEdit(p)">
+                    Uredi
+                  </button>
+                  <button type="button" class="z-btn-outline z-btn-sm" (click)="remove(p)">
+                    Ukloni
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Add modal -->
+<div *ngIf="addOpen" class="z-overlay" (click)="closeAdd()">
+  <div class="z-modal w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <h2 class="text-lg font-semibold">Dodaj akcije u OTC</h2>
+      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none"
+              (click)="closeAdd()" aria-label="Zatvori">
+        <span>&times;</span>
+      </button>
+    </div>
+    <div class="z-modal-body space-y-4">
+      <div>
+        <label for="addListingId" class="z-label">ID portfolio pozicije</label>
+        <input id="addListingId" name="addListingId" class="z-input" type="number" min="1"
+               placeholder="42" [(ngModel)]="addDraft.listingId" />
+        <p class="text-xs text-muted-foreground mt-1">Numerički ID iz vašeg portfolio-a.</p>
+      </div>
+      <div>
+        <label for="addQty" class="z-label">Javna količina</label>
+        <input id="addQty" name="addQty" class="z-input" type="number" min="1"
+               placeholder="0" [(ngModel)]="addDraft.publicQuantity" />
+        <p class="text-xs text-muted-foreground mt-1">Ne možete izložiti više nego što posedujete.</p>
+      </div>
+      <p *ngIf="addError" class="z-error">{{ addError }}</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="z-btn-outline" (click)="closeAdd()" [disabled]="addSubmitting">
+          Odustani
+        </button>
+        <button type="button" class="z-btn-gold" (click)="submitAdd()" [disabled]="addSubmitting">
+          {{ addSubmitting ? 'Dodavanje...' : 'Dodaj' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div *ngIf="editTarget" class="z-overlay" (click)="closeEdit()">
+  <div class="z-modal w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div>
+        <h2 class="text-lg font-semibold">Uredi poziciju — {{ editTarget.stockTicker }}</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Rezervisano: {{ editTarget.reservedQuantity | number }}</p>
+      </div>
+      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none"
+              (click)="closeEdit()" aria-label="Zatvori">
+        <span>&times;</span>
+      </button>
+    </div>
+    <div class="z-modal-body space-y-4">
+      <div>
+        <label for="editQty" class="z-label">Nova javna količina</label>
+        <input id="editQty" name="editQty" class="z-input" type="number" min="1"
+               [(ngModel)]="editPublicQuantity" />
+        <p class="text-xs text-muted-foreground mt-1">
+          Minimum: {{ editTarget.reservedQuantity | number }} (trenutno rezervisano).
+        </p>
+      </div>
+      <p *ngIf="editError" class="z-error">{{ editError }}</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="z-btn-outline" (click)="closeEdit()" [disabled]="editSubmitting">
+          Odustani
+        </button>
+        <button type="button" class="z-btn-primary" (click)="submitEdit()" [disabled]="editSubmitting">
+          {{ editSubmitting ? 'Čuvanje...' : 'Sačuvaj' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

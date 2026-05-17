@@ -4,21 +4,23 @@ import { FundService } from '../../services/fund.service';
 import { InvestmentFund } from '../../models/fund.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
+type SortField = 'naziv' | 'totalValue' | 'profit' | 'minimumContribution';
+type SortDir = 'asc' | 'desc';
+
 @Component({
   selector: 'app-fund-discovery',
   templateUrl: './fund-discovery.component.html',
 })
 export class FundDiscoveryComponent implements OnInit {
+  private allFunds: InvestmentFund[] = [];
   funds: InvestmentFund[] = [];
   loading = false;
   error: string | null = null;
-
-  /**
-   * PR_31 T28: supervisor-only "Kreiraj fond" CTA u listing-u.
-   * Gating se vezuje na `FUND_AGENT_MANAGE` permisiju — isti guard koristi route /funds/create
-   * (funds.module.ts roleGuard). Bez ove permisije CTA se ne renderuje.
-   */
   canCreateFund = false;
+
+  search = '';
+  sortField: SortField = 'naziv';
+  sortDir: SortDir = 'asc';
 
   constructor(
     private fundService: FundService,
@@ -29,8 +31,34 @@ export class FundDiscoveryComponent implements OnInit {
     this.canCreateFund = this.authService.hasPermission('FUND_AGENT_MANAGE');
     this.loading = true;
     this.fundService.discovery().subscribe({
-      next: list => { this.funds = list; this.loading = false; },
+      next: list => { this.allFunds = list; this.apply(); this.loading = false; },
       error: err => { this.error = err?.error?.message || 'Greska.'; this.loading = false; },
     });
+  }
+
+  apply(): void {
+    const q = this.search.trim().toLowerCase();
+    let result = q
+      ? this.allFunds.filter(f => f.naziv.toLowerCase().includes(q) || (f.opis || '').toLowerCase().includes(q))
+      : [...this.allFunds];
+
+    result.sort((a, b) => {
+      const av = a[this.sortField] as string | number;
+      const bv = b[this.sortField] as string | number;
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return this.sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    this.funds = result;
+  }
+
+  setSort(field: SortField): void {
+    if (this.sortField === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir = 'asc';
+    }
+    this.apply();
   }
 }

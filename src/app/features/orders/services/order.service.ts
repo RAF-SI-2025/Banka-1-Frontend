@@ -6,7 +6,7 @@ import { CreateOrderRequest, OrderResponse } from '../models/order.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
-  private readonly baseUrl = `${environment.apiUrl}/order/orders`;
+  private readonly baseUrl = `${environment.apiUrl}/orders`;
 
   constructor(private readonly http: HttpClient) {}
 

@@ -2,14 +2,14 @@ import { deviationLevel, deviationColorClass, deviationLabel } from './deviation
 
 describe('OTC deviation utility', () => {
   describe('deviationLevel', () => {
-    it('vraca GREEN za odstupanje do +/-5%', () => {
+    it('vraca GREEN za odstupanje manje od +/-5%', () => {
       expect(deviationLevel(100, 100)).toBe('GREEN');
       expect(deviationLevel(104, 100)).toBe('GREEN');
       expect(deviationLevel(96, 100)).toBe('GREEN');
-      expect(deviationLevel(105, 100)).toBe('GREEN');
     });
 
-    it('vraca YELLOW za odstupanje +/-5% do +/-20%', () => {
+    it('vraca YELLOW za odstupanje od +/-5% do +/-20%', () => {
+      expect(deviationLevel(105, 100)).toBe('YELLOW');
       expect(deviationLevel(110, 100)).toBe('YELLOW');
       expect(deviationLevel(85, 100)).toBe('YELLOW');
       expect(deviationLevel(120, 100)).toBe('YELLOW');

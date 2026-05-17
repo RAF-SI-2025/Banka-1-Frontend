@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Account, ChangeLimitDto } from '../models/account.model';
-import { Transaction } from '../models/transaction.model';
+import { Transaction, TransactionPage } from '../models/transaction.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -45,6 +45,29 @@ export class AccountService {
     return this.http.get<any>(
       `${environment.apiUrl}/accounts/employee/accounts`,
       { params },
+    );
+  }
+
+  getEmployeeAccountByNumber(accountNumber: string): Observable<Account> {
+    const params = new HttpParams()
+      .set('page', '0')
+      .set('size', '50');
+
+    return this.http.get<any>(
+      `${environment.apiUrl}/accounts/employee/accounts`,
+      { params },
+    ).pipe(
+      map((res) => {
+        const match = (res.content ?? []).find((item: any) =>
+          (item.brojRacuna ?? item.accountNumber ?? '').trim() === accountNumber
+        );
+
+        if (!match) {
+          throw new Error(`Account ${accountNumber} not found`);
+        }
+
+        return this.mapToAccountFromEmployee(match);
+      }),
     );
   }
 
@@ -89,6 +112,38 @@ export class AccountService {
     } as Account;
   }
 
+  private mapToAccountFromEmployee(item: any): Account {
+    const ownerName = `${item.ime || ''} ${item.prezime || ''}`.trim();
+    const accountNumber = (item.brojRacuna || item.accountNumber || '').trim();
+    const id = Number(item.id ?? item.accountId ?? item.accountID ?? 0);
+
+    return {
+      id,
+      name: ownerName,
+      accountNumber,
+      balance: Number(item.stanje ?? item.stanjeRacuna ?? item.balance ?? 0),
+      availableBalance: Number(item.raspolozivoStanje ?? item.availableBalance ?? 0),
+      reservedFunds: Number(item.rezervisanaSredstva ?? item.reservedFunds ?? 0),
+      currency: item.currency || (item.tekuciIliDevizni === 'devizni' ? 'EUR' : 'RSD'),
+      status: item.status || 'ACTIVE',
+      subtype: this.mapToSubtypeFromClient(
+        item.subtype,
+        item.accountType,
+        item.accountCategory,
+      ),
+      ownerId: Number(item.vlasnik ?? item.ownerId ?? 0),
+      ownerName,
+      employeeId: Number(item.zaposlen ?? item.employeeId ?? 0),
+      maintenanceFee: Number(item.mesecnoOdrzavanje ?? item.maintenanceFee ?? 0),
+      dailyLimit: Number(item.dnevniLimit ?? item.dailyLimit ?? 0),
+      monthlyLimit: Number(item.mesecniLimit ?? item.monthlyLimit ?? 0),
+      dailySpending: Number(item.dnevnaPotrosnja ?? item.dailySpending ?? 0),
+      monthlySpending: Number(item.mesecnaPotrosnja ?? item.monthlySpending ?? 0),
+      createdAt: item.datumIVremeKreiranja ?? item.creationDate ?? new Date().toISOString(),
+      expiryDate: item.datumIsteka ?? item.expirationDate ?? '',
+    } as Account;
+  }
+
   private mapToSubtypeFromClient(
     subtype: string,
     accountType: string,
@@ -129,6 +184,16 @@ export class AccountService {
     page = 0,
     size = 5,
   ): Observable<Transaction[]> {
+    return this.getTransactionsPage(accountNumber, page, size).pipe(
+      map((res) => res.content),
+    );
+  }
+
+  getTransactionsPage(
+    accountNumber: string,
+    page = 0,
+    size = 10,
+  ): Observable<TransactionPage> {
     return this.http
       .get<any>(
         `${environment.apiUrl}/transactions/accounts/${accountNumber}`,
@@ -136,18 +201,29 @@ export class AccountService {
           params: { page: page.toString(), size: size.toString() },
         },
       )
-      .pipe(map((res) => (res.content ?? []).map((item: any): Transaction => ({
-        id: 0,
-        fromAccountId: 0,
-        toAccountNumber: item.toAccountNumber ?? '',
-        recipientName: item.recipientName ?? '',
-        amount: item.finalAmount ?? item.amount ?? 0,
-        currency: item.fromCurrency ?? item.currency ?? 'RSD',
-        status: item.status ?? 'COMPLETED',
-        description: item.paymentPurpose ?? item.description ?? '',
-        createdAt: item.createdAt ?? '',
-        type: item.type ?? 'PAYMENT',
-      }))));
+      .pipe(map((res): TransactionPage => ({
+        content: (res.content ?? []).map((item: any) => this.mapToTransaction(item)),
+        totalElements: res.totalElements ?? 0,
+        totalPages: res.totalPages ?? 0,
+        number: res.number ?? page,
+        size: res.size ?? size,
+      })));
+  }
+
+  private mapToTransaction(item: any): Transaction {
+    return {
+      id: 0,
+      fromAccountId: 0,
+      fromAccountNumber: item.fromAccountNumber ?? '',
+      toAccountNumber: item.toAccountNumber ?? '',
+      recipientName: item.recipientName ?? '',
+      amount: item.initialAmount ?? item.amount ?? 0,
+      currency: item.fromCurrency ?? item.currency ?? 'RSD',
+      status: item.status ?? 'COMPLETED',
+      description: item.paymentPurpose ?? item.description ?? '',
+      createdAt: item.createdAt ?? '',
+      type: item.type ?? 'PAYMENT',
+    };
   }
 
   renameAccount(accountNumber: string, name: string): Observable<void> {
