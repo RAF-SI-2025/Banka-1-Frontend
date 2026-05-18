@@ -29,12 +29,14 @@
           <div>
             <label class="z-label">Email</label>
             <input type="email" formControlName="email" class="z-input" [class.border-red-500]="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" />
-            <p *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched" class="text-xs text-red-500 mt-1">Unesite validan email.</p>
+            <p *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched" class="text-xs text-red-500 mt-1">Validan email je obavezan.</p>
+            <p *ngIf="clientForm.get('email')?.hasError('invalidEmailFormat') && clientForm.get('email')?.touched" class="text-xs text-red-500 mt-1">Email mora biti validnog formata (npr. banka@primer.rs).</p>
             <p *ngIf="backendEmailError" class="text-xs text-red-500 mt-1">{{ backendEmailError }}</p>
           </div>
           <div>
             <label class="z-label">Broj telefona</label>
-            <input type="text" formControlName="brojTelefona" class="z-input" />
+            <input type="text" formControlName="brojTelefona" class="z-input" [class.border-red-500]="clientForm.get('brojTelefona')?.invalid && clientForm.get('brojTelefona')?.touched" />
+            <p *ngIf="clientForm.get('brojTelefona')?.hasError('invalidPhoneFormat') && clientForm.get('brojTelefona')?.touched" class="text-xs text-red-500 mt-1">Broj telefona može sadržavati samo cifre i opciono + na početku.</p>
           </div>
           <div class="md:col-span-2">
             <label class="z-label">Adresa</label>

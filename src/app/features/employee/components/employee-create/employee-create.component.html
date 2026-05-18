@@ -41,6 +41,9 @@
           <div>
             <label for="datumRodjenja" class="z-label">Datum rođenja <span class="text-destructive">*</span></label>
             <input id="datumRodjenja" type="date" formControlName="datumRodjenja" class="z-input" />
+            <p class="z-error" *ngIf="employeeForm.get('datumRodjenja')?.touched && employeeForm.get('datumRodjenja')?.hasError('futureDate')">
+              Datum rođenja ne sme biti u budućnosti.
+            </p>
           </div>
           <div>
             <label for="pol" class="z-label">Pol <span class="text-destructive">*</span></label>
@@ -62,13 +65,19 @@
           <div>
             <label for="email" class="z-label">Email <span class="text-destructive">*</span></label>
             <input id="email" type="email" formControlName="email" placeholder="Unesite email adresu" class="z-input" />
-            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.invalid">
+            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.hasError('email')">
               Validan email je obavezan.
+            </p>
+            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.hasError('invalidEmailFormat')">
+              Email mora biti validnog formata (npr. banka@primer.rs).
             </p>
           </div>
           <div>
             <label for="brojTelefona" class="z-label">Broj telefona <span class="text-destructive">*</span></label>
-            <input id="brojTelefona" type="text" formControlName="brojTelefona" placeholder="+381..." class="z-input" />
+            <input id="brojTelefona" type="text" formControlName="brojTelefona" placeholder="+381 (60) 123 4567" class="z-input" />
+            <p class="z-error" *ngIf="employeeForm.get('brojTelefona')?.touched && employeeForm.get('brojTelefona')?.hasError('invalidPhoneFormat')">
+              Broj telefona može sadržavati samo cifre i opciono + na početku.
+            </p>
           </div>
           <div class="md:col-span-2">
             <label for="adresa" class="z-label">Adresa</label>

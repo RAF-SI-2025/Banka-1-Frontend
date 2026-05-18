@@ -107,6 +107,9 @@
         <div>
           <label class="z-label" for="rc-ap-dob">Datum rođenja</label>
           <input id="rc-ap-dob" class="z-input" type="date" [(ngModel)]="authorizedPerson.dateOfBirth" title="Datum rođenja" />
+          <p class="text-xs text-red-500 mt-1" *ngIf="authorizedPerson.dateOfBirth && !isValidDateOfBirth(authorizedPerson.dateOfBirth)">
+            Datum rođenja ne sme biti u budućnosti.
+          </p>
         </div>
 
         <div>
@@ -121,11 +124,17 @@
         <div>
           <label class="z-label" for="rc-ap-email">Email adresa</label>
           <input id="rc-ap-email" class="z-input" type="email" [(ngModel)]="authorizedPerson.email" placeholder="ime@primer.com" title="Email adresa" />
+          <p class="text-xs text-red-500 mt-1" *ngIf="authorizedPerson.email && !isValidEmail(authorizedPerson.email)">
+            Email mora biti validnog formata (npr. ime@primer.rs).
+          </p>
         </div>
 
         <div>
           <label class="z-label" for="rc-ap-phone">Broj telefona</label>
           <input id="rc-ap-phone" class="z-input" type="text" [(ngModel)]="authorizedPerson.phone" placeholder="+381 60 123 4567" title="Broj telefona" />
+          <p class="text-xs text-red-500 mt-1" *ngIf="authorizedPerson.phone && !isValidPhone(authorizedPerson.phone)">
+            Broj telefona može sadržavati samo cifre i opciono + na početku.
+          </p>
         </div>
 
         <div class="sm:col-span-2">

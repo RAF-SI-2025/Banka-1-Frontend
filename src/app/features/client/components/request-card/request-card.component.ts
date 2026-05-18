@@ -195,15 +195,62 @@ export class RequestCardComponent implements OnInit {
 
     if (
       this.isBusinessSelected() &&
-      this.recipientType === 'AUTHORIZED_PERSON' &&
-      !this.isAuthorizedPersonValid()
+      this.recipientType === 'AUTHORIZED_PERSON'
     ) {
-      this.errorMessage = 'Popunite sva polja za ovlašćeno lice.';
-      return;
+      const apValidationError = this.validateAuthorizedPerson();
+      if (apValidationError) {
+        this.errorMessage = apValidationError;
+        return;
+      }
     }
 
     this.sendVerificationCode();
     this.step = 2;
+  }
+
+  /**
+   * Validira ovlašćeno lice i vraća error poruku ako nije validno
+   */
+  private validateAuthorizedPerson(): string | null {
+    const p = this.authorizedPerson;
+
+    if (!p.firstName.trim()) {
+      return 'Ime ovlašćenog lica je obavezno.';
+    }
+
+    if (!p.lastName.trim()) {
+      return 'Prezime ovlašćenog lica je obavezno.';
+    }
+
+    if (!p.dateOfBirth) {
+      return 'Datum rođenja ovlašćenog lica je obavezan.';
+    }
+
+    if (!this.isValidDateOfBirth(p.dateOfBirth)) {
+      return 'Datum rođenja ne sme biti u budućnosti.';
+    }
+
+    if (!p.email.trim()) {
+      return 'Email ovlašćenog lica je obavezan.';
+    }
+
+    if (!this.isValidEmail(p.email)) {
+      return 'Email mora biti validnog formata (npr. ime@primer.rs).';
+    }
+
+    if (!p.phone.trim()) {
+      return 'Broj telefona ovlašćenog lica je obavezan.';
+    }
+
+    if (!this.isValidPhone(p.phone)) {
+      return 'Broj telefona može sadržavati samo cifre i opciono + na početku.';
+    }
+
+    if (!p.address.trim()) {
+      return 'Adresa ovlašćenog lica je obavezna.';
+    }
+
+    return null;
   }
 
   public resendVerificationCode(): void {
@@ -393,7 +440,41 @@ export class RequestCardComponent implements OnInit {
       p.gender &&
       p.email.trim() &&
       p.phone.trim() &&
-      p.address.trim()
+      p.address.trim() &&
+      this.isValidEmail(p.email) &&
+      this.isValidPhone(p.phone) &&
+      this.isValidDateOfBirth(p.dateOfBirth)
     );
+  }
+
+  /**
+   * Proverava da li je email validan
+   */
+  public isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * Proverava da li je telefon validan
+   */
+  public isValidPhone(phone: string): boolean {
+    const phoneRegex = /^(\+)?[0-9\s\-\(\)]{6,20}$/;
+    if (!phoneRegex.test(phone)) {
+      return false;
+    }
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 6;
+  }
+
+  /**
+   * Proverava da li datum nije u budućnosti
+   */
+  public isValidDateOfBirth(date: string): boolean {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return selectedDate <= today;
   }
 }

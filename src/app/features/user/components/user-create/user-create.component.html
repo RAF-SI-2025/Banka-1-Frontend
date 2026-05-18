@@ -48,8 +48,8 @@
             name="dateOfBirth"
             required
           />
-          <p class="z-error" *ngIf="userForm.submitted && !dateOfBirth">
-            Datum rođenja je obavezan.
+          <p class="z-error" *ngIf="userForm.submitted && validationErrors['dateOfBirth']">
+            {{ validationErrors['dateOfBirth'] }}
           </p>
         </div>
 
@@ -80,10 +80,10 @@
             [(ngModel)]="email"
             name="email"
             required
-            placeholder="Unesite email"
+            placeholder="Unesite email (npr. banka@primer.rs)"
           />
-          <p class="z-error" *ngIf="userForm.submitted && !email">
-            Email je obavezan.
+          <p class="z-error" *ngIf="userForm.submitted && validationErrors['email']">
+            {{ validationErrors['email'] }}
           </p>
         </div>
 
@@ -95,8 +95,11 @@
             class="z-input"
             [(ngModel)]="phone"
             name="phone"
-            placeholder="+381..."
+            placeholder="+381 (60) 123 4567"
           />
+          <p class="z-error" *ngIf="userForm.submitted && validationErrors['phone']">
+            {{ validationErrors['phone'] }}
+          </p>
         </div>
 
         <div>
@@ -131,7 +134,7 @@
         </div>
 
         <div class="pt-2">
-          <button type="submit" class="z-btn z-btn-primary z-btn-full" [disabled]="submitting">
+          <button type="submit" class="z-btn z-btn-primary z-btn-full" [disabled]="submitting || !isFormValid()">
             {{ submitting ? 'Kreiranje...' : 'Kreiraj' }}
           </button>
         </div>
