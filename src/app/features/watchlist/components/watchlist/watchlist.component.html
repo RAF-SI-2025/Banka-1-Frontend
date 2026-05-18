@@ -1,0 +1,158 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-content">
+    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+      <div>
+        <p class="text-xs font-semibold tracking-wider text-primary uppercase mb-2">
+          Trading
+        </p>
+        <h1 class="text-2xl font-bold text-foreground">Watchliste</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pratite cenu, dnevnu promenu i volumen za hartije koje su vam važne.
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card p-5 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="z-label">Izaberite watchlistu</label>
+          <select class="z-select" [(ngModel)]="selectedWatchlistId">
+            <option
+              *ngFor="let watchlist of watchlists; trackBy: trackByWatchlist"
+              [ngValue]="watchlist.id"
+            >
+              {{ watchlist.name }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="z-label">Filter po tipu hartije</label>
+          <select class="z-select" [(ngModel)]="selectedType">
+            <option *ngFor="let option of typeOptions" [ngValue]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="z-label">Nova watchlista</label>
+          <div class="flex gap-2">
+            <input
+              class="z-input"
+              type="text"
+              placeholder="npr. Tech akcije"
+              [(ngModel)]="newWatchlistName"
+              (keyup.enter)="createWatchlist()"
+            />
+
+            <button
+              type="button"
+              class="z-btn-primary whitespace-nowrap"
+              (click)="createWatchlist()"
+            >
+              Kreiraj
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="z-card p-5">
+      <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+            {{ selectedWatchlist?.name || 'Watchlista' }}
+          </p>
+          <p class="text-sm text-muted-foreground mt-1">
+            Trenutna cena, dnevna promena i volumen po hartiji.
+          </p>
+        </div>
+
+        <span class="z-badge z-badge-green">
+          {{ filteredSecurities.length }} hartija
+        </span>
+      </div>
+
+      <div
+        *ngIf="filteredSecurities.length === 0"
+        class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm"
+      >
+        <p>Ova watchlista nema hartije za izabrani filter.</p>
+        <p class="mt-1">
+          Hartije možete dodati iz portala hartija klikom na “Dodaj na watchlist”.
+        </p>
+      </div>
+
+      <div
+        *ngIf="filteredSecurities.length > 0"
+        class="overflow-x-auto rounded-xl border border-border"
+      >
+        <table class="z-table watchlist-table min-w-[1000px]">
+          <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Naziv hartije</th>
+            <th>Tip</th>
+            <th>Berza</th>
+            <th>Trenutna cena</th>
+            <th>Dnevna promena</th>
+            <th>Volumen</th>
+            <th>Akcije</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <tr *ngFor="let security of filteredSecurities; trackBy: trackBySecurity">
+            <td class="font-semibold">{{ security.ticker }}</td>
+
+            <td>{{ security.name }}</td>
+
+            <td>
+                <span class="z-badge z-badge-gray">
+                  {{ getTypeLabel(security.type) }}
+                </span>
+            </td>
+
+            <td class="text-muted-foreground">{{ security.exchange }}</td>
+
+            <td class="font-medium">
+              {{ formatPrice(security.price, security.currency) }}
+            </td>
+
+            <td [ngClass]="getChangeClass(security)">
+              {{ formatChange(security) }}
+            </td>
+
+            <td class="text-muted-foreground">
+              {{ formatVolume(security.volume) }}
+            </td>
+
+            <td>
+              <div class="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="createOrder(security)"
+                >
+                  Kreiraj order
+                </button>
+
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="removeSecurity(security)"
+                >
+                  Ukloni
+                </button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

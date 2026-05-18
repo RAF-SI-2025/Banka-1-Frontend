@@ -37,7 +37,7 @@
 </aside>
 
 <!-- Topbar -->
-<header class="fixed top-0 left-[240px] right-0 z-40 flex items-center gap-4 bg-green-900 px-6 py-2.5 overflow-hidden">
+<header class="fixed top-0 left-[240px] right-0 z-50 flex items-center gap-4 bg-green-900 px-6 py-2.5 overflow-visible">
   <!-- Header particles -->
   <div class="header-particles" aria-hidden="true">
     <span class="hp hp-1"></span>
@@ -50,19 +50,105 @@
 
   <div class="relative z-10 flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 flex-1 max-w-md">
     <span class="material-icons text-white/60 text-lg">search</span>
-    <input type="text" placeholder="Transakcije, računi, kartice..."
-           class="bg-transparent border-0 outline-none text-white text-sm w-full placeholder:text-white/40" />
+    <input
+      type="text"
+      placeholder="Transakcije, računi, kartice..."
+      class="bg-transparent border-0 outline-none text-white text-sm w-full placeholder:text-white/40"
+    />
   </div>
+
   <div class="relative z-10 flex items-center gap-2 ml-auto">
-    <button class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors" title="Obaveštenja">
+    <!-- Header watchlist quick access -->
+    <div class="relative">
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/20 bg-white/10 text-white/85 text-sm font-semibold cursor-pointer hover:bg-white/15 hover:text-white transition-all"
+        (click)="toggleWatchlistMenu()"
+        title="Brzi pristup watchlisti"
+      >
+        <span class="material-icons text-base">visibility</span>
+        <span>Watchlista</span>
+      </button>
+
+      <div
+        *ngIf="isWatchlistMenuOpen"
+        class="absolute right-0 top-full mt-2 w-[440px] max-w-[calc(100vw-320px)] rounded-xl border border-white/10 bg-green-950 text-white shadow-xl p-4 z-[9999]"
+      >
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-white/50 font-semibold">
+              Brzi pregled
+            </p>
+            <p class="text-sm font-semibold">Watchlista</p>
+          </div>
+
+          <a
+            routerLink="/watchlist"
+            class="text-xs text-green-200 hover:text-white no-underline"
+            (click)="closeWatchlistMenu()"
+          >
+            Otvori sve
+          </a>
+        </div>
+
+        <div *ngIf="watchlistPreview.length === 0" class="text-sm text-white/60 py-4">
+          Još nema hartija u watchlisti.
+        </div>
+
+        <div *ngIf="watchlistPreview.length > 0" class="space-y-2">
+          <div
+            *ngFor="let security of watchlistPreview"
+            class="rounded-lg bg-white/10 px-3 py-2"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold">{{ security.ticker }}</p>
+                <p class="text-xs text-white/50 truncate max-w-[160px]">
+                  {{ security.name }}
+                </p>
+              </div>
+
+              <div class="text-right">
+                <p class="text-sm font-semibold">
+                  {{ formatHeaderPrice(security) }}
+                </p>
+                <p class="text-xs" [ngClass]="getHeaderChangeClass(security)">
+                  {{ formatHeaderChange(security) }}
+                </p>
+              </div>
+
+              <div class="text-right hidden md:block">
+                <p class="text-[10px] text-white/40 uppercase">Volumen</p>
+                <p class="text-xs text-white/70">{{ security.volume | number }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors"
+      title="Obaveštenja"
+    >
       <span class="material-icons text-xl">notifications</span>
     </button>
+
     <span class="text-sm text-white/80 whitespace-nowrap">{{ userName || 'Dobro došli' }}</span>
-    <button class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors" routerLink="/profile" title="Profil">
+
+    <button
+      class="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center border-0 cursor-pointer hover:bg-white/20 transition-colors"
+      routerLink="/profile"
+      title="Profil"
+    >
       <span class="material-icons text-xl">account_circle</span>
     </button>
-    <button (click)="logout()"
-            class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/30 bg-transparent text-white/85 text-sm font-semibold cursor-pointer hover:bg-white/10 hover:text-white transition-all">
+
+    <button
+      (click)="logout()"
+      class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/30 bg-transparent text-white/85 text-sm font-semibold cursor-pointer hover:bg-white/10 hover:text-white transition-all"
+    >
       <span class="material-icons text-base">logout</span>
       <span>Odjava</span>
     </button>

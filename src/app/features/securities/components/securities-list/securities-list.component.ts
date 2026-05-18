@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, Subject, combineLatest, interval } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { Observable, Subject, interval } from 'rxjs';
+import { takeUntil} from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SecuritiesService } from '../../services/securities.service';
@@ -12,7 +12,6 @@ import { ExchangeManagerService } from '../../../employee/services/exchange-mana
 import { ExchangeService } from '../../../../shared/services/exchange.service';
 import {
   Security,
-  Stock,
   Future,
   Forex,
   SecuritiesFilters,
@@ -20,6 +19,8 @@ import {
   SortConfig,
   SortField,
 } from '../../models/security.model';
+import { Watchlist } from '../../../watchlist/models/watchlist.model';
+import { WatchlistService } from '../../../watchlist/services/watchlist.service';
 
 type SecurityTab = 'stocks' | 'futures' | 'forex';
 
@@ -50,6 +51,9 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   draftFilters: SecuritiesFilters = {};
   isFilterOpen = false;
 
+  watchlists: Watchlist[] = [];
+  selectedWatchlistBySecurityId: Record<number, string> = {};
+
   sortConfig: SortConfig = { field: 'ticker', direction: 'asc' };
 
   searchQuery = '';
@@ -60,7 +64,8 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly toastService: ToastService,
     private readonly exchangeService: ExchangeService,
-    private readonly exchangeManager: ExchangeManagerService
+    private readonly exchangeManager: ExchangeManagerService,
+    private readonly watchlistService: WatchlistService,
   ) {}
 
   ngOnInit(): void {
@@ -78,6 +83,12 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
       this.currentPage = 0; // Reset na prvu stranicu
       this.loadSecurities(); // Učitaj podatke
     });
+
+    this.watchlistService.watchlists$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(watchlists => {
+        this.watchlists = watchlists;
+      });
   }
 
   ngOnDestroy(): void {
@@ -321,4 +332,39 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     this.draftFilters = { ...this.filters };
     delete this.draftFilters.search;
   }
+
+  addToWatchlist(security: Security, event: Event): void {
+    event.stopPropagation();
+
+    if (this.watchlists.length === 0) {
+      const created = this.watchlistService.createWatchlist('Moja watchlista');
+      this.watchlists = [created];
+    }
+
+    const watchlistId = this.selectedWatchlistBySecurityId[security.id];
+
+    if (!watchlistId) {
+      this.toastService.error('Izaberite watchlistu.');
+      return;
+    }
+
+    if (!watchlistId) {
+      this.toastService.error('Nije pronađena watchlista.');
+      return;
+    }
+
+    if (this.watchlistService.isSecurityInWatchlist(watchlistId, security.id)) {
+      this.toastService.warning('Hartija je već dodata u izabranu watchlistu.');
+      return;
+    }
+
+    this.watchlistService.addSecurityToWatchlist(watchlistId, security);
+    this.toastService.success('Hartija je dodata u watchlistu.');
+  }
+
+  onWatchlistSelectClick(event: Event): void {
+    event.stopPropagation();
+  }
+
+
 }
