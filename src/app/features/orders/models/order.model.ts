@@ -44,3 +44,89 @@ export interface OrderResponse {
   approximatePrice: number;
   fee: number;
 }
+
+
+export type SecurityTypeFilter =
+  | 'ALL'
+  | 'STOCK'
+  | 'FOREX'
+  | 'FUTURES'
+  | 'OPTION';
+
+export type MyOrderStatusFilter =
+  | 'ALL'
+  | 'PENDING'
+  | 'APPROVED'
+  | 'DECLINED'
+  | 'DONE';
+
+export type MyOrderTypeFilter =
+  | 'ALL'
+  | 'MARKET'
+  | 'LIMIT'
+  | 'STOP'
+  | 'STOP_LIMIT';
+
+export interface MyOrder {
+  id: number;
+  orderType: OrderType;
+  ticker: string;
+  securityName: string;
+  securityType: string;
+  quantity: number;
+  executionPrice: number | null;
+  status: OrderStatus;
+  createdAt: string | null;
+  executedAt: string | null;
+  paidFee: number | null;
+}
+
+export interface MyOrdersPageResponse {
+  content: MyOrderRaw[];
+  totalElements?: number;
+  totalPages?: number;
+  number?: number;
+  size?: number;
+}
+
+export interface MyOrderRaw {
+  id?: number;
+  orderId?: number;
+
+  orderType?: OrderType;
+  type?: OrderType;
+
+  ticker?: string;
+  symbol?: string;
+  securityTicker?: string;
+  listingTicker?: string;
+
+  securityName?: string;
+  listingName?: string;
+  name?: string;
+
+  securityType?: string;
+  listingType?: string;
+  assetType?: string;
+
+  quantity?: number;
+
+  executionPrice?: number;
+  pricePerUnit?: number;
+  averageExecutionPrice?: number;
+
+  status?: OrderStatus;
+
+  createdAt?: string;
+  creationDate?: string;
+  createdDate?: string;
+  lastModification?: string;
+
+  executedAt?: string;
+  executionDate?: string;
+  doneAt?: string;
+
+  paidFee?: number;
+  fee?: number;
+  commission?: number;
+}

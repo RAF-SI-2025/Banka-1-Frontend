@@ -34,6 +34,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
     { label: 'Aktivne ponude', route: '/client/otc-offers', icon: 'handshake' },
     this.portfolioLink,
+    { label: 'Moji orderi', route: '/my-orders', icon: 'receipt_long' },
     { label: 'Krediti',    route: '/loans',               icon: 'credit_card' },
     { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
   ];
@@ -48,6 +49,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Hartije',    route: '/securities',          icon: 'trending_up' },
     { label: 'Berza',      route: '/stock-exchange',      icon: 'show_chart' },
     { label: 'Nalozi',     route: '/orders-overview',      icon: 'assignment' },
+    { label: 'Moji orderi', route: '/my-orders', icon: 'receipt_long' },
   ];
 
   private readonly supervisorLinks: NavLink[] = [
