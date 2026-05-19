@@ -27,10 +27,30 @@
 
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && stock">
-      <!-- Stock name -->
-      <h2 class="text-xl font-semibold text-foreground mb-6">
-        {{ stock.ticker }} - {{ stock.name }}
-      </h2>
+      <!-- Stock name + WP-22 (Celina 3) watchlist / price-alert header actions -->
+      <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <h2 class="text-xl font-semibold text-foreground">
+          {{ stock.ticker }} - {{ stock.name }}
+        </h2>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="z-btn-outline z-btn-sm flex items-center gap-1.5"
+            (click)="openWatchlistPicker()"
+          >
+            <lucide-icon name="star" [size]="14"></lucide-icon>
+            Dodaj na watchlist
+          </button>
+          <button
+            type="button"
+            class="z-btn-outline z-btn-sm flex items-center gap-1.5"
+            (click)="openAlertModal()"
+          >
+            <lucide-icon name="bell" [size]="14"></lucide-icon>
+            Postavi obavestenje
+          </button>
+        </div>
+      </div>
 
       <!-- Main info card with chart -->
       <div class="z-card mb-6">
@@ -232,3 +252,17 @@
     </div>
   </div>
 </div>
+
+<!-- WP-22 (Celina 3): watchlist picker + create-alert modals. -->
+<app-watchlist-picker
+  *ngIf="watchlistPickerOpen && listingId !== null"
+  [listingId]="listingId"
+  (close)="closeWatchlistPicker()"
+></app-watchlist-picker>
+<app-create-alert-modal
+  *ngIf="alertModalOpen && listingId !== null"
+  [listingId]="listingId"
+  [ticker]="stock?.ticker || ''"
+  (close)="closeAlertModal()"
+></app-create-alert-modal>
+

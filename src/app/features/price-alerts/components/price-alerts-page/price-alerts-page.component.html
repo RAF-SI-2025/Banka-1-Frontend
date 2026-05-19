@@ -1,0 +1,61 @@
+<!-- WP-22 (Celina 3): price-alerts management page. -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-foreground">Cenovni alarmi</h1>
+  </div>
+
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje obavestenja..."></app-state>
+  <app-state *ngIf="!isLoading && error" mode="error" [text]="error"></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && alerts.length === 0"
+    mode="empty"
+    icon="bell"
+    title="Nema obavestenja"
+    text="Postavite obavestenje sa stranice hartije od vrednosti."
+  ></app-state>
+
+  <div *ngIf="!isLoading && !error && alerts.length > 0" class="z-card">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th>HARTIJA</th>
+          <th>USLOV</th>
+          <th class="text-right">PRAG</th>
+          <th>KANAL</th>
+          <th>STANJE</th>
+          <th>AKCIJA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of alerts; trackBy: trackByAlert">
+          <td>
+            <a [routerLink]="detailLink(a)" class="text-primary hover:underline font-semibold">
+              {{ a.ticker }}
+            </a>
+            <span class="block text-xs text-muted-foreground">{{ a.securityName }}</span>
+          </td>
+          <td>{{ conditionLabel(a.condition) }}</td>
+          <td class="text-right font-mono tabular-nums">
+            {{ a.threshold | number: '1.2-2' }}{{ isPercent(a.condition) ? '%' : '' }}
+          </td>
+          <td class="text-muted-foreground">{{ channelLabel(a.notificationType) }}</td>
+          <td>
+            <span
+              [class]="a.active ? 'z-badge z-badge-green' : 'z-badge z-badge-gray'"
+            >
+              {{ a.active ? 'Aktivan' : 'Pauziran' }}
+            </span>
+          </td>
+          <td class="space-x-2 whitespace-nowrap">
+            <button type="button" class="z-btn-outline z-btn-sm" (click)="toggle(a)">
+              {{ a.active ? 'Pauziraj' : 'Aktiviraj' }}
+            </button>
+            <button type="button" class="z-btn-outline z-btn-sm" (click)="remove(a)">
+              Obrisi
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

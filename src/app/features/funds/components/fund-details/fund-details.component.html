@@ -64,6 +64,99 @@
         </dl>
       </section>
 
+      <!-- WP-26: performance metrike (Celina 4 — statistika fondova). -->
+      <section class="z-card p-5 mb-6" data-testid="fund-statistics">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">
+          Statistika fonda
+        </p>
+
+        <app-state *ngIf="statisticsLoading" mode="loading" text="Ucitavanje metrika..."></app-state>
+        <app-state *ngIf="statisticsError && !statisticsLoading"
+                   mode="error" text="Greska pri ucitavanju metrika."></app-state>
+
+        <ng-container *ngIf="!statisticsLoading && !statisticsError">
+          <!-- Nedovoljno istorijskih snapshot-ova: metrike se ne prikazuju. -->
+          <div *ngIf="!hasMetrics"
+               class="z-callout-info"
+               data-testid="metrics-unavailable">
+            Fond jos uvek nema dovoljno istorijskih podataka za izracunavanje
+            statistike. Metrike ce se pojaviti kada se akumulira dovoljno
+            dnevnih snapshot-ova vrednosti.
+          </div>
+
+          <div *ngIf="hasMetrics"
+               class="grid grid-cols-2 md:grid-cols-4 gap-4"
+               data-testid="metrics-grid">
+            <div class="z-stat-card">
+              <span class="z-stat-label">Godisnji prinos</span>
+              <span class="z-stat-value"
+                    data-testid="stat-annualizedReturn"
+                    [class.text-success]="statistics!.annualizedReturn !== null && statistics!.annualizedReturn! > 0"
+                    [class.text-destructive]="statistics!.annualizedReturn !== null && statistics!.annualizedReturn! < 0">
+                {{ metricPercent(statistics!.annualizedReturn) }}
+              </span>
+              <p class="z-stat-hint">Anualizovani prinos</p>
+            </div>
+            <div class="z-stat-card">
+              <span class="z-stat-label">Reward/Variability</span>
+              <span class="z-stat-value" data-testid="stat-rewardToVariability">
+                {{ metricRatio(statistics!.rewardToVariability) }}
+              </span>
+              <p class="z-stat-hint">Prinos po jedinici rizika</p>
+            </div>
+            <div class="z-stat-card">
+              <span class="z-stat-label">Maks. pad</span>
+              <span class="z-stat-value"
+                    data-testid="stat-maxDrawdown"
+                    [class.text-destructive]="statistics!.maxDrawdown !== null && statistics!.maxDrawdown !== 0">
+                {{ metricPercent(statistics!.maxDrawdown) }}
+              </span>
+              <p class="z-stat-hint">Najveci pad vrednosti</p>
+            </div>
+            <div class="z-stat-card">
+              <span class="z-stat-label">Volatilnost</span>
+              <span class="z-stat-value" data-testid="stat-volatility">
+                {{ metricPercent(statistics!.volatility) }}
+              </span>
+              <p class="z-stat-hint">Standardna devijacija prinosa</p>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+
+      <!-- WP-26: chart istorije vrednosti + comparison sa prosekom svih fondova. -->
+      <section class="z-card p-5 mb-6" data-testid="fund-value-chart">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">
+          Kretanje vrednosti fonda
+        </p>
+
+        <app-state *ngIf="historyLoading" mode="loading" text="Ucitavanje istorije vrednosti..."></app-state>
+        <app-state *ngIf="historyError && !historyLoading"
+                   mode="error" text="Greska pri ucitavanju istorije vrednosti."></app-state>
+
+        <ng-container *ngIf="!historyLoading && !historyError">
+          <div *ngIf="fundValueSeries.length === 0"
+               class="z-callout-info"
+               data-testid="history-empty">
+            Jos uvek nema zabelezenih snapshot-ova vrednosti za ovaj fond.
+          </div>
+
+          <app-fund-history-chart
+            *ngIf="fundValueSeries.length > 0"
+            data-testid="history-chart"
+            [fundSeries]="fundValueSeries"
+            [averageSeries]="averageValueSeries"
+            [fundLabel]="fund.naziv"
+            averageLabel="Prosek svih fondova"
+            [height]="320">
+          </app-fund-history-chart>
+          <p *ngIf="fundValueSeries.length > 0 && averageValueSeries.length === 0"
+             class="text-[11px] text-muted-foreground mt-2">
+            Prosek svih fondova trenutno nije dostupan za poredjenje.
+          </p>
+        </ng-container>
+      </section>
+
       <!-- Client own position -->
       <section *ngIf="isClient && myPosition" class="z-card p-5 mb-6">
         <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Moja pozicija</p>

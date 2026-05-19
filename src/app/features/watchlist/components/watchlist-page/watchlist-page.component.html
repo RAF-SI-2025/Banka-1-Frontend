@@ -1,0 +1,136 @@
+<!-- WP-22 (Celina 3): Watchlist management page. -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-foreground">Moje watchliste</h1>
+    <button type="button" class="z-btn-primary z-btn-sm flex items-center gap-1.5" (click)="openCreateModal()">
+      <lucide-icon name="star" [size]="14"></lucide-icon>
+      Nova watchlista
+    </button>
+  </div>
+
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje watchlista..."></app-state>
+  <app-state *ngIf="!isLoading && error" mode="error" [text]="error"></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && watchlists.length === 0"
+    mode="empty"
+    icon="star"
+    title="Nema watchlista"
+    text="Kreirajte prvu watchlistu da pratite hartije od vrednosti."
+  ></app-state>
+
+  <div *ngIf="!isLoading && !error && watchlists.length > 0" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Watchlist sidebar -->
+    <aside class="z-card p-3 lg:col-span-1 space-y-1">
+      <button
+        *ngFor="let wl of watchlists; trackBy: trackByWatchlist"
+        type="button"
+        class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm text-left cursor-pointer hover:bg-accent/40"
+        [class.bg-accent]="selectedWatchlist?.id === wl.id"
+        [class.font-semibold]="selectedWatchlist?.id === wl.id"
+        (click)="selectWatchlist(wl)"
+      >
+        <span class="truncate">{{ wl.name }}</span>
+        <span
+          class="z-btn-icon flex-shrink-0 text-destructive"
+          role="button"
+          aria-label="Obrisi watchlistu"
+          (click)="$event.stopPropagation(); deleteWatchlist(wl)"
+        >
+          <lucide-icon name="x" [size]="14"></lucide-icon>
+        </span>
+      </button>
+    </aside>
+
+    <!-- Selected watchlist items -->
+    <section class="lg:col-span-3 space-y-4">
+      <div class="z-card p-4 flex items-center justify-between gap-4">
+        <h2 class="text-lg font-semibold text-foreground truncate">
+          {{ selectedWatchlist?.name }}
+        </h2>
+        <div>
+          <label class="sr-only" for="wl-type">Tip hartije</label>
+          <select
+            id="wl-type"
+            class="z-select"
+            [(ngModel)]="typeFilter"
+            (ngModelChange)="onTypeFilterChange()"
+          >
+            <option *ngFor="let o of typeOptions" [value]="o.value">{{ o.label }}</option>
+          </select>
+        </div>
+      </div>
+
+      <app-state *ngIf="itemsLoading" mode="loading" text="Ucitavanje hartija..."></app-state>
+      <app-state *ngIf="!itemsLoading && itemsError" mode="error" [text]="itemsError"></app-state>
+      <app-state
+        *ngIf="!itemsLoading && !itemsError && items.length === 0"
+        mode="empty"
+        icon="star"
+        title="Watchlista je prazna"
+        text="Dodajte hartije sa portala hartija od vrednosti."
+      ></app-state>
+
+      <div *ngIf="!itemsLoading && !itemsError && items.length > 0" class="z-card">
+        <table class="z-table">
+          <thead>
+            <tr>
+              <th>TICKER</th>
+              <th>NAZIV</th>
+              <th>TIP</th>
+              <th class="text-right">CENA</th>
+              <th class="text-right">PROMENA (%)</th>
+              <th class="text-right">VOLUMEN</th>
+              <th>AKCIJA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of items; trackBy: trackByItem">
+              <td class="font-semibold">
+                <a [routerLink]="detailLink(it)" class="text-primary hover:underline">{{ it.ticker }}</a>
+              </td>
+              <td>{{ it.name }}</td>
+              <td class="text-muted-foreground">{{ it.listingType }}</td>
+              <td class="text-right font-mono tabular-nums">{{ it.price | number: '1.2-2' }}</td>
+              <td class="text-right font-mono tabular-nums" [ngClass]="changeClass(it.change)">
+                {{ it.change > 0 ? '+' : '' }}{{ it.change | number: '1.2-2' }}%
+              </td>
+              <td class="text-right font-mono tabular-nums text-muted-foreground">
+                {{ it.volume | number }}
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="removeItem(it)"
+                >
+                  Ukloni
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Create-watchlist modal -->
+<app-form-modal
+  *ngIf="createModalOpen"
+  title="Nova watchlista"
+  [submitting]="creating"
+  [errorMessage]="createError"
+  confirmLabel="Kreiraj"
+  (close)="closeCreateModal()"
+  (confirm)="createWatchlist()"
+>
+  <label class="z-label" for="wl-name">Naziv watchliste</label>
+  <input
+    id="wl-name"
+    type="text"
+    class="z-input"
+    [(ngModel)]="newName"
+    placeholder="npr. Tehnoloske akcije"
+    maxlength="60"
+  />
+</app-form-modal>

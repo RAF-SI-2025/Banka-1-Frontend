@@ -41,6 +41,12 @@
           <div>
             <label for="datumRodjenja" class="z-label">Datum rođenja <span class="text-destructive">*</span></label>
             <input id="datumRodjenja" type="date" formControlName="datumRodjenja" class="z-input" />
+            <p class="z-error" *ngIf="employeeForm.get('datumRodjenja')?.touched && employeeForm.get('datumRodjenja')?.errors?.['required']">
+              Datum rođenja je obavezan.
+            </p>
+            <p class="z-error" *ngIf="employeeForm.get('datumRodjenja')?.touched && employeeForm.get('datumRodjenja')?.errors?.['futureDate']">
+              Datum rođenja ne sme biti u budućnosti.
+            </p>
           </div>
           <div>
             <label for="pol" class="z-label">Pol <span class="text-destructive">*</span></label>
@@ -62,13 +68,22 @@
           <div>
             <label for="email" class="z-label">Email <span class="text-destructive">*</span></label>
             <input id="email" type="email" formControlName="email" placeholder="Unesite email adresu" class="z-input" />
-            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.invalid">
-              Validan email je obavezan.
+            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.errors?.['required']">
+              Email je obavezan.
+            </p>
+            <p class="z-error" *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.errors?.['emailFormat']">
+              Unesite validan email (npr. ime@banka.rs).
             </p>
           </div>
           <div>
             <label for="brojTelefona" class="z-label">Broj telefona <span class="text-destructive">*</span></label>
             <input id="brojTelefona" type="text" formControlName="brojTelefona" placeholder="+381..." class="z-input" />
+            <p class="z-error" *ngIf="employeeForm.get('brojTelefona')?.touched && employeeForm.get('brojTelefona')?.errors?.['required']">
+              Broj telefona je obavezan.
+            </p>
+            <p class="z-error" *ngIf="employeeForm.get('brojTelefona')?.touched && employeeForm.get('brojTelefona')?.errors?.['phoneFormat']">
+              Broj telefona sme sadržati samo cifre i znak "+" na početku (8–15 cifara).
+            </p>
           </div>
           <div class="md:col-span-2">
             <label for="adresa" class="z-label">Adresa</label>

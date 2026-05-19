@@ -28,12 +28,48 @@
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="z-label">Broj telefona <span class="text-destructive">*</span></label>
-            <input type="text" class="z-input" formControlName="brojTelefona" placeholder="+381..." />
-            <p class="z-error" *ngIf="editForm.get('brojTelefona')?.invalid && editForm.get('brojTelefona')?.touched">
-              Broj telefona je obavezan.
+            <label class="z-label">Email <span class="text-destructive">*</span></label>
+            <input type="email" class="z-input" formControlName="email" placeholder="ime@banka.rs" />
+            <p class="z-error" *ngIf="editForm.get('email')?.touched && editForm.get('email')?.errors?.['required']">
+              Email je obavezan.
+            </p>
+            <p class="z-error" *ngIf="editForm.get('email')?.touched && editForm.get('email')?.errors?.['emailFormat']">
+              Unesite validan email (npr. ime@banka.rs).
             </p>
           </div>
+          <div>
+            <label class="z-label">Broj telefona <span class="text-destructive">*</span></label>
+            <input type="text" class="z-input" formControlName="brojTelefona" placeholder="+381..." />
+            <p class="z-error" *ngIf="editForm.get('brojTelefona')?.touched && editForm.get('brojTelefona')?.errors?.['required']">
+              Broj telefona je obavezan.
+            </p>
+            <p class="z-error" *ngIf="editForm.get('brojTelefona')?.touched && editForm.get('brojTelefona')?.errors?.['phoneFormat']">
+              Broj telefona sme sadržati samo cifre i znak "+" na početku (8–15 cifara).
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="edit-datumRodjenja" class="z-label">Datum rođenja <span class="text-destructive">*</span></label>
+            <input id="edit-datumRodjenja" type="date" class="z-input" formControlName="datumRodjenja" />
+            <p class="z-error" *ngIf="editForm.get('datumRodjenja')?.touched && editForm.get('datumRodjenja')?.errors?.['required']">
+              Datum rođenja je obavezan.
+            </p>
+            <p class="z-error" *ngIf="editForm.get('datumRodjenja')?.touched && editForm.get('datumRodjenja')?.errors?.['futureDate']">
+              Datum rođenja ne sme biti u budućnosti.
+            </p>
+          </div>
+          <div>
+            <label class="z-label">Pol <span class="text-destructive">*</span></label>
+            <select class="z-select" formControlName="pol">
+              <option value="M">Muški</option>
+              <option value="Z">Ženski</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="z-label">Adresa</label>
             <input type="text" class="z-input" formControlName="adresa" placeholder="Adresa" />

@@ -10,6 +10,7 @@ import {
   PortfolioListingType,
   PortfolioSummary,
 } from '../../models/portfolio.model';
+import { DividendPayout } from '../../models/dividend.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { StateComponent } from '../../../../shared/components/state/state.component';
@@ -33,6 +34,13 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   draftPublicQuantities: Record<string, number> = {};
   savingPublicQuantity: Record<string, boolean> = {};
   exercisingOption: Record<string, boolean> = {};
+
+  // WP-24: istorija dividendi po poziciji. Drzano po listingId-u, lazy-fetch
+  // kad korisnik prvi put razvije red — izbegava N HTTP poziva na ucitavanju.
+  expandedDividendListingId: number | null = null;
+  dividendsByListing: Record<number, DividendPayout[]> = {};
+  dividendsLoading: Record<number, boolean> = {};
+  dividendsError: Record<number, boolean> = {};
 
   activeTab: 'holdings' | 'funds' = 'holdings';
   isSupervisor = false;
@@ -217,6 +225,57 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
+  /**
+   * WP-24: razvija/skuplja panel sa istorijom dividendi za poziciju. Otvoren je
+   * najvise jedan red u isto vreme. Pri prvom otvaranju jedne pozicije povlaci
+   * njenu istoriju (`getDividends(listingId)`) i kesira je.
+   */
+  toggleDividends(holding: PortfolioHolding): void {
+    const listingId = holding.listingId;
+
+    if (this.expandedDividendListingId === listingId) {
+      this.expandedDividendListingId = null;
+      return;
+    }
+
+    this.expandedDividendListingId = listingId;
+
+    if (this.dividendsByListing[listingId] === undefined && !this.dividendsLoading[listingId]) {
+      this.loadDividends(listingId);
+    }
+  }
+
+  loadDividends(listingId: number): void {
+    this.dividendsLoading[listingId] = true;
+    this.dividendsError[listingId] = false;
+
+    this.portfolioService
+      .getDividends(listingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (payouts) => {
+          this.dividendsByListing[listingId] = payouts ?? [];
+          this.dividendsLoading[listingId] = false;
+        },
+        error: (error) => {
+          console.error('Error loading dividends:', error);
+          this.dividendsError[listingId] = true;
+          this.dividendsLoading[listingId] = false;
+        },
+      });
+  }
+
+  isDividendRowExpanded(holding: PortfolioHolding): boolean {
+    return this.expandedDividendListingId === holding.listingId;
+  }
+
+  getDividendTotal(listingId: number): number {
+    return (this.dividendsByListing[listingId] ?? []).reduce(
+      (sum, payout) => sum + (payout.netAmount ?? 0),
+      0,
+    );
+  }
+
   isStock(holding: PortfolioHolding): boolean {
     return holding.listingType === 'STOCK';
   }
@@ -260,6 +319,21 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+    }).format(date);
+  }
+
+  /** WP-24: datum bez vremena — koristi se za datum isplate dividende. */
+  formatDate(value: string): string {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
     }).format(date);
   }
 

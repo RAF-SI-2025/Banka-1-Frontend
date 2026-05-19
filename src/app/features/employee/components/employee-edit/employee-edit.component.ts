@@ -1,6 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Employee } from '../../models/employee';
+import {
+  emailFormatValidator,
+  notFutureDateValidator,
+  phoneNumberValidator,
+} from '../../../../shared/utils/validators';
 
 @Component({
   selector: 'app-employee-edit-modal',
@@ -18,7 +23,10 @@ export class EmployeeEditComponent implements OnChanges {
     this.editForm = this.fb.group({
       ime: ['', [Validators.required, Validators.minLength(2)]],
       prezime: ['', [Validators.required, Validators.minLength(2)]],
-      brojTelefona: ['', Validators.required],
+      email: ['', [Validators.required, emailFormatValidator]],
+      brojTelefona: ['', [Validators.required, phoneNumberValidator]],
+      datumRodjenja: ['', [Validators.required, notFutureDateValidator]],
+      pol: ['M', Validators.required],
       adresa: [''],
       pozicija: [''],
       departman: [''],
@@ -33,7 +41,10 @@ export class EmployeeEditComponent implements OnChanges {
       this.editForm.patchValue({
         ime: this.employee.ime || '',
         prezime: this.employee.prezime || '',
+        email: this.employee.email || '',
         brojTelefona: this.employee.brojTelefona || '',
+        datumRodjenja: this.employee.datumRodjenja || '',
+        pol: this.employee.pol || 'M',
         adresa: this.employee.adresa || '',
         pozicija: this.employee.pozicija || '',
         departman: this.employee.departman || '',

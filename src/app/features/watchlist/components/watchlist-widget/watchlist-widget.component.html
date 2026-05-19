@@ -1,0 +1,53 @@
+<!-- WP-22 (Celina 3): topbar watchlist quick-access dropdown body. -->
+<div class="flex items-center justify-between px-3 py-2 border-b border-border">
+  <span class="text-sm font-semibold text-foreground">
+    {{ watchlist?.name || 'Watchlist' }}
+  </span>
+  <a
+    routerLink="/watchlists"
+    (click)="navigate.emit()"
+    class="text-xs text-primary hover:underline"
+  >
+    Sve watchliste
+  </a>
+</div>
+
+<div *ngIf="loading" class="px-3 py-6 text-center text-sm text-muted-foreground">
+  Ucitavanje...
+</div>
+<div *ngIf="!loading && error" class="px-3 py-6 text-center text-sm text-destructive">
+  Greska pri ucitavanju watchliste.
+</div>
+<div
+  *ngIf="!loading && !error && items.length === 0"
+  class="px-3 py-6 text-center text-sm text-muted-foreground"
+>
+  Watchlista je prazna.
+</div>
+
+<ul
+  *ngIf="!loading && !error && items.length > 0"
+  class="max-h-80 overflow-y-auto divide-y divide-border"
+>
+  <li *ngFor="let it of items; trackBy: trackByItem">
+    <a
+      [routerLink]="detailLink(it)"
+      (click)="navigate.emit()"
+      class="flex items-center justify-between gap-2 px-3 py-2 cursor-pointer hover:bg-accent/40"
+    >
+      <span class="min-w-0">
+        <span class="block text-sm font-semibold truncate">{{ it.ticker }}</span>
+        <span class="block text-xs text-muted-foreground truncate">{{ it.name }}</span>
+      </span>
+      <span class="text-right flex-shrink-0">
+        <span class="block text-sm font-mono tabular-nums">{{ it.price | number: '1.2-2' }}</span>
+        <span class="block text-xs font-mono tabular-nums" [ngClass]="changeClass(it.change)">
+          {{ it.change > 0 ? '+' : '' }}{{ it.change | number: '1.2-2' }}%
+        </span>
+        <span class="block text-[10px] text-muted-foreground/70">
+          Vol {{ it.volume | number }}
+        </span>
+      </span>
+    </a>
+  </li>
+</ul>

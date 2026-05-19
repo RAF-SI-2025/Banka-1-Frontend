@@ -39,10 +39,15 @@ describe('NavManifest', () => {
       expect(labels).toContain('Berza');
       expect(labels).not.toContain('Administracija');
     });
-    it('Berza ima svih 5 stavki (akcije/portfolio/margin/OTC/fondovi)', () => {
+    it('Berza ima svih 9 stavki (akcije/portfolio/moji-orderi/watchlist/alarmi/trajni-nalozi/margin/OTC/fondovi)', () => {
       const f = filterNavByPermissions(NAV_MANIFEST, c);
       const berza = f.find(g => g.label === 'Berza');
-      expect(berza?.items.length).toBe(5);
+      expect(berza?.items.length).toBe(9);
+      const routes = berza!.items.map(i => i.route);
+      expect(routes).toContain('/orders/my');
+      expect(routes).toContain('/watchlists');
+      expect(routes).toContain('/price-alerts');
+      expect(routes).toContain('/recurring-orders');
     });
   });
 
@@ -88,13 +93,14 @@ describe('NavManifest', () => {
       expect(labels).toContain('Berza');
       expect(labels).toContain('Administracija');
     });
-    it('Administracija ukljucuje Aktuari, Pregled order, Porez, Profit banke/aktuara, Kursna lista', () => {
+    it('Administracija ukljucuje Aktuari, Pregled order, Porez, Revizioni dnevnik, Profit banke/aktuara, Kursna lista', () => {
       const f = filterNavByPermissions(NAV_MANIFEST, c);
       const adm = f.find(g => g.label === 'Administracija');
       const routes = adm!.items.map(i => i.route);
       expect(routes).toContain('/actuary-management');
       expect(routes).toContain('/orders-overview');
       expect(routes).toContain('/tax-tracking');
+      expect(routes).toContain('/audit-log');
       expect(routes).toContain('/funds/profit-banke');
       expect(routes).toContain('/funds/profit-aktuara');
       expect(routes).toContain('/stock-exchange');
@@ -104,15 +110,17 @@ describe('NavManifest', () => {
 
   describe('Admin (role=ADMIN, perms=[sve gore + EMPLOYEE_MANAGE_ALL])', () => {
     const c = cap(['BANKING_BASIC', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'OTC_TRADE', 'FUND_AGENT_MANAGE', 'CLIENT_MANAGE', 'EMPLOYEE_MANAGE_ALL'], 'ADMIN');
-    it('NE vidi Bankarstvo, vidi Berza + Administracija sa svim 11 stavki', () => {
+    it('NE vidi Bankarstvo, vidi Berza + Administracija sa svim 14 stavki', () => {
       const f = filterNavByPermissions(NAV_MANIFEST, c);
       expect(f.find(g => g.label === 'Bankarstvo')).toBeUndefined();
       const berza = f.find(g => g.label === 'Berza');
-      expect(berza?.items.length).toBe(5);
+      expect(berza?.items.length).toBe(9);
       const adm = f.find(g => g.label === 'Administracija');
-      expect(adm?.items.length).toBe(11);
+      /* Administracija ima 14 stavki; admin sa svim permisijama vidi sve. */
+      expect(adm?.items.length).toBe(14);
       const routes = adm!.items.map(i => i.route);
       expect(routes).toContain('/employees');
+      expect(routes).toContain('/audit-log');
     });
   });
 });

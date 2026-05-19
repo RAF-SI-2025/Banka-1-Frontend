@@ -188,3 +188,59 @@ export interface CounterInterbankNegotiationRequest {
   premium: number;
   settlementDate: string;
 }
+
+// -------------------------------------------------------------------------
+// WP-25 (Task D6): OTC negotiation history.
+//
+// Backend ima dva endpoint-a (JWT-secured, gateway `/otc/...`):
+//   - GET /otc/offers/history?status=&from=&to=&counterparty=
+//       → caller-ovi pregovori kroz SVE statuse (uklj. terminalne
+//         ACCEPTED/REJECTED/WITHDRAWN/EXPIRED), svaki kao offer-summary.
+//   - GET /otc/offers/{id}/history
+//       → uredjeni revision trail jednog pregovora: lista revizija sa
+//         old/new vrednostima, akterom i timestamp-om.
+// -------------------------------------------------------------------------
+
+/** Akcija koja je proizvela reviziju pregovora. */
+export type OtcRevisionAction = 'CREATE' | 'COUNTER' | 'ACCEPT' | 'REJECT' | 'WITHDRAW';
+
+/** Uloga aktera koji je napravio reviziju (kupac ili prodavac). */
+export type OtcActorRole = 'BUYER' | 'SELLER';
+
+/**
+ * Jedan korak u istoriji pregovora — odgovara revision DTO-u backend-a
+ * (`GET /otc/offers/{id}/history`). `old*` polja su vrednosti pre revizije
+ * (`null` za prvu reviziju tj. `CREATE`), `new*` su vrednosti posle revizije.
+ */
+export interface OtcOfferRevision {
+  id: number;
+  offerId: number;
+  action: OtcRevisionAction;
+  actorUserId: number;
+  actorName: string;
+  actorRole: OtcActorRole;
+  oldAmount: number | null;
+  newAmount: number | null;
+  oldPricePerStock: number | null;
+  newPricePerStock: number | null;
+  oldPremium: number | null;
+  newPremium: number | null;
+  oldSettlementDate: string | null;
+  newSettlementDate: string | null;
+  createdAt: string;
+}
+
+/**
+ * Filter za `GET /otc/offers/history`. Sva polja su opciona; prazna polja se
+ * ne salju kao query parametri (backend tretira odsustvo kao "bez filtera").
+ *
+ * - `status`     = jedan `OtcOfferStatus` (npr. `ACCEPTED`).
+ * - `from` / `to`= ISO datum granice (`yyyy-MM-dd`) za vreme poslednje izmene.
+ * - `counterparty` = id druge strane (kupac ili prodavac).
+ */
+export interface OtcHistoryFilter {
+  status?: OtcOfferStatus | '';
+  from?: string;
+  to?: string;
+  counterparty?: number | null;
+}

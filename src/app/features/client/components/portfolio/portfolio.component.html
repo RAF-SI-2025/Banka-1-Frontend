@@ -110,7 +110,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let holding of holdings; let i = index; trackBy: trackByHolding">
+              <ng-container *ngFor="let holding of holdings; let i = index; trackBy: trackByHolding">
+              <tr>
                 <td>
                   <span class="z-badge" [ngClass]="{
                     'z-badge-green': holding.listingType === 'STOCK',
@@ -132,6 +133,17 @@
                   <div class="flex flex-col gap-3 items-start min-w-[260px]">
                     <button type="button" class="z-btn-outline z-btn-sm" (click)="onSell(holding)">
                       Prodaj
+                    </button>
+
+                    <!-- WP-24: istorija primljenih dividendi za ovu poziciju (akcije). -->
+                    <button
+                      *ngIf="isStock(holding)"
+                      type="button"
+                      class="z-btn-secondary z-btn-sm"
+                      [attr.aria-expanded]="isDividendRowExpanded(holding)"
+                      (click)="toggleDividends(holding)"
+                    >
+                      {{ isDividendRowExpanded(holding) ? 'Sakrij dividende' : 'Dividende' }}
                     </button>
 
                     <div *ngIf="isStock(holding)" class="w-full rounded-lg border border-border bg-muted/20 p-3">
@@ -186,6 +198,80 @@
                   </div>
                 </td>
               </tr>
+
+              <!-- WP-24: panel sa istorijom dividendi — vidljiv kad je red razvijen. -->
+              <tr *ngIf="isStock(holding) && isDividendRowExpanded(holding)" class="dividend-detail-row">
+                <td colspan="7" class="bg-muted/20">
+                  <div class="p-4">
+                    <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                      <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                        Primljene dividende — {{ holding.ticker }}
+                      </p>
+                      <span
+                        *ngIf="!dividendsLoading[holding.listingId] && !dividendsError[holding.listingId]
+                               && (dividendsByListing[holding.listingId]?.length ?? 0) > 0"
+                        class="z-badge z-badge-green"
+                      >
+                        Ukupno neto: {{ formatAmount(getDividendTotal(holding.listingId)) }} RSD
+                      </span>
+                    </div>
+
+                    <app-state
+                      *ngIf="dividendsLoading[holding.listingId]"
+                      mode="loading"
+                      text="Ucitavanje dividendi..."
+                    ></app-state>
+
+                    <app-state
+                      *ngIf="dividendsError[holding.listingId]"
+                      mode="error"
+                      text="Greška pri učitavanju dividendi."
+                    ></app-state>
+
+                    <ng-container
+                      *ngIf="!dividendsLoading[holding.listingId] && !dividendsError[holding.listingId]"
+                    >
+                      <app-state
+                        *ngIf="(dividendsByListing[holding.listingId]?.length ?? 0) === 0"
+                        mode="empty"
+                        title="Nema dividendi"
+                        text="Za ovu poziciju nije primljena nijedna dividenda."
+                      ></app-state>
+
+                      <div
+                        *ngIf="(dividendsByListing[holding.listingId]?.length ?? 0) > 0"
+                        class="overflow-x-auto rounded-xl border border-border bg-card"
+                      >
+                        <table class="z-table min-w-[640px]">
+                          <thead>
+                            <tr>
+                              <th>Datum isplate</th>
+                              <th class="text-right">Količina</th>
+                              <th class="text-right">Bruto iznos</th>
+                              <th class="text-right">Porez (RSD)</th>
+                              <th class="text-right">Neto iznos</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let payout of dividendsByListing[holding.listingId]">
+                              <td class="whitespace-nowrap">{{ formatDate(payout.paymentDate) }}</td>
+                              <td class="text-right">{{ formatAmount(payout.quantity, 0) }}</td>
+                              <td class="text-right whitespace-nowrap">
+                                {{ formatAmount(payout.grossAmount) }} {{ payout.currency }}
+                              </td>
+                              <td class="text-right whitespace-nowrap">{{ formatAmount(payout.taxAmountRsd) }}</td>
+                              <td class="text-right font-semibold whitespace-nowrap">
+                                {{ formatAmount(payout.netAmount) }} {{ payout.currency }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+              </ng-container>
             </tbody>
           </table>
         </div>

@@ -1,0 +1,99 @@
+<!-- WP-23 (Celina 3): system audit log viewer. -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-foreground">Revizioni dnevnik</h1>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="z-card p-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div>
+        <label class="z-label" for="al-action">Tip akcije</label>
+        <select id="al-action" class="z-select" [(ngModel)]="actionTypeFilter">
+          <option *ngFor="let o of actionOptions" [ngValue]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="al-actor">ID korisnika</label>
+        <input
+          id="al-actor"
+          type="number"
+          min="1"
+          step="1"
+          class="z-input"
+          [(ngModel)]="actorIdFilter"
+          placeholder="npr. 42"
+        />
+      </div>
+      <div>
+        <label class="z-label" for="al-from">Datum od</label>
+        <input id="al-from" type="date" class="z-input" [(ngModel)]="fromDate" />
+      </div>
+      <div>
+        <label class="z-label" for="al-to">Datum do</label>
+        <input id="al-to" type="date" class="z-input" [(ngModel)]="toDate" />
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button type="button" class="z-btn-outline z-btn-sm" (click)="clearFilters()">Resetuj</button>
+      <button type="button" class="z-btn-primary z-btn-sm" (click)="applyFilters()">Primeni</button>
+    </div>
+  </div>
+
+  <!-- States -->
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje revizionog dnevnika..."></app-state>
+  <app-state *ngIf="!isLoading && error" mode="error" [text]="error"></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && entries.length === 0"
+    mode="empty"
+    icon="shieldcheck"
+    title="Nema zapisa"
+    text="Nema zapisa u revizionom dnevniku za zadate filtere."
+  ></app-state>
+
+  <!-- Audit table -->
+  <div *ngIf="!isLoading && !error && entries.length > 0" class="z-card">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th>KORISNIK</th>
+          <th>AKCIJA</th>
+          <th>OBJEKAT</th>
+          <th>DETALJI</th>
+          <th>VREME</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of entries; trackBy: trackByEntry">
+          <td>
+            <span class="font-semibold">{{ e.actorName }}</span>
+            <span class="block text-xs text-muted-foreground">#{{ e.actorId }}</span>
+          </td>
+          <td>
+            <span class="z-badge z-badge-blue">{{ actionLabel(e.actionType) }}</span>
+          </td>
+          <td>
+            <span class="font-semibold">{{ e.targetType }}</span>
+            <span class="block text-xs text-muted-foreground font-mono tabular-nums">
+              #{{ e.targetId }}
+            </span>
+          </td>
+          <td class="text-muted-foreground">{{ e.details }}</td>
+          <td class="text-muted-foreground whitespace-nowrap">
+            {{ e.createdAt | date: 'dd.MM.yyyy. HH:mm' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="flex justify-between items-center px-5 py-3 border-t border-border">
+      <span class="text-sm text-muted-foreground">Ukupno: {{ totalElements }}</span>
+      <app-pagination
+        [total]="totalElements"
+        [pageSize]="pageSize"
+        [page]="currentPage + 1"
+        (pageChange)="onPageChange($event - 1)"
+      ></app-pagination>
+    </div>
+  </div>
+</div>

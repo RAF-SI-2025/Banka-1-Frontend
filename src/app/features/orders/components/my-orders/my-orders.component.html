@@ -1,0 +1,102 @@
+<!-- WP-22 (Celina 3): "Moji orderi" — order history page. -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-foreground">Moji orderi</h1>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="z-card p-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div>
+        <label class="z-label" for="mo-status">Status</label>
+        <select id="mo-status" class="z-select" [(ngModel)]="statusFilter">
+          <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="mo-direction">Smer</label>
+        <select id="mo-direction" class="z-select" [(ngModel)]="directionFilter">
+          <option *ngFor="let o of directionOptions" [ngValue]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="mo-type">Tip hartije</label>
+        <select id="mo-type" class="z-select" [(ngModel)]="securityTypeFilter">
+          <option *ngFor="let o of securityTypeOptions" [ngValue]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="mo-from">Datum od</label>
+        <input id="mo-from" type="date" class="z-input" [(ngModel)]="fromDate" />
+      </div>
+      <div>
+        <label class="z-label" for="mo-to">Datum do</label>
+        <input id="mo-to" type="date" class="z-input" [(ngModel)]="toDate" />
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button type="button" class="z-btn-outline z-btn-sm" (click)="clearFilters()">Resetuj</button>
+      <button type="button" class="z-btn-primary z-btn-sm" (click)="applyFilters()">Primeni</button>
+    </div>
+  </div>
+
+  <!-- States -->
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje ordera..."></app-state>
+  <app-state *ngIf="!isLoading && error" mode="error" [text]="error"></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && orders.length === 0"
+    mode="empty"
+    title="Nema ordera"
+    text="Nema ordera za zadate filtere."
+  ></app-state>
+
+  <!-- Orders table -->
+  <div *ngIf="!isLoading && !error && orders.length > 0" class="z-card">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th>TIP</th>
+          <th>HARTIJA</th>
+          <th>SMER</th>
+          <th class="text-right">KOLICINA</th>
+          <th class="text-right">CENA</th>
+          <th class="text-right">PROVIZIJA</th>
+          <th>STATUS</th>
+          <th>KREIRAN</th>
+          <th>IZVRSEN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders; trackBy: trackByOrder">
+          <td class="font-semibold">{{ o.orderType }}</td>
+          <td>
+            <span class="font-semibold">{{ o.ticker }}</span>
+            <span class="block text-xs text-muted-foreground">{{ o.securityName }}</span>
+            <span class="block text-[10px] text-muted-foreground/70">{{ o.listingType }}</span>
+          </td>
+          <td>{{ directionLabel(o.direction) }}</td>
+          <td class="text-right font-mono tabular-nums">{{ o.quantity }}</td>
+          <td class="text-right font-mono tabular-nums">{{ o.pricePerUnit | number: '1.2-2' }}</td>
+          <td class="text-right font-mono tabular-nums">{{ o.fee | number: '1.2-2' }}</td>
+          <td><span [class]="statusBadgeClass(o.status)">{{ statusLabel(o.status) }}</span></td>
+          <td class="text-muted-foreground whitespace-nowrap">
+            {{ o.createdAt | date: 'dd.MM.yyyy. HH:mm' }}
+          </td>
+          <td class="text-muted-foreground whitespace-nowrap">
+            {{ o.lastModification | date: 'dd.MM.yyyy. HH:mm' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="flex justify-between items-center px-5 py-3 border-t border-border">
+      <span class="text-sm text-muted-foreground">Ukupno: {{ totalElements }}</span>
+      <app-pagination
+        [total]="totalElements"
+        [pageSize]="pageSize"
+        [page]="currentPage + 1"
+        (pageChange)="onPageChange($event - 1)"
+      ></app-pagination>
+    </div>
+  </div>
+</div>

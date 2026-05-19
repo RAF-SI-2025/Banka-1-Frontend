@@ -12,6 +12,8 @@ import { SidebarComponent } from './core/layout/sidebar/sidebar.component';
 import { TopbarComponent } from './core/layout/topbar/topbar.component';
 import { CommandPaletteComponent } from './core/layout/command-palette/command-palette.component';
 import { LucideIconComponent } from './shared/icons/lucide-icon.component';
+// WP-22 (Celina 3): topbar watchlist quick-access widget (standalone).
+import { WatchlistWidgetComponent } from './features/watchlist/components/watchlist-widget/watchlist-widget.component';
 
 import { EmployeeModule } from './features/employee/employee.module';
 
@@ -44,7 +46,9 @@ import { CommonModule } from '@angular/common';
     // import-a iz StateComponent-a (StateComponent je standalone — ne moze
     // imports-ovati ne-standalone komponentu). Spec-ovi koji ga koriste su
     // takodje azurirani da ga drze u imports umesto declarations.
-    LucideIconComponent
+    LucideIconComponent,
+    // WP-22 (Celina 3): standalone widget renderovan unutar TopbarComponent-a.
+    WatchlistWidgetComponent
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

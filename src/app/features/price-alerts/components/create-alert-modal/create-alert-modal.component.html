@@ -1,0 +1,40 @@
+<!-- WP-22 (Celina 3): "Postavi obavestenje" — create price-alert modal. -->
+<app-form-modal
+  [title]="ticker ? 'Obavestenje: ' + ticker : 'Postavi obavestenje'"
+  [submitting]="submitting"
+  [errorMessage]="error"
+  confirmLabel="Postavi"
+  (close)="onCancel()"
+  (confirm)="submit()"
+>
+  <div class="space-y-4">
+    <div>
+      <label class="z-label" for="ca-condition">Uslov</label>
+      <select id="ca-condition" class="z-select" [(ngModel)]="condition">
+        <option *ngFor="let o of conditionOptions" [value]="o.value">{{ o.label }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="z-label" for="ca-threshold">
+        {{ isPercent ? 'Procenat pada (%)' : 'Ciljna cena' }}
+      </label>
+      <input
+        id="ca-threshold"
+        type="number"
+        min="0"
+        step="0.01"
+        class="z-input"
+        [(ngModel)]="threshold"
+        [placeholder]="isPercent ? 'npr. 5' : 'npr. 150.00'"
+      />
+    </div>
+
+    <div>
+      <label class="z-label" for="ca-channel">Nacin obavestavanja</label>
+      <select id="ca-channel" class="z-select" [(ngModel)]="notificationType">
+        <option *ngFor="let o of channelOptions" [value]="o.value">{{ o.label }}</option>
+      </select>
+    </div>
+  </div>
+</app-form-modal>

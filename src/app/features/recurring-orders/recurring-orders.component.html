@@ -1,0 +1,160 @@
+<!-- WP-23 (Celina 3 — DCA): recurring (standing) orders page. -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-foreground">Trajni nalozi</h1>
+    <button type="button" class="z-btn-primary z-btn-sm" (click)="openModal()">
+      Novi trajni nalog
+    </button>
+  </div>
+
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje trajnih naloga..."></app-state>
+  <app-state *ngIf="!isLoading && error" mode="error" [text]="error"></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && orders.length === 0"
+    mode="empty"
+    icon="repeat"
+    title="Nema trajnih naloga"
+    text="Kreirajte trajni nalog da periodicno automatski izvrsavate Market Order."
+  ></app-state>
+
+  <div *ngIf="!isLoading && !error && orders.length > 0" class="z-card">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th>HARTIJA</th>
+          <th>SMER</th>
+          <th>NACIN</th>
+          <th class="text-right">VREDNOST</th>
+          <th class="text-right">RACUN</th>
+          <th>UCESTALOST</th>
+          <th>SLEDECE IZVRSENJE</th>
+          <th>STANJE</th>
+          <th>AKCIJA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders; trackBy: trackByOrder">
+          <td class="font-semibold font-mono tabular-nums">#{{ o.listingId }}</td>
+          <td>{{ directionLabel(o.direction) }}</td>
+          <td class="text-muted-foreground">{{ modeLabel(o.mode) }}</td>
+          <td class="text-right font-mono tabular-nums">
+            {{ o.value | number: '1.2-2' }}
+          </td>
+          <td class="text-right font-mono tabular-nums">#{{ o.accountId }}</td>
+          <td>{{ cadenceLabel(o.cadence) }}</td>
+          <td class="text-muted-foreground whitespace-nowrap">
+            {{ o.nextRun | date: 'dd.MM.yyyy. HH:mm' }}
+          </td>
+          <td>
+            <span [class]="o.active ? 'z-badge z-badge-green' : 'z-badge z-badge-gray'">
+              {{ o.active ? 'Aktivan' : 'Pauziran' }}
+            </span>
+          </td>
+          <td class="space-x-2 whitespace-nowrap">
+            <button
+              *ngIf="o.active"
+              type="button"
+              class="z-btn-outline z-btn-sm"
+              (click)="pause(o)"
+            >
+              Pauziraj
+            </button>
+            <button
+              *ngIf="!o.active"
+              type="button"
+              class="z-btn-outline z-btn-sm"
+              (click)="resume(o)"
+            >
+              Aktiviraj
+            </button>
+            <button type="button" class="z-btn-outline z-btn-sm" (click)="cancel(o)">
+              Otkazi
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create modal -->
+<app-form-modal
+  *ngIf="modalOpen"
+  title="Novi trajni nalog"
+  [submitting]="submitting"
+  [errorMessage]="formError"
+  confirmLabel="Kreiraj"
+  (close)="closeModal()"
+  (confirm)="submit()"
+>
+  <div class="space-y-4">
+    <div>
+      <label class="z-label" for="ro-listing">ID hartije od vrednosti</label>
+      <input
+        id="ro-listing"
+        type="number"
+        min="1"
+        step="1"
+        class="z-input"
+        [(ngModel)]="listingId"
+        placeholder="npr. 101"
+      />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="z-label" for="ro-direction">Smer</label>
+        <select id="ro-direction" class="z-select" [(ngModel)]="direction">
+          <option *ngFor="let o of directionOptions" [value]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="ro-mode">Nacin</label>
+        <select id="ro-mode" class="z-select" [(ngModel)]="mode">
+          <option *ngFor="let o of modeOptions" [value]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="z-label" for="ro-value">
+        {{ isByAmount ? 'Iznos' : 'Kolicina' }}
+      </label>
+      <input
+        id="ro-value"
+        type="number"
+        min="0"
+        [step]="isByAmount ? '0.01' : '1'"
+        class="z-input"
+        [(ngModel)]="value"
+        [placeholder]="isByAmount ? 'npr. 500.00' : 'npr. 3'"
+      />
+    </div>
+
+    <div>
+      <label class="z-label" for="ro-account">ID racuna</label>
+      <input
+        id="ro-account"
+        type="number"
+        min="1"
+        step="1"
+        class="z-input"
+        [(ngModel)]="accountId"
+        placeholder="npr. 9001"
+      />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="z-label" for="ro-cadence">Ucestalost</label>
+        <select id="ro-cadence" class="z-select" [(ngModel)]="cadence">
+          <option *ngFor="let o of cadenceOptions" [value]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="ro-next-run">Prvo izvrsenje</label>
+        <input id="ro-next-run" type="date" class="z-input" [(ngModel)]="nextRun" />
+      </div>
+    </div>
+  </div>
+</app-form-modal>

@@ -24,7 +24,12 @@ export type NavIcon =
   | 'users'
   | 'shieldcheck'
   | 'receipt'
-  | 'gauge';
+  | 'gauge'
+  // WP-22 (Celina 3): Berza grupa — "Moji orderi" / Watchlist / Cenovni alarmi.
+  | 'star'
+  | 'bell'
+  // WP-23 (Celina 3): "Trajni nalozi" (DCA recurring orders).
+  | 'repeat';
 
 export interface NavItem {
   label: string;
@@ -74,6 +79,14 @@ export const NAV_MANIFEST: NavGroup[] = [
     items: [
       { label: 'Hartije od vrednosti', route: '/securities',  icon: 'trendingup', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
       { label: 'Moj portfolio',        route: '/portfolio',   icon: 'briefcase',  requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
+      // WP-22 (Celina 3): order history / watchlist / price alerts — isti
+      // auditorijum kao "Hartije od vrednosti" (trgujuci klijenti + aktuari).
+      { label: 'Moji orderi',          route: '/orders/my',   icon: 'receipt',    requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
+      { label: 'Watchlist',            route: '/watchlists',  icon: 'star',       requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
+      { label: 'Cenovni alarmi',       route: '/price-alerts',icon: 'bell',       requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
+      // WP-23 (Celina 3 — DCA): standing orders — isti auditorijum kao ostale
+      // Berza trading stavke (trgujuci klijenti + aktuari).
+      { label: 'Trajni nalozi',        route: '/recurring-orders', icon: 'repeat', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
       { label: 'Marzni racun',         route: '/margin',      icon: 'gauge',      requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING', 'ADMIN'] },
       { label: 'OTC trgovina',         route: '/otc',         icon: 'handshake',  requiredPermissions: ['OTC_TRADE', 'CLIENT_TRADING', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SUPERVISOR', 'ADMIN'] },
       { label: 'Fondovi',              route: '/funds',       icon: 'building',   requiredPermissions: ['FUND_AGENT_MANAGE', 'CLIENT_TRADING', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SUPERVISOR', 'ADMIN'] },
@@ -91,6 +104,9 @@ export const NAV_MANIFEST: NavGroup[] = [
       { label: 'Aktuari',           route: '/actuary-management',        icon: 'shieldcheck', requiredPermissions: ['FUND_AGENT_MANAGE', 'EMPLOYEE_MANAGE_ALL', 'ADMIN'] },
       { label: 'Pregled order',     route: '/orders-overview',           icon: 'receipt',     requiredPermissions: ['TRADE_UNLIMITED', 'EMPLOYEE_MANAGE_ALL', 'ADMIN'] },
       { label: 'Porez tracking',    route: '/tax-tracking',              icon: 'receipt',     requiredPermissions: ['TRADE_UNLIMITED', 'EMPLOYEE_MANAGE_ALL', 'ADMIN', 'SUPERVISOR'] },
+      // WP-23 (Celina 3): revizioni dnevnik — admin/supervizor, usaglaseno sa
+      // `audit-log` rutom `anyRole: ['SUPERVISOR', 'ADMIN']` (gard cita role string).
+      { label: 'Revizioni dnevnik', route: '/audit-log',                 icon: 'shieldcheck', requiredPermissions: ['ADMIN', 'SUPERVISOR'] },
       { label: 'Krediti admin',     route: '/loan-management',           icon: 'piggybank',   requiredPermissions: ['CLIENT_MANAGE', 'EMPLOYEE_MANAGE_ALL', 'ADMIN'] },
       { label: 'Kartice',           route: '/cards-management',          icon: 'creditcard',  requiredPermissions: ['CLIENT_MANAGE', 'EMPLOYEE_MANAGE_ALL', 'ADMIN'] },
       { label: 'Zahtevi za kredit', route: '/loan-request-management',   icon: 'piggybank',   requiredPermissions: ['CLIENT_MANAGE', 'EMPLOYEE_MANAGE_ALL', 'ADMIN'] },

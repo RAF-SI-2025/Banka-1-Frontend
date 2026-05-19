@@ -1,13 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { FundService } from '../../services/fund.service';
-import { ClientFundPosition, FundHolding, InvestmentFund } from '../../models/fund.model';
+import {
+  ClientFundPosition,
+  FundHolding,
+  FundStatistics,
+  FundValueSnapshotPoint,
+  InvestmentFund,
+} from '../../models/fund.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AccountService } from '../../../client/services/account.service';
 import { Account } from '../../../client/models/account.model';
+import { FundSeriesPoint } from '../../../../shared/charts/fund-history-chart/fund-history-chart.component';
 
 @Component({
   selector: 'app-fund-details',
@@ -22,6 +30,15 @@ export class FundDetailsComponent implements OnInit {
   securities: FundHolding[] = [];
   positions: ClientFundPosition[] = [];
   myPosition: ClientFundPosition | null = null;
+
+  // WP-26 (Celina 4 — statistika fondova): metrike + chart serije.
+  statistics: FundStatistics | null = null;
+  statisticsLoading = false;
+  statisticsError = false;
+  fundValueSeries: FundSeriesPoint[] = [];
+  averageValueSeries: FundSeriesPoint[] = [];
+  historyLoading = false;
+  historyError = false;
 
   isSupervisor = false;
   isClient = false;
@@ -88,6 +105,8 @@ export class FundDetailsComponent implements OnInit {
             .find(p => p.fundId === this.fundId) ?? null;
         }
         this.loadSecurities();
+        this.loadStatistics();
+        this.loadValueHistory();
       },
       error: err => {
         this.error = err?.error?.message || 'Greska pri ucitavanju fonda.';
@@ -100,6 +119,72 @@ export class FundDetailsComponent implements OnInit {
     this.fundService.fundSecurities(this.fundId).subscribe({
       next: s => { this.securities = s; this.loading = false; },
       error: () => { this.loading = false; },
+    });
+  }
+
+  /** WP-26: ucitava performance metrike fonda. */
+  private loadStatistics(): void {
+    this.statisticsLoading = true;
+    this.statisticsError = false;
+    this.fundService.getStatistics(this.fundId).subscribe({
+      next: stats => { this.statistics = stats; this.statisticsLoading = false; },
+      error: () => { this.statisticsError = true; this.statisticsLoading = false; },
+    });
+  }
+
+  /**
+   * WP-26: ucitava istoriju vrednosti fonda i sistemski prosek paralelno.
+   * Prosek je best-effort — `catchError` na average struji znaci da pad
+   * proseka NE rusi chart; serija samog fonda se i dalje prikazuje (chart
+   * onda nema comparison liniju). `historyError` se pali samo ako padne
+   * realna istorija fonda.
+   */
+  private loadValueHistory(): void {
+    this.historyLoading = true;
+    this.historyError = false;
+    forkJoin({
+      fund: this.fundService.getValueHistory(this.fundId),
+      average: this.fundService.getAverageValueHistory().pipe(
+        catchError(() => of([] as FundValueSnapshotPoint[])),
+      ),
+    }).subscribe({
+      next: ({ fund, average }) => {
+        this.fundValueSeries = fund.map(p => this.toSeriesPoint(p));
+        this.averageValueSeries = average.map(p => this.toSeriesPoint(p));
+        this.historyLoading = false;
+      },
+      error: () => { this.historyError = true; this.historyLoading = false; },
+    });
+  }
+
+  private toSeriesPoint(p: FundValueSnapshotPoint): FundSeriesPoint {
+    return { x: p.snapshotDate, y: p.totalValue };
+  }
+
+  /** WP-26: true kad metrike postoje i ima ih smisla prikazati. */
+  get hasMetrics(): boolean {
+    return !!this.statistics && this.statistics.metricsAvailable;
+  }
+
+  /** WP-26: frakcija (0.12) -> procenat string; null -> placeholder. */
+  metricPercent(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+    return `${(value * 100).toLocaleString('sr-RS', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}%`;
+  }
+
+  /** WP-26: reward-to-variability ratio (ne procenat); null -> placeholder. */
+  metricRatio(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+    return value.toLocaleString('sr-RS', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
   }
 

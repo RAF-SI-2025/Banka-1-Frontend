@@ -6,11 +6,13 @@ import { LucideIconComponent } from '../../../shared/icons/lucide-icon.component
 import { AuthService } from '../../services/auth.service';
 
 /**
- * PR_31 Task 6 specs.
+ * PR_31 Task 6 specs (azurirano W27b: usaglaseno sa redizajniranim NAV_MANIFEST).
  *
- * AuthService API stvarno koristi `getLoggedUser()` koji vraca
- * `{ email, permissions } | null`. Mock-ujemo samo tu metodu i menjamo joj povrat
- * po slucaju.
+ * `SidebarComponent` cita ulogovanog korisnika kroz `AuthService.getLoggedUser()`
+ * i gradi capability set kao `[...permissions, role]` (role string ide u set jer
+ * NAV_MANIFEST gate-uje Bankarstvo po roli 'CLIENT'/'CLIENT_TRADING', a Berza po
+ * 'SECURITIES_TRADE_*'/'TRADE_UNLIMITED'/'CLIENT_TRADING' permisijama). Mock-ujemo
+ * samo `getLoggedUser()` i menjamo joj povrat po slucaju.
  */
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
@@ -19,8 +21,10 @@ describe('SidebarComponent', () => {
 
   beforeEach(async () => {
     authMock = {
+      // Default: regularni klijent banke — role 'CLIENT' otkljucava Bankarstvo grupu.
       getLoggedUser: jasmine.createSpy('getLoggedUser').and.returnValue({
         email: 'client@banka.com',
+        role: 'CLIENT',
         permissions: ['BANKING_BASIC'],
       }),
     };
@@ -35,14 +39,14 @@ describe('SidebarComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('renders Bankarstvo group for client with BANKING_BASIC', () => {
+  it('renders Bankarstvo group for a client (role CLIENT)', () => {
     fixture.detectChanges();
     const html = (fixture.nativeElement as HTMLElement).innerHTML;
     expect(html).toContain('Bankarstvo');
     expect(html).toContain('Pocetna');
   });
 
-  it('hides Berza and Administracija groups when user has only BANKING_BASIC', () => {
+  it('hides Berza and Administracija groups for a plain client', () => {
     fixture.detectChanges();
     const html = (fixture.nativeElement as HTMLElement).innerHTML;
     expect(html).not.toContain('Berza');
@@ -57,13 +61,17 @@ describe('SidebarComponent', () => {
     expect(component.isActive('/exchange')).toBe(false);
   });
 
-  it('shows Berza group for actuary with SECURITIES_TRADE permission', () => {
+  it('shows Berza group for an actuary with SECURITIES_TRADE_UNLIMITED permission', () => {
+    // Aktuar agent: role 'AGENT' (nije u nijednoj nav listi -> Bankarstvo ostaje
+    // skriven) + 'SECURITIES_TRADE_UNLIMITED' permisija koja otkljucava Berza grupu.
     authMock.getLoggedUser.and.returnValue({
       email: 'agent@banka.com',
-      permissions: ['SECURITIES_TRADE'],
+      role: 'AGENT',
+      permissions: ['SECURITIES_TRADE_UNLIMITED'],
     });
     // Re-create da bi ngOnInit ponovo procitao permisije.
     fixture = TestBed.createComponent(SidebarComponent);
+    component = fixture.componentInstance;
     fixture.detectChanges();
     const html = (fixture.nativeElement as HTMLElement).innerHTML;
     expect(html).toContain('Berza');

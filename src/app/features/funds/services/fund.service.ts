@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -10,6 +10,8 @@ import {
   ClientFundPosition,
   ClientFundTransaction,
   FundHolding,
+  FundStatistics,
+  FundValueSnapshotPoint,
   InvestmentFund,
   InvestmentRequest,
   RedemptionRequest,
@@ -28,9 +30,50 @@ export class FundService {
 
   constructor(private http: HttpClient) {}
 
-  discovery(): Observable<InvestmentFund[]> {
-    return this.http.get<any[]>(this.baseUrl).pipe(
+  /**
+   * WP-26: discovery lista. `sort`/`direction` su opcioni — backend prihvata
+   * postojeca polja plus 4 metric naziva (annualizedReturn, rewardToVariability,
+   * maxDrawdown, volatility). Komponenta i dalje sortira klijent-side, ali
+   * parametri se prosledjuju kad se eksplicitno zatraze.
+   */
+  discovery(sort?: string, direction?: 'asc' | 'desc'): Observable<InvestmentFund[]> {
+    let params = new HttpParams();
+    if (sort) {
+      params = params.set('sort', sort);
+    }
+    if (direction) {
+      params = params.set('direction', direction);
+    }
+    return this.http.get<any[]>(this.baseUrl, { params }).pipe(
       map((funds) => (funds ?? []).map((fund) => this.mapFund(fund))),
+    );
+  }
+
+  /** WP-26: performance metrike fonda (`GET /funds/{id}/statistics`). */
+  getStatistics(fundId: number): Observable<FundStatistics> {
+    return this.http.get<FundStatistics>(`${this.baseUrl}/${fundId}/statistics`);
+  }
+
+  /** WP-26: realna istorija vrednosti fonda (`FundValueSnapshot` serija, rastuca po datumu). */
+  getValueHistory(fundId: number): Observable<FundValueSnapshotPoint[]> {
+    return this.http.get<FundValueSnapshotPoint[]>(`${this.baseUrl}/${fundId}/value-history`).pipe(
+      map((points) => points ?? []),
+    );
+  }
+
+  /**
+   * WP-26: alias za `getValueHistory` — implementation plan referencira
+   * `fundPerformance()` koji je nedostajao u servisu. Backed je realnim
+   * `/funds/{id}/value-history` endpoint-om.
+   */
+  fundPerformance(fundId: number): Observable<FundValueSnapshotPoint[]> {
+    return this.getValueHistory(fundId);
+  }
+
+  /** WP-26: sistemski prosek snapshot serije preko svih fondova (za comparison chart). */
+  getAverageValueHistory(): Observable<FundValueSnapshotPoint[]> {
+    return this.http.get<FundValueSnapshotPoint[]>(`${this.baseUrl}/value-history/average`).pipe(
+      map((points) => points ?? []),
     );
   }
 
@@ -113,7 +156,18 @@ export class FundService {
         fund.account?.account_id,
       ),
       accountNumber: fund.accountNumber ?? fund.account?.accountNumber ?? fund.account?.brojRacuna,
+      // WP-26: metrike su nullable na backend-u (null kad fond nema dovoljno
+      // snapshot-ova). Normalizujemo `undefined` -> `null` da template uvek
+      // ima determinisanu vrednost za "Nedovoljno podataka" placeholder.
+      annualizedReturn: this.normalizeMetric(fund.annualizedReturn),
+      rewardToVariability: this.normalizeMetric(fund.rewardToVariability),
+      maxDrawdown: this.normalizeMetric(fund.maxDrawdown),
+      volatility: this.normalizeMetric(fund.volatility),
     } as InvestmentFund;
+  }
+
+  private normalizeMetric(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
   }
 
   private normalizeAccountId(value: unknown): number | undefined {

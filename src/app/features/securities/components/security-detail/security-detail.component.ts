@@ -14,6 +14,10 @@ import {
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T24: ApexCharts zameni Canvas drawChart().
 import { PriceChartComponent, PriceSeriesPoint } from '../../../../shared/charts/price-chart/price-chart.component';
+// WP-22 (Celina 3): watchlist + price-alert action buttons in the header.
+import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
+import { WatchlistPickerComponent } from '../../../watchlist/components/watchlist-picker/watchlist-picker.component';
+import { CreateAlertModalComponent } from '../../../price-alerts/components/create-alert-modal/create-alert-modal.component';
 
 type Period = 'day' | 'week' | 'month' | 'year' | '5year' | 'all';
 
@@ -25,7 +29,14 @@ interface DetailRow {
 @Component({
   selector: 'app-security-detail',
   standalone: true,
-  imports: [CommonModule, StateComponent, PriceChartComponent],
+  imports: [
+    CommonModule,
+    StateComponent,
+    PriceChartComponent,
+    LucideIconComponent,
+    WatchlistPickerComponent,
+    CreateAlertModalComponent,
+  ],
   templateUrl: './security-detail.component.html',
   styleUrls: ['./security-detail.component.scss'],
 })
@@ -44,6 +55,10 @@ export class SecurityDetailComponent implements OnInit, OnDestroy {
   priceSeries: PriceSeriesPoint[] = [];
 
   selectedPeriod: Period = 'month';
+
+  /** WP-22 (Celina 3): header watchlist-picker / create-alert modal open flags. */
+  watchlistPickerOpen = false;
+  alertModalOpen = false;
 
   periods: { value: Period; label: string }[] = [
     { value: 'day', label: 'Dan' },
@@ -190,5 +205,23 @@ export class SecurityDetailComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/securities']);
+  }
+
+  /* ---- WP-22 (Celina 3): watchlist + price-alert header actions ---- */
+
+  openWatchlistPicker(): void {
+    this.watchlistPickerOpen = true;
+  }
+
+  closeWatchlistPicker(): void {
+    this.watchlistPickerOpen = false;
+  }
+
+  openAlertModal(): void {
+    this.alertModalOpen = true;
+  }
+
+  closeAlertModal(): void {
+    this.alertModalOpen = false;
   }
 }

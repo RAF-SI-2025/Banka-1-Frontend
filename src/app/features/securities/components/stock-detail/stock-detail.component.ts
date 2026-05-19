@@ -15,6 +15,10 @@ import {
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T23: ApexCharts zameni Canvas drawChart().
 import { PriceChartComponent, PriceSeriesPoint } from '../../../../shared/charts/price-chart/price-chart.component';
+// WP-22 (Celina 3): watchlist + price-alert action buttons in the header.
+import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
+import { WatchlistPickerComponent } from '../../../watchlist/components/watchlist-picker/watchlist-picker.component';
+import { CreateAlertModalComponent } from '../../../price-alerts/components/create-alert-modal/create-alert-modal.component';
 
 type Period = 'day' | 'week' | 'month' | 'year' | '5year' | 'all';
 
@@ -26,7 +30,15 @@ interface DetailRow {
 @Component({
   selector: 'app-stock-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, StateComponent, PriceChartComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    StateComponent,
+    PriceChartComponent,
+    LucideIconComponent,
+    WatchlistPickerComponent,
+    CreateAlertModalComponent,
+  ],
   templateUrl: './stock-detail.component.html',
   styleUrls: ['./stock-detail.component.scss'],
 })
@@ -43,6 +55,10 @@ export class StockDetailComponent implements OnInit, OnDestroy {
 
   /** PR_31 Phase 7 T23: ApexCharts serija (zameni Canvas drawChart). */
   priceSeries: PriceSeriesPoint[] = [];
+
+  /** WP-22 (Celina 3): header watchlist-picker / create-alert modal open flags. */
+  watchlistPickerOpen = false;
+  alertModalOpen = false;
 
   selectedPeriod: Period = 'month';
   periods: { value: Period; label: string }[] = [
@@ -300,6 +316,37 @@ export class StockDetailComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/securities']);
+  }
+
+  /* ---- WP-22 (Celina 3): watchlist + price-alert header actions ---- */
+
+  /**
+   * Listing id of the displayed stock. Prefers the loaded `stock.id`, falling
+   * back to the `:ticker` route param (which actually carries the listing id).
+   * `null` when neither is available yet.
+   */
+  get listingId(): number | null {
+    if (this.stock?.id != null) {
+      return this.stock.id;
+    }
+    const parsed = Number(this.ticker);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  openWatchlistPicker(): void {
+    this.watchlistPickerOpen = true;
+  }
+
+  closeWatchlistPicker(): void {
+    this.watchlistPickerOpen = false;
+  }
+
+  openAlertModal(): void {
+    this.alertModalOpen = true;
+  }
+
+  closeAlertModal(): void {
+    this.alertModalOpen = false;
   }
 
   trackByStrike(index: number, strike: number): number {

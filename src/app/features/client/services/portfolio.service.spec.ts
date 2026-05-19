@@ -53,4 +53,24 @@ describe('PortfolioService', () => {
     expect(req.request.body).toEqual({});
     req.flush(null);
   });
+
+  // WP-24: dividend payout history.
+  it('should fetch all dividend payouts when no listingId is given', () => {
+    service.getDividends().subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/dividends`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.has('listingId')).toBeFalse();
+    req.flush([]);
+  });
+
+  it('should fetch dividend payouts filtered by listingId', () => {
+    service.getDividends(101).subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === `${environment.apiUrl}/dividends` && r.params.get('listingId') === '101',
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });

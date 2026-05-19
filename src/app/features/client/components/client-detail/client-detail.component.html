@@ -29,12 +29,15 @@
           <div>
             <label class="z-label">Email</label>
             <input type="email" formControlName="email" class="z-input" [class.border-red-500]="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" />
-            <p *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched" class="text-xs text-red-500 mt-1">Unesite validan email.</p>
+            <p *ngIf="clientForm.get('email')?.touched && clientForm.get('email')?.errors?.['required']" class="text-xs text-red-500 mt-1">Email je obavezan.</p>
+            <p *ngIf="clientForm.get('email')?.touched && clientForm.get('email')?.errors?.['emailFormat']" class="text-xs text-red-500 mt-1">Unesite validan email (npr. ime@banka.rs).</p>
             <p *ngIf="backendEmailError" class="text-xs text-red-500 mt-1">{{ backendEmailError }}</p>
           </div>
           <div>
-            <label class="z-label">Broj telefona</label>
-            <input type="text" formControlName="brojTelefona" class="z-input" />
+            <label for="client-brojTelefona" class="z-label">Broj telefona</label>
+            <input id="client-brojTelefona" type="text" formControlName="brojTelefona" class="z-input" [class.border-red-500]="clientForm.get('brojTelefona')?.invalid && clientForm.get('brojTelefona')?.touched" />
+            <p *ngIf="clientForm.get('brojTelefona')?.touched && clientForm.get('brojTelefona')?.errors?.['required']" class="text-xs text-red-500 mt-1">Broj telefona je obavezan.</p>
+            <p *ngIf="clientForm.get('brojTelefona')?.touched && clientForm.get('brojTelefona')?.errors?.['phoneFormat']" class="text-xs text-red-500 mt-1">Broj telefona sme sadržati samo cifre i znak "+" na početku (8–15 cifara).</p>
           </div>
           <div class="md:col-span-2">
             <label class="z-label">Adresa</label>

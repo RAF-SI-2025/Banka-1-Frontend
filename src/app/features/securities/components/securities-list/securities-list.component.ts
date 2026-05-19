@@ -14,6 +14,8 @@ import { AppPaginationComponent } from '../../../../shared/components/pagination
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T22: lucide-icon za drawer close button.
 import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
+// WP-22 (Celina 3): watchlist picker modal otvoren iz "Dodaj na watchlist" dugmeta.
+import { WatchlistPickerComponent } from '../../../watchlist/components/watchlist-picker/watchlist-picker.component';
 import {
   Security,
   Stock,
@@ -30,7 +32,14 @@ type SecurityTab = 'stocks' | 'futures' | 'forex';
 @Component({
   selector: 'app-securities-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppPaginationComponent,
+    StateComponent,
+    LucideIconComponent,
+    WatchlistPickerComponent,
+  ],
   templateUrl: './securities-list.component.html',
   styleUrls: ['./securities-list.component.scss'],
 })
@@ -57,6 +66,9 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   sortConfig: SortConfig = { field: 'ticker', direction: 'asc' };
 
   searchQuery = '';
+
+  /** WP-22 (Celina 3): listing id whose watchlist picker is open; null = closed. */
+  watchlistPickerListingId: number | null = null;
 
   constructor(
     private readonly securitiesService: SecuritiesService,
@@ -283,6 +295,19 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   onRowClick(security: Security): void {
     const type = this.activeTab === 'stocks' ? 'stock' : this.activeTab === 'futures' ? 'future' : 'forex';
     this.router.navigate(['/securities', type, security.id]);
+  }
+
+  /**
+   * WP-22 (Celina 3): opens the watchlist picker for a row.
+   * Stops row-click propagation so it does not also navigate to the detail page.
+   */
+  openWatchlistPicker(security: Security, event: Event): void {
+    event.stopPropagation();
+    this.watchlistPickerListingId = security.id;
+  }
+
+  closeWatchlistPicker(): void {
+    this.watchlistPickerListingId = null;
   }
 
   formatPrice(price: number): string {

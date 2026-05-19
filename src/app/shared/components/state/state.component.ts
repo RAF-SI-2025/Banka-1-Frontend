@@ -29,7 +29,7 @@ const LUCIDE_NAMES = new Set([
   'home', 'wallet', 'send', 'creditcard', 'piggybank', 'trendingup', 'briefcase',
   'handshake', 'building', 'users', 'shieldcheck', 'receipt', 'gauge',
   'search', 'menu', 'x', 'sun', 'moon', 'monitor', 'bell', 'chevrondown',
-  'inbox', 'alerttriangle',
+  'inbox', 'alerttriangle', 'star', 'repeat',
 ]);
 
 @Component({

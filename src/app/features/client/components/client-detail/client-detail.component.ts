@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientDto, ClientService } from '../../services/client.service';
 // PR_31 T11: shared StateComponent za loading/empty/error markup.
 import { StateComponent } from '../../../../shared/components/state/state.component';
+import { emailFormatValidator, phoneNumberValidator } from '../../../../shared/utils/validators';
 @Component({
   selector: 'app-client-detail',
   templateUrl: './client-detail.component.html',
@@ -28,8 +29,8 @@ export class ClientDetailComponent implements OnInit {
     this.clientForm = this.fb.group({
       ime: ['', Validators.required],
       prezime: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      brojTelefona: ['', Validators.required],
+      email: ['', [Validators.required, emailFormatValidator]],
+      brojTelefona: ['', [Validators.required, phoneNumberValidator]],
       adresa: ['', Validators.required],
     });
   }

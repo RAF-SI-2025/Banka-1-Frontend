@@ -356,13 +356,25 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <!-- WP-22 (Celina 3): Dodaj na watchlist. -->
+                  <button
+                    type="button"
+                    class="z-btn-icon"
+                    title="Dodaj na watchlist"
+                    aria-label="Dodaj na watchlist"
+                    (click)="openWatchlistPicker(security, $event)"
+                  >
+                    <lucide-icon name="star" [size]="14"></lucide-icon>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -415,13 +427,25 @@
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td class="text-muted-foreground">{{ asFuture(security).settlementDate }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <!-- WP-22 (Celina 3): Dodaj na watchlist. -->
+                  <button
+                    type="button"
+                    class="z-btn-icon"
+                    title="Dodaj na watchlist"
+                    aria-label="Dodaj na watchlist"
+                    (click)="openWatchlistPicker(security, $event)"
+                  >
+                    <lucide-icon name="star" [size]="14"></lucide-icon>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -472,13 +496,25 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).spread.toFixed(4) }}</td>
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <!-- WP-22 (Celina 3): Dodaj na watchlist. -->
+                  <button
+                    type="button"
+                    class="z-btn-icon"
+                    title="Dodaj na watchlist"
+                    aria-label="Dodaj na watchlist"
+                    (click)="openWatchlistPicker(security, $event)"
+                  >
+                    <lucide-icon name="star" [size]="14"></lucide-icon>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -504,3 +540,10 @@
     </div>
   </div>
 </div>
+
+<!-- WP-22 (Celina 3): watchlist picker modal (opened from the AKCIJA column). -->
+<app-watchlist-picker
+  *ngIf="watchlistPickerListingId !== null"
+  [listingId]="watchlistPickerListingId"
+  (close)="closeWatchlistPicker()"
+></app-watchlist-picker>

@@ -47,9 +47,90 @@
       </div>
     </div>
 
-    <button type="button" class="z-btn-icon" aria-label="Notifikacije">
-      <lucide-icon name="bell" [size]="16"></lucide-icon>
-    </button>
+    <div class="relative">
+      <button type="button" (click)="toggleNotificationsMenu()"
+              class="z-btn-icon relative"
+              aria-label="Notifikacije"
+              [attr.aria-expanded]="notificationsMenuOpen">
+        <lucide-icon name="bell" [size]="16"></lucide-icon>
+        <span *ngIf="(unreadCount$ | async) as unread"
+              class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none"
+              [attr.aria-label]="unread + ' neprocitanih notifikacija'">
+          {{ unread > 99 ? '99+' : unread }}
+        </span>
+      </button>
+      <!-- Richer panel than the theme/avatar menus: it is a list of cards, not a
+           flat command menu. Same *ngIf open/close + closeMenus() pattern, but no
+           role="menu" — `menu`/`menuitem` forbids the header + <ul> structure. -->
+      <div *ngIf="notificationsMenuOpen"
+           class="absolute right-0 top-full mt-1 z-50 w-[340px] bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-border">
+          <span class="text-sm font-semibold text-foreground">Notifikacije</span>
+          <button type="button"
+                  (click)="markAllNotificationsRead()"
+                  class="text-xs text-primary hover:underline cursor-pointer border-0 bg-transparent">
+            Oznaci sve
+          </button>
+        </div>
+
+        <div *ngIf="notificationsLoading" class="px-3 py-6 text-center text-sm text-muted-foreground">
+          Ucitavanje...
+        </div>
+        <div *ngIf="!notificationsLoading && notificationsError"
+             class="px-3 py-6 text-center text-sm text-destructive">
+          Greska pri ucitavanju notifikacija.
+        </div>
+        <div *ngIf="!notificationsLoading && !notificationsError && notifications.length === 0"
+             class="px-3 py-6 text-center text-sm text-muted-foreground">
+          Nemate nijedno obavestenje.
+        </div>
+
+        <ul *ngIf="!notificationsLoading && !notificationsError && notifications.length > 0"
+            class="max-h-80 overflow-y-auto divide-y divide-border">
+          <li *ngFor="let n of notifications" [class.bg-accent]="!n.read">
+            <button type="button"
+                    (click)="markNotificationRead(n)"
+                    class="w-full text-left flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-accent/40 border-0 bg-transparent">
+              <span class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full"
+                    [class.bg-primary]="!n.read"
+                    [class.bg-transparent]="n.read"
+                    aria-hidden="true"></span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold truncate"
+                      [class.text-muted-foreground]="n.read">{{ n.title }}</span>
+                <span class="block text-xs text-muted-foreground line-clamp-2">{{ n.body }}</span>
+                <span class="block text-[10px] text-muted-foreground/70 mt-0.5">
+                  {{ n.createdAt | date: 'dd.MM.yyyy. HH:mm' }}
+                </span>
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <a routerLink="/notifications" (click)="closeMenus()"
+           class="block px-3 py-2 text-center text-sm text-primary hover:bg-accent/40 border-t border-border">
+          Prikazi sve
+        </a>
+      </div>
+    </div>
+
+    <!-- WP-22 (Celina 3): watchlist quick-access dropdown. Same *ngIf open/close
+         + closeMenus() pattern as the theme/notification/avatar menus. -->
+    <div class="relative">
+      <button type="button" (click)="toggleWatchlistMenu()"
+              class="z-btn-icon"
+              aria-label="Watchlist"
+              [attr.aria-expanded]="watchlistMenuOpen">
+        <lucide-icon name="star" [size]="16"></lucide-icon>
+      </button>
+      <div *ngIf="watchlistMenuOpen"
+           class="absolute right-0 top-full mt-1 z-50 w-[320px] bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+        <app-watchlist-widget
+          [open]="watchlistMenuOpen"
+          (navigate)="closeMenus()">
+        </app-watchlist-widget>
+      </div>
+    </div>
 
     <div class="relative">
       <button type="button" (click)="toggleAvatarMenu()"

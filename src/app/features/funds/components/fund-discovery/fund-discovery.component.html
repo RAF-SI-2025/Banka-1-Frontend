@@ -23,19 +23,32 @@
     <div class="flex flex-wrap items-center gap-3 mb-5">
       <input [(ngModel)]="search" (ngModelChange)="apply()"
              class="z-input flex-1 min-w-[200px]" placeholder="Pretrazi po nazivu ili opisu..." />
-      <div class="flex items-center gap-2 text-sm">
+      <!-- WP-26: sort dugmad prosirena sa 4 metric kljuca (statistika fondova). -->
+      <div class="flex flex-wrap items-center gap-2 text-sm">
         <span class="text-muted-foreground">Sortiraj:</span>
-        <button class="z-btn-outline-sm" (click)="setSort('naziv')">
+        <button class="z-btn-outline-sm" data-testid="sort-naziv" (click)="setSort('naziv')">
           Naziv <span *ngIf="sortField === 'naziv'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
         </button>
-        <button class="z-btn-outline-sm" (click)="setSort('totalValue')">
+        <button class="z-btn-outline-sm" data-testid="sort-totalValue" (click)="setSort('totalValue')">
           Vrednost <span *ngIf="sortField === 'totalValue'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
         </button>
-        <button class="z-btn-outline-sm" (click)="setSort('profit')">
+        <button class="z-btn-outline-sm" data-testid="sort-profit" (click)="setSort('profit')">
           Profit <span *ngIf="sortField === 'profit'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
         </button>
-        <button class="z-btn-outline-sm" (click)="setSort('minimumContribution')">
+        <button class="z-btn-outline-sm" data-testid="sort-minimumContribution" (click)="setSort('minimumContribution')">
           Min. ulog <span *ngIf="sortField === 'minimumContribution'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" data-testid="sort-annualizedReturn" (click)="setSort('annualizedReturn')">
+          Godisnji prinos <span *ngIf="sortField === 'annualizedReturn'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" data-testid="sort-rewardToVariability" (click)="setSort('rewardToVariability')">
+          Reward/Variability <span *ngIf="sortField === 'rewardToVariability'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" data-testid="sort-maxDrawdown" (click)="setSort('maxDrawdown')">
+          Maks. pad <span *ngIf="sortField === 'maxDrawdown'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" data-testid="sort-volatility" (click)="setSort('volatility')">
+          Volatilnost <span *ngIf="sortField === 'volatility'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
         </button>
       </div>
     </div>
@@ -75,6 +88,54 @@
               <dd class="font-mono font-bold text-lg text-foreground mt-0.5">{{ f.totalValue | number:'1.0-2' }} RSD</dd>
             </div>
           </dl>
+
+          <!-- WP-26: performance metrike (Celina 4 — statistika fondova).
+               Frakcije sa backend-a; "—" kad fond nema dovoljno snapshot-ova. -->
+          <dl class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm border-t border-border pt-4 mt-4"
+              data-testid="fund-metrics">
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Godisnji prinos</dt>
+              <dd class="font-mono font-semibold mt-0.5"
+                  data-testid="metric-annualizedReturn"
+                  [class.text-success]="f.annualizedReturn !== null && f.annualizedReturn > 0"
+                  [class.text-destructive]="f.annualizedReturn !== null && f.annualizedReturn < 0"
+                  [class.text-muted-foreground]="f.annualizedReturn === null">
+                {{ metricPercent(f.annualizedReturn) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Reward/Variability</dt>
+              <dd class="font-mono font-semibold mt-0.5"
+                  data-testid="metric-rewardToVariability"
+                  [class.text-foreground]="f.rewardToVariability !== null"
+                  [class.text-muted-foreground]="f.rewardToVariability === null">
+                {{ metricRatio(f.rewardToVariability) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Maks. pad</dt>
+              <dd class="font-mono font-semibold mt-0.5"
+                  data-testid="metric-maxDrawdown"
+                  [class.text-destructive]="f.maxDrawdown !== null && f.maxDrawdown !== 0"
+                  [class.text-muted-foreground]="f.maxDrawdown === null">
+                {{ metricPercent(f.maxDrawdown) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Volatilnost</dt>
+              <dd class="font-mono font-semibold mt-0.5"
+                  data-testid="metric-volatility"
+                  [class.text-foreground]="f.volatility !== null"
+                  [class.text-muted-foreground]="f.volatility === null">
+                {{ metricPercent(f.volatility) }}
+              </dd>
+            </div>
+          </dl>
+          <p *ngIf="f.annualizedReturn === null"
+             class="text-[11px] text-muted-foreground mt-2"
+             data-testid="metric-empty-hint">
+            Nedovoljno podataka za statistiku.
+          </p>
 
           <div class="flex items-center justify-end mt-4 pt-3 border-t border-border text-sm font-semibold text-primary group-hover:underline">
             Detalji i investicija <span aria-hidden="true" class="ml-1">→</span>

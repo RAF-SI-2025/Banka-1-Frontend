@@ -12,6 +12,35 @@ export interface InvestmentFund {
   datumKreiranja: string;
   totalValue: number;
   profit: number;
+  // WP-26 (Celina 4 — statistika fondova): performance metrike sa backend-a.
+  // Sve su frakcije (0.12 = 12%) i null kad fond nema dovoljno snapshot-ova.
+  annualizedReturn: number | null;
+  rewardToVariability: number | null;
+  maxDrawdown: number | null;
+  volatility: number | null;
+}
+
+/**
+ * WP-26: rezultat `GET /funds/{id}/statistics`. `metricsAvailable=false` znaci da
+ * fond jos uvek nema dovoljno istorijskih snapshot-ova — tada su sve metrike null.
+ */
+export interface FundStatistics {
+  metricsAvailable: boolean;
+  annualizedReturn: number | null;
+  rewardToVariability: number | null;
+  maxDrawdown: number | null;
+  volatility: number | null;
+}
+
+/**
+ * WP-26: jedna tacka u istoriji vrednosti fonda (`FundValueSnapshot`).
+ * Koristi se i za seriju jednog fonda (`/funds/{id}/value-history`) i za
+ * sistemski prosek (`/funds/value-history/average`).
+ */
+export interface FundValueSnapshotPoint {
+  snapshotDate: string;
+  totalValue: number;
+  profit: number;
 }
 
 export interface ClientFundPosition {

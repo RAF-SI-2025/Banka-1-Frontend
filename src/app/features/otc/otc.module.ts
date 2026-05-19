@@ -9,6 +9,7 @@ import { OtcPositionsComponent } from './components/otc-positions/otc-positions.
 import { OtcOffersComponent } from './components/otc-offers/otc-offers.component';
 import { OtcContractsComponent } from './components/otc-contracts/otc-contracts.component';
 import { OtcCreateOfferComponent } from './components/otc-create-offer/otc-create-offer.component';
+import { OtcNegotiationHistoryComponent } from './components/otc-negotiation-history/otc-negotiation-history.component';
 import { roleGuard } from '../../core/guards/role.guard';
 import { StateComponent } from '../../shared/components/state/state.component';
 
@@ -33,6 +34,7 @@ const routes: Routes = [
     OtcOffersComponent,
     OtcContractsComponent,
     OtcCreateOfferComponent,
+    OtcNegotiationHistoryComponent,
   ],
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule.forChild(routes), StateComponent],
 })

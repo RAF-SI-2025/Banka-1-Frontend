@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 
 import { OtcOffersComponent } from './otc-offers.component';
@@ -28,7 +30,7 @@ describe('OtcOffersComponent — filter mode (PR_33 Phase B)', () => {
 
   beforeEach(() => {
     otcServiceStub = jasmine.createSpyObj<OtcService>('OtcService', [
-      'getActiveOffers', 'accept', 'reject', 'counterOffer',
+      'getActiveOffers', 'accept', 'reject', 'counterOffer', 'withdrawOffer',
       'acceptInterbankNegotiation', 'deleteInterbankNegotiation',
       'counterInterbankNegotiation',
     ]);
@@ -37,7 +39,13 @@ describe('OtcOffersComponent — filter mode (PR_33 Phase B)', () => {
     otcServiceStub.getActiveOffers.and.returnValue(of([]));
     priceServiceStub.poll.and.returnValue(of([]));
 
+    // OtcOffersComponent injektuje i AuthService (koji zavisi od HttpClient +
+    // Router). Bez HTTP/Router test providera Angular ne moze da konstruise
+    // realni AuthService → NullInjectorError za HttpClient. HttpClientTestingModule
+    // + RouterTestingModule zadovoljavaju tu zavisnost (AuthService se ne stub-uje
+    // jer njegove getUserIdFromToken/getJwtRoles metode citaju localStorage, ne mrezu).
     TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule, RouterTestingModule],
       providers: [
         OtcOffersComponent,
         { provide: OtcService, useValue: otcServiceStub },
@@ -122,10 +130,12 @@ describe('OtcOffersComponent — filter mode (PR_33 Phase B)', () => {
     expect(otcServiceStub.acceptInterbankNegotiation).not.toHaveBeenCalled();
   });
 
-  it('reject(offer) za inter-bank zove deleteInterbankNegotiation', () => {
+  it('withdraw(offer) za inter-bank zove deleteInterbankNegotiation', () => {
+    // Inter-bank "brisanje pregovora" ide kroz withdraw() (canReject() je false za
+    // interbank ponude — reject() je intra-bank-only put).
     otcServiceStub.deleteInterbankNegotiation.and.returnValue(of(undefined));
     const offer = makeOffer({ interbank: true, localId: 'neg-1' });
-    component.reject(offer);
+    component.withdraw(offer);
     expect(otcServiceStub.deleteInterbankNegotiation).toHaveBeenCalledWith('neg-1');
   });
 

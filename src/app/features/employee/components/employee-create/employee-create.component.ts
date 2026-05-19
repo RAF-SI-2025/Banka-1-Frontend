@@ -4,6 +4,11 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { EmployeeService } from '../../services/employee.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import {
+  emailFormatValidator,
+  notFutureDateValidator,
+  phoneNumberValidator,
+} from '../../../../shared/utils/validators';
 
 @Component({
   selector: 'app-employee-create',
@@ -35,10 +40,10 @@ export class EmployeeCreateComponent implements OnInit, OnDestroy {
     this.employeeForm = this.fb.group({
       ime: ['', [Validators.required, Validators.minLength(2)]],
       prezime: ['', [Validators.required, Validators.minLength(2)]],
-      datumRodjenja: ['1990-01-01', Validators.required],
+      datumRodjenja: ['1990-01-01', [Validators.required, notFutureDateValidator]],
       pol: ['M', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      brojTelefona: ['', Validators.required],
+      email: ['', [Validators.required, emailFormatValidator]],
+      brojTelefona: ['', [Validators.required, phoneNumberValidator]],
       adresa: [''],
       pozicija: ['', Validators.required],
       departman: ['', Validators.required],

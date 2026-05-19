@@ -1,10 +1,15 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../services/auth.service';
 import { Theme, ThemeService } from '../../services/theme.service';
+import { NotificationService } from '../../services/notification.service';
+import { Notification } from '../../models/notification.model';
+
+/** How many notifications the bell dropdown preview shows. */
+const NOTIFICATION_PREVIEW_SIZE = 8;
 
 type ThemeIcon = 'sun' | 'moon' | 'monitor';
 
@@ -48,16 +53,29 @@ export class TopbarComponent implements OnInit, OnDestroy {
   breadcrumb: string[] = [];
   themeMenuOpen = false;
   avatarMenuOpen = false;
+  notificationsMenuOpen = false;
+  /** WP-22 (Celina 3): watchlist quick-access dropdown open flag. */
+  watchlistMenuOpen = false;
   userInitials = '';
   private sub?: Subscription;
 
   readonly themes: Theme[] = ['system', 'light', 'dark'];
 
+  /** Live unread-count for the bell badge (hidden when 0). */
+  readonly unreadCount$: Observable<number>;
+  /** Latest few notifications shown inside the bell dropdown. */
+  notifications: Notification[] = [];
+  notificationsLoading = false;
+  notificationsError = false;
+
   constructor(
     public theme: ThemeService,
     private auth: AuthService,
     private router: Router,
-  ) {}
+    private notificationService: NotificationService,
+  ) {
+    this.unreadCount$ = this.notificationService.unreadCount$;
+  }
 
   ngOnInit(): void {
     this.refreshBreadcrumb(this.router.url);
@@ -94,9 +112,69 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.avatarMenuOpen = next;
   }
 
+  toggleNotificationsMenu(): void {
+    const next = !this.notificationsMenuOpen;
+    this.closeMenus();
+    this.notificationsMenuOpen = next;
+    /* Lazily fetch the preview each time the panel opens so it is fresh. */
+    if (this.notificationsMenuOpen) {
+      this.loadNotificationPreview();
+    }
+  }
+
+  /**
+   * WP-22 (Celina 3): toggles the watchlist quick-access dropdown.
+   * The {@link WatchlistWidgetComponent} fetches lazily off its `open` input.
+   */
+  toggleWatchlistMenu(): void {
+    const next = !this.watchlistMenuOpen;
+    this.closeMenus();
+    this.watchlistMenuOpen = next;
+  }
+
   closeMenus(): void {
     this.themeMenuOpen = false;
     this.avatarMenuOpen = false;
+    this.notificationsMenuOpen = false;
+    this.watchlistMenuOpen = false;
+  }
+
+  /** Fetches the latest few notifications for the dropdown preview. */
+  loadNotificationPreview(): void {
+    this.notificationsLoading = true;
+    this.notificationsError = false;
+    this.notificationService.list(0, NOTIFICATION_PREVIEW_SIZE).subscribe({
+      next: (page) => {
+        this.notifications = page?.content ?? [];
+        this.notificationsLoading = false;
+      },
+      error: () => {
+        this.notificationsLoading = false;
+        this.notificationsError = true;
+      },
+    });
+  }
+
+  /** Marks one notification read from the dropdown and flips it locally. */
+  markNotificationRead(n: Notification): void {
+    if (n.read) {
+      return;
+    }
+    this.notificationService.markRead(n.id).subscribe({
+      next: () => {
+        n.read = true;
+      },
+      /* Silent: the dropdown is a peripheral surface, no toast noise. */
+      error: () => undefined,
+    });
+  }
+
+  /** Marks every notification read from the dropdown. */
+  markAllNotificationsRead(): void {
+    this.notificationService.markAllRead().subscribe({
+      next: () => this.notifications.forEach((n) => (n.read = true)),
+      error: () => undefined,
+    });
   }
 
   logout(): void {

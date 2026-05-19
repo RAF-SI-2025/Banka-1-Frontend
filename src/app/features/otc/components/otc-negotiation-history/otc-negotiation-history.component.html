@@ -1,0 +1,204 @@
+<div>
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold text-foreground">Istorija pregovora</h2>
+    <p class="text-sm text-muted-foreground mt-1">
+      Svi zavrseni i tekuci OTC pregovori. Klik na red prikazuje kompletnu istoriju protivponuda.
+    </p>
+  </div>
+
+  <!-- Filter -->
+  <div class="z-card p-4 mb-6">
+    <div class="flex items-end gap-4 flex-wrap">
+      <div>
+        <label class="z-label" for="histStatus">Status</label>
+        <select id="histStatus"
+                class="z-select max-w-[200px]"
+                aria-label="Filter istorije po statusu"
+                data-testid="filter-status"
+                [(ngModel)]="filter.status">
+          <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label" for="histFrom">Od datuma</label>
+        <input id="histFrom" type="date"
+               class="z-input max-w-[180px]"
+               aria-label="Filter istorije od datuma"
+               data-testid="filter-from"
+               [(ngModel)]="filter.from" />
+      </div>
+      <div>
+        <label class="z-label" for="histTo">Do datuma</label>
+        <input id="histTo" type="date"
+               class="z-input max-w-[180px]"
+               aria-label="Filter istorije do datuma"
+               data-testid="filter-to"
+               [(ngModel)]="filter.to" />
+      </div>
+      <div>
+        <label class="z-label" for="histCounterparty">Druga strana (ID)</label>
+        <input id="histCounterparty" type="number" min="1"
+               class="z-input max-w-[160px]"
+               placeholder="ID kupca/prodavca"
+               aria-label="Filter istorije po drugoj strani"
+               data-testid="filter-counterparty"
+               [(ngModel)]="filter.counterparty" />
+      </div>
+      <div class="flex gap-2">
+        <button type="button" class="z-btn-primary" (click)="applyFilter()" data-testid="apply-filter">
+          Primeni filter
+        </button>
+        <button type="button" class="z-btn-outline" (click)="resetFilter()" data-testid="reset-filter">
+          Poništi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje istorije pregovora..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <app-state *ngIf="negotiations.length === 0"
+               mode="empty" title="Nema pregovora za izabrani filter"
+               text="Promeniti filter ili pokrenuti novi OTC pregovor."></app-state>
+
+    <div *ngIf="negotiations.length > 0" class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Pregovori</p>
+        <span class="z-badge z-badge-blue">{{ negotiations.length }} pregovora</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[920px]" data-testid="history-table">
+          <thead>
+            <tr>
+              <th class="w-8"></th>
+              <th>Akcija</th>
+              <th class="text-right">Količina</th>
+              <th class="text-right">Cena/akciji</th>
+              <th class="text-right">Premium</th>
+              <th>Settlement</th>
+              <th>Poslednja izmena</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let n of negotiations">
+              <tr class="cursor-pointer hover:bg-muted/40"
+                  (click)="toggleRevisions(n)"
+                  [attr.data-testid]="'history-row-' + n.id">
+                <td class="text-muted-foreground text-center" aria-hidden="true">
+                  {{ isExpanded(n) ? '▾' : '▸' }}
+                </td>
+                <td class="font-semibold">{{ n.stockTicker }}</td>
+                <td class="text-right font-mono">{{ n.amount | number }}</td>
+                <td class="text-right font-mono">{{ n.pricePerStock | number:'1.2-2' }}</td>
+                <td class="text-right font-mono">{{ n.premium | number:'1.2-2' }}</td>
+                <td class="whitespace-nowrap">{{ formatDate(n.settlementDate) }}</td>
+                <td class="text-muted-foreground whitespace-nowrap">
+                  {{ n.lastModified ? (n.lastModified | date:'short') : '—' }}
+                </td>
+                <td>
+                  <span class="z-badge" [ngClass]="statusBadgeClass(n.status)">
+                    {{ statusLabel(n.status) }}
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Revision trail panel -->
+              <tr *ngIf="isExpanded(n)" [attr.data-testid]="'history-detail-' + n.id">
+                <td colspan="8" class="bg-muted/30 p-0">
+                  <div class="p-5">
+                    <h3 class="text-sm font-semibold text-foreground mb-3">
+                      Istorija protivponuda — {{ n.stockTicker }}
+                    </h3>
+
+                    <app-state *ngIf="revisionsLoading" mode="loading"
+                               text="Ucitavanje istorije protivponuda..."></app-state>
+                    <app-state *ngIf="revisionsError && !revisionsLoading" mode="error"
+                               [text]="revisionsError"></app-state>
+
+                    <ng-container *ngIf="!revisionsLoading && !revisionsError">
+                      <app-state *ngIf="revisions.length === 0" mode="empty"
+                                 title="Nema zabeleženih revizija"
+                                 text="Ovaj pregovor nema istoriju promena."></app-state>
+
+                      <div *ngIf="revisions.length > 0" class="overflow-x-auto">
+                        <table class="z-table min-w-[860px]" data-testid="revision-table">
+                          <thead>
+                            <tr>
+                              <th>Akcija</th>
+                              <th>Akter</th>
+                              <th>Uloga</th>
+                              <th class="text-right">Količina (staro → novo)</th>
+                              <th class="text-right">Cena (staro → novo)</th>
+                              <th class="text-right">Premium (staro → novo)</th>
+                              <th>Settlement (staro → novo)</th>
+                              <th>Vreme</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let r of revisions" [attr.data-testid]="'revision-row-' + r.id">
+                              <td class="font-semibold">{{ actionLabel(r.action) }}</td>
+                              <td>{{ r.actorName }}</td>
+                              <td>
+                                <span class="z-badge"
+                                      [ngClass]="r.actorRole === 'SELLER' ? 'z-badge-gold' : 'z-badge-blue'">
+                                  {{ roleLabel(r.actorRole) }}
+                                </span>
+                              </td>
+                              <td class="text-right font-mono whitespace-nowrap">
+                                <span class="text-muted-foreground">
+                                  {{ r.oldAmount !== null ? (r.oldAmount | number) : '—' }}
+                                </span>
+                                <span class="mx-1 text-muted-foreground">→</span>
+                                <span [class.z-diff-mid]="changed(r.oldAmount, r.newAmount)">
+                                  {{ r.newAmount !== null ? (r.newAmount | number) : '—' }}
+                                </span>
+                              </td>
+                              <td class="text-right font-mono whitespace-nowrap">
+                                <span class="text-muted-foreground">
+                                  {{ r.oldPricePerStock !== null ? (r.oldPricePerStock | number:'1.2-2') : '—' }}
+                                </span>
+                                <span class="mx-1 text-muted-foreground">→</span>
+                                <span [class.z-diff-mid]="changed(r.oldPricePerStock, r.newPricePerStock)">
+                                  {{ r.newPricePerStock !== null ? (r.newPricePerStock | number:'1.2-2') : '—' }}
+                                </span>
+                              </td>
+                              <td class="text-right font-mono whitespace-nowrap">
+                                <span class="text-muted-foreground">
+                                  {{ r.oldPremium !== null ? (r.oldPremium | number:'1.2-2') : '—' }}
+                                </span>
+                                <span class="mx-1 text-muted-foreground">→</span>
+                                <span [class.z-diff-mid]="changed(r.oldPremium, r.newPremium)">
+                                  {{ r.newPremium !== null ? (r.newPremium | number:'1.2-2') : '—' }}
+                                </span>
+                              </td>
+                              <td class="whitespace-nowrap">
+                                <span class="text-muted-foreground">
+                                  {{ formatDate(r.oldSettlementDate) }}
+                                </span>
+                                <span class="mx-1 text-muted-foreground">→</span>
+                                <span [class.z-diff-mid]="changed(r.oldSettlementDate, r.newSettlementDate)">
+                                  {{ formatDate(r.newSettlementDate) }}
+                                </span>
+                              </td>
+                              <td class="text-muted-foreground whitespace-nowrap">
+                                {{ r.createdAt | date:'short' }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>

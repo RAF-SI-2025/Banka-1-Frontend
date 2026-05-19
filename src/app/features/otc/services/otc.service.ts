@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -13,7 +13,9 @@ import {
   InterbankNegotiationView,
   OptionContract,
   OptionContractStatus,
+  OtcHistoryFilter,
   OtcOffer,
+  OtcOfferRevision,
   OtcPosition,
   OtcPublicStockGroup,
   UpdateOtcPositionRequest,
@@ -91,6 +93,44 @@ export class OtcService {
       ? `${this.baseUrl}/contracts/my?status=${status}`
       : `${this.baseUrl}/contracts/my`;
     return this.http.get<OptionContract[]>(url);
+  }
+
+  // ------------------------------------------------------------------
+  // WP-25 (Task D6): OTC negotiation history.
+  // ------------------------------------------------------------------
+
+  /**
+   * Dohvata istoriju pregovora current user-a kroz SVE statuse (uklj. terminalne
+   * ACCEPTED/REJECTED/WITHDRAWN/EXPIRED) — backend ruta `GET /otc/offers/history`.
+   *
+   * Filter polja su opciona; samo popunjena se prosledjuju kao query parametri
+   * (prazan string / `null` / `undefined` se izostavljaju da backend tretira
+   * odsustvo kao "bez filtera").
+   */
+  getNegotiationHistory(filter: OtcHistoryFilter): Observable<OtcOffer[]> {
+    let params = new HttpParams();
+    if (filter.status) {
+      params = params.set('status', filter.status);
+    }
+    if (filter.from) {
+      params = params.set('from', filter.from);
+    }
+    if (filter.to) {
+      params = params.set('to', filter.to);
+    }
+    if (filter.counterparty != null) {
+      params = params.set('counterparty', String(filter.counterparty));
+    }
+    return this.http.get<OtcOffer[]>(`${this.baseUrl}/offers/history`, { params });
+  }
+
+  /**
+   * Dohvata uredjeni revision trail jednog pregovora — backend ruta
+   * `GET /otc/offers/{id}/history`. Svaka revizija nosi old/new vrednosti,
+   * aktera (id + ime + uloga) i timestamp.
+   */
+  getOfferRevisions(offerId: number): Observable<OtcOfferRevision[]> {
+    return this.http.get<OtcOfferRevision[]>(`${this.baseUrl}/offers/${offerId}/history`);
   }
 
   // ------------------------------------------------------------------

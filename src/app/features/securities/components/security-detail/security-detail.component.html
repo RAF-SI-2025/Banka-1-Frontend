@@ -27,10 +27,31 @@
 
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && security">
-      <div class="flex items-baseline gap-3 mb-6 flex-wrap">
-        <h2 class="text-2xl font-bold text-foreground">{{ security.ticker }}</h2>
-        <span class="text-base text-muted-foreground">{{ security.name }}</span>
-        <span class="z-badge z-badge-blue">{{ security.exchange }}</span>
+      <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div class="flex items-baseline gap-3 flex-wrap">
+          <h2 class="text-2xl font-bold text-foreground">{{ security.ticker }}</h2>
+          <span class="text-base text-muted-foreground">{{ security.name }}</span>
+          <span class="z-badge z-badge-blue">{{ security.exchange }}</span>
+        </div>
+        <!-- WP-22 (Celina 3): watchlist + price-alert header actions. -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="z-btn-outline z-btn-sm flex items-center gap-1.5"
+            (click)="openWatchlistPicker()"
+          >
+            <lucide-icon name="star" [size]="14"></lucide-icon>
+            Dodaj na watchlist
+          </button>
+          <button
+            type="button"
+            class="z-btn-outline z-btn-sm flex items-center gap-1.5"
+            (click)="openAlertModal()"
+          >
+            <lucide-icon name="bell" [size]="14"></lucide-icon>
+            Postavi obavestenje
+          </button>
+        </div>
       </div>
 
       <div class="z-card mb-6 overflow-hidden">
@@ -114,3 +135,17 @@
     </div>
   </div>
 </div>
+
+<!-- WP-22 (Celina 3): watchlist picker + create-alert modals. -->
+<app-watchlist-picker
+  *ngIf="watchlistPickerOpen && id !== null"
+  [listingId]="id"
+  (close)="closeWatchlistPicker()"
+></app-watchlist-picker>
+<app-create-alert-modal
+  *ngIf="alertModalOpen && id !== null"
+  [listingId]="id"
+  [ticker]="security?.ticker || ''"
+  (close)="closeAlertModal()"
+></app-create-alert-modal>
+

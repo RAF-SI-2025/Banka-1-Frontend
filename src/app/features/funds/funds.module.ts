@@ -12,6 +12,8 @@ import { CreateFundComponent } from './components/create-fund/create-fund.compon
 // PR_19 C19.5 + C19.6: shared standalone components.
 import { StateComponent } from '../../shared/components/state/state.component';
 import { FormModalComponent } from '../../shared/components/form-modal/form-modal.component';
+// WP-26: standalone multi-series chart za statistiku fondova.
+import { FundHistoryChartComponent } from '../../shared/charts/fund-history-chart/fund-history-chart.component';
 import { roleGuard } from '../../core/guards/role.guard';
 
 const routes: Routes = [
@@ -51,6 +53,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     RouterModule.forChild(routes),
     StateComponent,
-    FormModalComponent],
+    FormModalComponent,
+    FundHistoryChartComponent],
 })
 export class FundsModule {}

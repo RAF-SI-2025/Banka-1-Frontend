@@ -153,6 +153,16 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    // WP-21: in-app notifications page (lazy, standalone).
+    // Every authenticated user has a notification feed — no extra permission.
+    path: 'notifications',
+    loadComponent: () =>
+      import('./features/notifications/notifications.component').then(
+        (m) => m.NotificationsComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule),
@@ -202,6 +212,29 @@ const routes: Routes = [
     // SECURITIES_TRADE_UNLIMITED je preliberalno (i agenti ga mogu imati).
     data: { anyRole: ['SUPERVISOR', 'ADMIN', 'EmployeeAdmin'] },
   },
+  {
+    // WP-23 (Celina 3): system audit log viewer (lazy, standalone).
+    // Restricted to administrators and supervisors — copies the supervisor-only
+    // `tax-tracking` guard shape.
+    path: 'audit-log',
+    loadComponent: () =>
+      import('./features/employee/components/audit-log/audit-log.component').then(
+        (m) => m.AuditLogComponent,
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: { anyRole: ['SUPERVISOR', 'ADMIN'] },
+  },
+  {
+    // WP-23 (Celina 3 — DCA): recurring (standing) orders (lazy, standalone).
+    // Every authenticated trader — clients-with-trading + actuary agents —
+    // can have recurring orders, so authGuard alone gates the route.
+    path: 'recurring-orders',
+    loadComponent: () =>
+      import('./features/recurring-orders/recurring-orders.component').then(
+        (m) => m.RecurringOrdersComponent,
+      ),
+    canActivate: [authGuard],
+  },
 
   {
     path: 'securities',
@@ -234,6 +267,34 @@ const routes: Routes = [
     path: 'orders/create/:direction/:listingId',
     component: CreateOrderComponent,
     canActivate: [authGuard]
+  },
+  {
+    // WP-22 (Celina 3): "Moji orderi" — caller's own order history (lazy, standalone).
+    // Every authenticated trader (client-with-trading + actuary agent) sees their own orders.
+    path: 'orders/my',
+    loadComponent: () =>
+      import('./features/orders/components/my-orders/my-orders.component').then(
+        (m) => m.MyOrdersComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    // WP-22 (Celina 3): Watchlist management (lazy, standalone).
+    path: 'watchlists',
+    loadComponent: () =>
+      import(
+        './features/watchlist/components/watchlist-page/watchlist-page.component'
+      ).then((m) => m.WatchlistPageComponent),
+    canActivate: [authGuard],
+  },
+  {
+    // WP-22 (Celina 3): Price-alerts management (lazy, standalone).
+    path: 'price-alerts',
+    loadComponent: () =>
+      import(
+        './features/price-alerts/components/price-alerts-page/price-alerts-page.component'
+      ).then((m) => m.PriceAlertsPageComponent),
+    canActivate: [authGuard],
   },
   {
     // PR_03 C3.8: portal za marzne racune (lazy-loaded).

@@ -85,14 +85,19 @@ export class LoginComponent {
   /**
    * Mapira HTTP gresku na spec-tacnu poruku iz TestoviCelina1 (Sc 2 i Sc 3):
    * "Korisnik ne postoji" za 404 / USER_NOT_FOUND, "Neispravni unos" za pogresan password.
+   * Brute-force lockout (Celina 1): backend (WP-5) vraca ErrorCode ACCOUNT_LOCKED uz
+   * HTTP 403 posle 5 uzastopnih neuspesnih pokusaja — prikazujemo jasnu poruku sa
+   * uputstvom da se sacuva ili resetuje lozinka. Lockout grana se proverava PRE
+   * generickog 403 -> "Neispravni unos" mapiranja.
    * Ostale greske vracaju backend message ili generican fallback.
    */
   private mapLoginError(error: HttpErrorResponse): string {
     const code = (error.error?.code ?? error.error?.error ?? '').toString().toUpperCase();
     const status = error.status;
-    const lockoutHints = ['USER_LOCKED', 'ACCOUNT_LOCKED', 'TOO_MANY_ATTEMPTS'];
+    const lockoutHints = ['ACCOUNT_LOCKED', 'USER_LOCKED', 'TOO_MANY_ATTEMPTS'];
     if (lockoutHints.includes(code)) {
-      return 'Nalog je privremeno zaključan zbog previše neuspešnih pokušaja.';
+      return 'Nalog je privremeno zaključan zbog više neuspešnih pokušaja. ' +
+        'Pokušajte ponovo kasnije ili resetujte lozinku.';
     }
     if (code === 'USER_NOT_FOUND' || status === 404) {
       return 'Korisnik ne postoji';
