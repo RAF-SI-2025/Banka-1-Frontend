@@ -37,6 +37,18 @@
         <button class="z-btn-outline-sm" (click)="setSort('minimumContribution')">
           Min. ulog <span *ngIf="sortField === 'minimumContribution'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
         </button>
+        <button class="z-btn-outline-sm" (click)="setSort('annualYield')">
+          God. prinos <span *ngIf="sortField === 'annualYield'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('rewardToVariabilityRatio')">
+          R/V Ratio <span *ngIf="sortField === 'rewardToVariabilityRatio'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('maxDrawdown')">
+          Max Drawdown <span *ngIf="sortField === 'maxDrawdown'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('volatility')">
+          Volatilnost <span *ngIf="sortField === 'volatility'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
       </div>
     </div>
 
@@ -70,6 +82,47 @@
               <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Likvidno</dt>
               <dd class="font-mono font-semibold text-foreground mt-0.5">{{ f.likvidnaSredstva | number:'1.0-2' }} RSD</dd>
             </div>
+
+            <!-- Godišnji prinos -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">God. prinos</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.annualYield !== null && f.annualYield !== undefined; else noData">
+                  {{ f.annualYield | number:'1.0-2' }}%
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- Volatilnost -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Volatilnost</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.volatility !== null && f.volatility !== undefined; else noData">
+                  {{ f.volatility | number:'1.0-2' }}
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- R/V Ratio -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">R/V Ratio</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.rewardToVariabilityRatio !== null && f.rewardToVariabilityRatio !== undefined; else noData">
+                  {{ f.rewardToVariabilityRatio | number:'1.0-2' }}
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- Max Drawdown -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Max Drawdown</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.maxDrawdown !== null && f.maxDrawdown !== undefined; else noData">
+                  {{ f.maxDrawdown | number:'1.0-2' }}%
+                </ng-container>
+              </dd>
+            </div>
+
             <div class="col-span-2">
               <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Ukupna vrednost</dt>
               <dd class="font-mono font-bold text-lg text-foreground mt-0.5">{{ f.totalValue | number:'1.0-2' }} RSD</dd>
@@ -81,6 +134,9 @@
           </div>
         </a>
       </div>
-    </ng-container>
+    </ng-container> 
+    <ng-template #noData>
+      <span class="text-[11px] italic text-muted-foreground font-sans">Nedovoljno podataka</span>
+    </ng-template>
   </div>
 </div>

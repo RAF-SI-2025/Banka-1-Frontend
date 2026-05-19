@@ -1,19 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-
+import * as ApexCharts from 'apexcharts';
 import { FundService } from '../../services/fund.service';
 import { ClientFundPosition, FundHolding, InvestmentFund } from '../../models/fund.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AccountService } from '../../../client/services/account.service';
 import { Account } from '../../../client/models/account.model';
 
+type ChartPeriod = '1M' | '3M' | '1Y' | 'ALL';
+
 @Component({
   selector: 'app-fund-details',
   templateUrl: './fund-details.component.html',
 })
 export class FundDetailsComponent implements OnInit {
+  @ViewChild('historyChart') historyChartCanvas!: ElementRef;
+  @ViewChild('comparisonChart') comparisonChartCanvas!: ElementRef;
+
   fund: InvestmentFund | null = null;
   fundId!: number;
   loading = false;
@@ -30,6 +35,10 @@ export class FundDetailsComponent implements OnInit {
   sellTarget: FundHolding | null = null;
   sellQuantity: number | null = null;
   sellError: string | null = null;
+
+  selectedPeriod: ChartPeriod = '3M';
+  historyChartInstance: ApexCharts | null = null;
+  comparisonChartInstance: ApexCharts | null = null;
 
   investForm: FormGroup;
   redeemForm: FormGroup;
@@ -88,12 +97,156 @@ export class FundDetailsComponent implements OnInit {
             .find(p => p.fundId === this.fundId) ?? null;
         }
         this.loadSecurities();
+        this.loadCharts(); 
       },
       error: err => {
         this.error = err?.error?.message || 'Greska pri ucitavanju fonda.';
         this.loading = false;
       },
     });
+  }
+
+  setPeriod(period: ChartPeriod): void {
+    this.selectedPeriod = period;
+    this.loadCharts();
+  }
+
+  loadCharts(): void {
+      this.fundService.getFundHistory(this.fundId, this.selectedPeriod).subscribe({
+        next: (data: any) => {
+          this.renderHistoryChart(data.labels, data.values);
+          this.renderComparisonChart(data.labels, data.fundPerformances, data.systemAveragePerformances);
+        },
+        error: err => {
+          console.error('Nije moguće ucitati istoriju za grafikone:', err);
+          // Ako nema podataka sa bekenda, grafikoni se jednostavno nece iscrtati sa pogresnim podacima
+        }
+      });
+    }
+
+  private triggerMockCharts(): void {
+    const mockLabels = this.getMockLabels(this.selectedPeriod);
+    const baseValue = this.fund?.totalValue || 5000000;
+    
+    const mockValues = [
+      baseValue * 0.92,
+      baseValue * 0.95,
+      baseValue * 0.98,
+      baseValue * 0.97,
+      baseValue * 0.99,
+      baseValue
+    ];
+    this.renderHistoryChart(mockLabels, mockValues);
+    this.renderComparisonChart(mockLabels, [0, 2.5, 4.1, 3.8, 6.2, 8.5], [0, 1.8, 3.0, 3.5, 4.8, 5.2]);
+  }
+
+  private renderHistoryChart(labels: string[], values: number[]): void {
+    if (this.historyChartInstance) this.historyChartInstance.destroy();
+    
+    setTimeout(() => {
+      if (!this.historyChartCanvas) return;
+      
+      const options = {
+        chart: {
+          type: 'area',
+          height: 250,
+          toolbar: { show: false },
+          fontFamily: 'Inter, sans-serif'
+        },
+        colors: ['#d97706'],
+        stroke: { curve: 'smooth', width: 2 },
+        dataLabels: { enabled: false },
+        series: [{
+          name: 'Vrednost fonda (RSD)',
+          data: values
+        }],
+        xaxis: { 
+          categories: labels,
+          labels: {
+            style: {
+              colors: '#ffffff' 
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: '#ffffff'
+            },
+            formatter: (val: number) => val.toLocaleString('sr-RS') + ' RSD'
+          }
+        },
+        legend: {
+          labels: {
+            colors: '#ffffff'
+          }
+        },
+        tooltip: { theme: 'dark' }
+      };
+
+      this.historyChartInstance = new (ApexCharts as any)(this.historyChartCanvas.nativeElement!, options);
+      this.historyChartInstance?.render();
+    }, 50);
+  }
+
+  private renderComparisonChart(labels: string[], fundPerf: number[], systemAvg: number[]): void {
+    if (this.comparisonChartInstance) this.comparisonChartInstance.destroy();
+    
+    setTimeout(() => {
+      if (!this.comparisonChartCanvas) return;
+      
+      const options = {
+        chart: {
+          type: 'line',
+          height: 250,
+          toolbar: { show: false },
+          fontFamily: 'Inter, sans-serif'
+        },
+        colors: ['#3b82f6', '#94a3b8'],
+        stroke: {
+          curve: 'smooth',
+          width: [2, 2],
+          dashArray: [0, 5]
+        },
+        dataLabels: { enabled: false },
+        series: [
+          { name: 'Ovaj fond (%)', data: fundPerf },
+          { name: 'Prosek svih fondova (%)', data: systemAvg }
+        ],
+        xaxis: { 
+          categories: labels,
+          labels: {
+            style: {
+              colors: '#ffffff' 
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: '#ffffff'
+            },
+            formatter: (val: number) => val.toFixed(2) + '%'
+          }
+        },
+        legend: {
+          labels: {
+            colors: '#ffffff' 
+          }
+        },
+        tooltip: { theme: 'dark' }
+      };
+
+      this.comparisonChartInstance = new (ApexCharts as any)(this.comparisonChartCanvas.nativeElement!, options);
+      this.comparisonChartInstance?.render();
+    }, 50);
+  }
+
+  private getMockLabels(period: ChartPeriod): string[] {
+    if (period === '1M') return ['Pre 4w', 'Pre 3w', 'Pre 2w', 'Pre 1w', 'Ove nedelje'];
+    if (period === '3M') return ['Mart', 'April', 'Maj'];
+    if (period === '1Y') return ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'Maj'];
+    return ['2023', '2024', '2025', '2026'];
   }
 
   private loadSecurities(): void {

@@ -28,6 +28,12 @@ export class FundService {
 
   constructor(private http: HttpClient) {}
 
+  getFundHistory(fundId: number, period: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/${fundId}/history`, {
+      params: { period }
+    });
+  }
+
   discovery(): Observable<InvestmentFund[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
       map((funds) => (funds ?? []).map((fund) => this.mapFund(fund))),

@@ -12,6 +12,10 @@ export interface InvestmentFund {
   datumKreiranja: string;
   totalValue: number;
   profit: number;
+  annualYield?: number | null;
+  rewardToVariabilityRatio?: number | null;
+  maxDrawdown?: number | null;
+  volatility?: number | null;
 }
 
 export interface ClientFundPosition {

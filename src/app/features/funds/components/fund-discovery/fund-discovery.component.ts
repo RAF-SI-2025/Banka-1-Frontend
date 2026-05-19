@@ -4,7 +4,7 @@ import { FundService } from '../../services/fund.service';
 import { InvestmentFund } from '../../models/fund.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
-type SortField = 'naziv' | 'totalValue' | 'profit' | 'minimumContribution';
+type SortField = 'naziv' | 'totalValue' | 'profit' | 'minimumContribution' | 'annualYield' | 'rewardToVariabilityRatio' | 'maxDrawdown' | 'volatility';
 type SortDir = 'asc' | 'desc';
 
 @Component({
@@ -27,12 +27,19 @@ export class FundDiscoveryComponent implements OnInit {
     private authService: AuthService,
   ) {}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
     this.canCreateFund = this.authService.hasPermission('FUND_AGENT_MANAGE');
     this.loading = true;
     this.fundService.discovery().subscribe({
-      next: list => { this.allFunds = list; this.apply(); this.loading = false; },
-      error: err => { this.error = err?.error?.message || 'Greska.'; this.loading = false; },
+      next: list => {
+        this.allFunds = list || []; 
+        this.apply(); 
+        this.loading = false; 
+      },
+      error: err => { 
+        this.error = err?.error?.message || 'Greska.'; 
+        this.loading = false; 
+      },
     });
   }
 
@@ -43,8 +50,13 @@ export class FundDiscoveryComponent implements OnInit {
       : [...this.allFunds];
 
     result.sort((a, b) => {
-      const av = a[this.sortField] as string | number;
-      const bv = b[this.sortField] as string | number;
+      const av = a[this.sortField] as any;
+      const bv = b[this.sortField] as any;
+
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      
       const cmp = av < bv ? -1 : av > bv ? 1 : 0;
       return this.sortDir === 'asc' ? cmp : -cmp;
     });

@@ -16,7 +16,6 @@
         <p class="text-sm text-muted-foreground mt-2 max-w-3xl">{{ fund.opis || 'Bez opisa.' }}</p>
       </header>
 
-      <!-- KPI cards -->
       <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="z-stat-card">
           <span class="z-stat-label">Likvidna sredstva</span>
@@ -39,10 +38,44 @@
         </div>
       </section>
 
-      <!-- Fund info -->
       <section class="z-card p-5 mb-6">
-        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Detalji fonda</p>
-        <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+          <h2 class="text-lg font-semibold text-foreground">Performanse fonda</h2>
+          <div class="flex items-center gap-1 bg-muted p-1 rounded-md">
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '1M'" 
+                    [class.shadow-sm]="selectedPeriod === '1M'" 
+                    (click)="setPeriod('1M')">1M</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '3M'" 
+                    [class.shadow-sm]="selectedPeriod === '3M'" 
+                    (click)="setPeriod('3M')">3M</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '1Y'" 
+                    [class.shadow-sm]="selectedPeriod === '1Y'" 
+                    (click)="setPeriod('1Y')">1Y</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === 'ALL'" 
+                    [class.shadow-sm]="selectedPeriod === 'ALL'" 
+                    (click)="setPeriod('ALL')">ALL</button>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-white uppercase mb-2">Istorijska vrednost</p>
+            <div #historyChart></div>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-white uppercase mb-2">Uporedni prinos</p>
+            <div #comparisonChart></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="z-card p-5 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Detalji i metrike fonda</p>
+        <dl class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-sm">
           <div>
             <dt class="text-muted-foreground">Min. ulog</dt>
             <dd class="font-mono font-semibold text-foreground mt-0.5">{{ fund.minimumContribution | number:'1.0-2' }} RSD</dd>
@@ -61,10 +94,42 @@
             <dt class="text-muted-foreground">Broj racuna</dt>
             <dd class="font-mono text-xs text-foreground mt-0.5">{{ fund.accountNumber }}</dd>
           </div>
+
+          <div>
+            <dt class="text-muted-foreground">God. prinos</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.annualYield !== null && fund.annualYield !== undefined; else noData">
+                {{ fund.annualYield | number:'1.0-2' }}%
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Volatilnost</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.volatility !== null && fund.volatility !== undefined; else noData">
+                {{ fund.volatility | number:'1.0-2' }}
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">R/V Ratio</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.rewardToVariabilityRatio !== null && fund.rewardToVariabilityRatio !== undefined; else noData">
+                {{ fund.rewardToVariabilityRatio | number:'1.0-2' }}
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Max Drawdown</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.maxDrawdown !== null && fund.maxDrawdown !== undefined; else noData">
+                {{ fund.maxDrawdown | number:'1.0-2' }}%
+              </ng-container>
+            </dd>
+          </div>
         </dl>
       </section>
 
-      <!-- Client own position -->
       <section *ngIf="isClient && myPosition" class="z-card p-5 mb-6">
         <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Moja pozicija</p>
         <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -91,7 +156,6 @@
         </dl>
       </section>
 
-      <!-- Invest / redeem forms (client only) -->
       <div *ngIf="isClient" class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         <section class="z-card p-5">
           <div class="flex items-center gap-2 mb-4">
@@ -158,7 +222,6 @@
         </section>
       </div>
 
-      <!-- Securities owned by fund -->
       <section class="z-card overflow-hidden mb-6">
         <div class="p-4 border-b border-border">
           <h2 class="text-base font-semibold text-foreground">Hartije fonda</h2>
@@ -206,7 +269,6 @@
         </ng-template>
       </section>
 
-      <!-- Sell dialog (supervisor) -->
       <div *ngIf="sellTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="z-card p-6 w-full max-w-sm space-y-4">
           <h3 class="text-lg font-bold text-foreground">Prodaj hartiju — {{ sellTarget.ticker }}</h3>
@@ -229,7 +291,6 @@
         </div>
       </div>
 
-      <!-- All positions — supervisor view -->
       <section *ngIf="isSupervisor" class="z-card overflow-hidden mb-6">
         <div class="p-4 border-b border-border">
           <h2 class="text-base font-semibold text-foreground">Sve pozicije investitora</h2>
@@ -270,5 +331,10 @@
         </div>
       </section>
     </ng-container>
+
+    <ng-template #noData>
+      <span class="text-[11px] italic text-muted-foreground font-sans">Nedovoljno podataka</span>
+    </ng-template>
+
   </div>
 </div>
