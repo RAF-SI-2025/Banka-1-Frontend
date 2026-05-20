@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  DividendHistoryResponse,
   PortfolioSummary,
   SetPublicQuantityRequest,
 } from '../models/portfolio.model';
@@ -26,5 +27,15 @@ export class PortfolioService {
 
   exerciseOption(portfolioId: number): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${portfolioId}/exercise-option`, {});
+  }
+
+  /**
+   * F10: istorija isplaćenih dividendi za jednu poziciju (portfolio holding id).
+   * Backend: order-service — potvrditi kontrakt sa timom.
+   */
+  getDividendHistory(portfolioId: number): Observable<DividendHistoryResponse> {
+    return this.http.get<DividendHistoryResponse>(
+      `${this.baseUrl}/${portfolioId}/dividends`,
+    );
   }
 }

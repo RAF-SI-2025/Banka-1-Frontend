@@ -5,6 +5,7 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { PortfolioSummary } from '../../models/portfolio.model';
+import { FundService } from '../../../funds/services/fund.service';
 
 describe('PortfolioComponent', () => {
   let component: PortfolioComponent;
@@ -12,6 +13,7 @@ describe('PortfolioComponent', () => {
   let portfolioServiceSpy: jasmine.SpyObj<PortfolioService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let toastServiceSpy: jasmine.SpyObj<ToastService>;
+  let fundServiceSpy: jasmine.SpyObj<FundService>;
 
   // PR_31 follow-up: deklarisi kao funkciju koja vraca svez deep-clone, jer testovi mutiraju
   // holding.publicQuantity na ovom objektu — bez clone-a tests dele state preko beforeEach.
@@ -52,11 +54,18 @@ describe('PortfolioComponent', () => {
   beforeEach(() => {
     portfolioServiceSpy = jasmine.createSpyObj<PortfolioService>(
       'PortfolioService',
-      ['getPortfolio', 'setPublicQuantity', 'exerciseOption'],
+      ['getPortfolio', 'setPublicQuantity', 'exerciseOption', 'getDividendHistory'],
     );
+    fundServiceSpy = jasmine.createSpyObj<FundService>('FundService', [
+      'myPositions',
+      'supervised',
+    ]);
+    fundServiceSpy.myPositions.and.returnValue(of([]));
+    fundServiceSpy.supervised.and.returnValue(of([]));
+
     authServiceSpy = jasmine.createSpyObj<AuthService>(
       'AuthService',
-      ['isActuary', 'getLoggedUser', 'isClient', 'canAccessPortfolio', 'logout'],
+      ['isActuary', 'getLoggedUser', 'isClient', 'canAccessPortfolio', 'logout', 'hasPermission'],
     );
     toastServiceSpy = jasmine.createSpyObj<ToastService>('ToastService', [
       'success',
@@ -65,6 +74,16 @@ describe('PortfolioComponent', () => {
     ]);
 
     portfolioServiceSpy.getPortfolio.and.returnValue(of(buildPortfolioSummary()));
+    portfolioServiceSpy.getDividendHistory.and.returnValue(
+      of({
+        totalReceived: 100,
+        currency: 'USD',
+        payouts: [
+          { payoutDate: '2026-01-10', amount: 40, currency: 'USD' },
+          { payoutDate: '2025-07-01', amount: 60, currency: 'USD' },
+        ],
+      }),
+    );
     authServiceSpy.isActuary.and.returnValue(true);
     authServiceSpy.getLoggedUser.and.returnValue({
       email: 'test@test.com',
@@ -72,6 +91,7 @@ describe('PortfolioComponent', () => {
     });
     authServiceSpy.isClient.and.returnValue(true);
     authServiceSpy.canAccessPortfolio.and.returnValue(true);
+    authServiceSpy.hasPermission.and.returnValue(false);
 
     TestBed.configureTestingModule({
       imports: [PortfolioComponent],
@@ -79,6 +99,7 @@ describe('PortfolioComponent', () => {
         { provide: PortfolioService, useValue: portfolioServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
+        { provide: FundService, useValue: fundServiceSpy },
       ],
     });
 
@@ -131,6 +152,43 @@ describe('PortfolioComponent', () => {
 
     expect(portfolioServiceSpy.setPublicQuantity).not.toHaveBeenCalled();
     expect(toastServiceSpy.info).toHaveBeenCalled();
+  });
+
+  it('should load dividend history when expanding STOCK row', () => {
+    const holding = component.holdings[0];
+
+    component.toggleDividendPanel(holding, 0);
+
+    expect(component.isDividendExpanded('AAPL-STOCK-0')).toBeTrue();
+    expect(portfolioServiceSpy.getDividendHistory).toHaveBeenCalledWith(11);
+    expect(component.dividendPayouts['AAPL-STOCK-0'].length).toBe(2);
+    expect(component.getDividendTotalLabel('AAPL-STOCK-0')).toContain('USD');
+  });
+
+  it('should sum dividend total from payouts when backend omits totalReceived', () => {
+    portfolioServiceSpy.getDividendHistory.and.returnValue(
+      of({
+        payouts: [
+          { payoutDate: '2026-02-01', amount: 10, currency: 'RSD' },
+          { payoutDate: '2025-11-01', amount: 5.5, currency: 'RSD' },
+        ],
+      }),
+    );
+    const holding = component.holdings[0];
+
+    component.loadDividendHistory(holding, 0);
+
+    expect(component.getDividendTotalLabel('AAPL-STOCK-0')).toContain('15,50');
+    expect(component.getDividendTotalLabel('AAPL-STOCK-0')).toContain('RSD');
+  });
+
+  it('should not call dividend API when holding id is missing', () => {
+    const holding = { ...component.holdings[0], id: undefined };
+
+    component.toggleDividendPanel(holding, 0);
+
+    expect(portfolioServiceSpy.getDividendHistory).not.toHaveBeenCalled();
+    expect(component.dividendError['AAPL-STOCK-0']).toContain('portfolio ID');
   });
 
   it('should reset exercising state and log error when exercise fails', () => {

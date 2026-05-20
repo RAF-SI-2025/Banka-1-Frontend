@@ -1,3 +1,11 @@
 .portfolio-table td {
   vertical-align: top;
 }
+
+.dividend-detail-row > td {
+  vertical-align: top;
+}
+
+.dividend-panel {
+  border-left: 3px solid hsl(var(--primary));
+}

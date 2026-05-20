@@ -5,6 +5,7 @@ export {};
 const MOCK_SUMMARY = {
   holdings: [
     {
+      id: 42,
       listingId: 1,
       listingType: 'STOCK',
       ticker: 'AAPL',
@@ -162,6 +163,49 @@ describe('Scenario 73: Hartija u portfoliju posle BUY ordera', () => {
     cy.contains('AAPL').should('be.visible');
     // stock holdings show "Javni režim za OTC" section for managing public quantity
     cy.contains('Javni režim za OTC').should('be.visible');
+  });
+});
+
+// F10: Dividende u portfoliju
+describe('F10: Dividende u portfoliju', () => {
+  it('prikazuje istoriju isplata u proširenom redu (datum, iznos, valuta)', () => {
+    cy.intercept('GET', '**/order/portfolio', {
+      statusCode: 200,
+      body: {
+        ...MOCK_SUMMARY,
+        holdings: [MOCK_SUMMARY.holdings[0]],
+      },
+    }).as('getPortfolio');
+
+    cy.intercept('GET', '**/order/portfolio/42/dividends', {
+      statusCode: 200,
+      body: {
+        totalReceived: 12.5,
+        currency: 'USD',
+        payouts: [
+          { payoutDate: '2026-03-01', amount: 5, currency: 'USD' },
+          { payoutDate: '2025-09-01', amount: 7.5, currency: 'USD' },
+        ],
+      },
+    }).as('getDividends');
+
+    cy.visit('/portfolio', {
+      onBeforeLoad: (win) => {
+        win.localStorage.setItem('authToken', 'fake-jwt-token');
+        win.localStorage.setItem('loggedUser', JSON.stringify(clientUser));
+      },
+    });
+
+    cy.wait('@getPortfolio');
+    cy.get('[data-testid=dividend-toggle]').should('be.visible').click();
+    cy.wait('@getDividends');
+
+    cy.get('[data-testid=dividend-panel]').should('be.visible');
+    cy.contains('Ukupno primljeno').should('be.visible');
+    cy.contains('12,50').should('be.visible');
+    cy.get('[data-testid=dividend-payout-row]').should('have.length', 2);
+    cy.contains('Datum isplate').should('be.visible');
+    cy.contains('USD').should('be.visible');
   });
 });
 

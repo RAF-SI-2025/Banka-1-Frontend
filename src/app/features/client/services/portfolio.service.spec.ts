@@ -53,4 +53,26 @@ describe('PortfolioService', () => {
     expect(req.request.body).toEqual({});
     req.flush(null);
   });
+
+  it('should fetch dividend history for a holding', () => {
+    let result: unknown;
+    service.getDividendHistory(11).subscribe((res) => (result = res));
+
+    const req = httpMock.expectOne(`${baseUrl}/11/dividends`);
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      totalReceived: 125.5,
+      currency: 'USD',
+      payouts: [
+        { payoutDate: '2026-03-15', amount: 50, currency: 'USD' },
+        { payoutDate: '2025-12-10', amount: 75.5, currency: 'USD' },
+      ],
+    });
+
+    expect(result).toEqual({
+      totalReceived: 125.5,
+      currency: 'USD',
+      payouts: jasmine.any(Array),
+    });
+  });
 });

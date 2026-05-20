@@ -97,7 +97,7 @@
         </div>
 
         <div *ngIf="holdings.length > 0" class="overflow-x-auto rounded-xl border border-border">
-          <table class="z-table portfolio-table min-w-[980px]">
+          <table class="z-table portfolio-table min-w-[1100px]">
             <thead>
               <tr>
                 <th>Tip</th>
@@ -106,11 +106,13 @@
                 <th>Price</th>
                 <th>Profit</th>
                 <th>Last modified</th>
+                <th>Dividende</th>
                 <th>Akcije</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let holding of holdings; let i = index; trackBy: trackByHolding">
+              <ng-container *ngFor="let holding of holdings; let i = index; trackBy: trackByHolding">
+              <tr>
                 <td>
                   <span class="z-badge" [ngClass]="{
                     'z-badge-green': holding.listingType === 'STOCK',
@@ -128,6 +130,35 @@
                   {{ formatAmount(holding.profit) }}
                 </td>
                 <td class="text-muted-foreground whitespace-nowrap">{{ formatDateTime(holding.lastModified) }}</td>
+                <td class="min-w-[160px]">
+                  <ng-container *ngIf="canShowDividendHistory(holding); else noDividendsCell">
+                    <p
+                      *ngIf="getDividendTotalLabel(getHoldingKey(holding, i)) as totalLabel"
+                      class="text-sm font-semibold text-foreground mb-1"
+                      data-testid="dividend-total"
+                    >
+                      Ukupno: {{ totalLabel }}
+                    </p>
+                    <p
+                      *ngIf="!getDividendTotalLabel(getHoldingKey(holding, i)) && !isDividendExpanded(getHoldingKey(holding, i))"
+                      class="text-xs text-muted-foreground mb-1"
+                    >
+                      Proširi za istoriju
+                    </p>
+                    <button
+                      type="button"
+                      class="z-btn-outline z-btn-sm"
+                      data-testid="dividend-toggle"
+                      [attr.aria-expanded]="isDividendExpanded(getHoldingKey(holding, i))"
+                      (click)="toggleDividendPanel(holding, i)"
+                    >
+                      {{ isDividendExpanded(getHoldingKey(holding, i)) ? 'Sakrij' : 'Istorija' }}
+                    </button>
+                  </ng-container>
+                  <ng-template #noDividendsCell>
+                    <span class="text-xs text-muted-foreground">—</span>
+                  </ng-template>
+                </td>
                 <td>
                   <div class="flex flex-col gap-3 items-start min-w-[260px]">
                     <button type="button" class="z-btn-outline z-btn-sm" (click)="onSell(holding)">
@@ -186,6 +217,87 @@
                   </div>
                 </td>
               </tr>
+
+              <tr
+                *ngIf="canShowDividendHistory(holding) && isDividendExpanded(getHoldingKey(holding, i))"
+                class="dividend-detail-row"
+                data-testid="dividend-panel"
+              >
+                <td colspan="8" class="!p-0">
+                  <div class="dividend-panel border-t border-border bg-muted/20 px-4 py-4">
+                    <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">
+                      Istorija isplaćenih dividendi — {{ holding.ticker }}
+                    </p>
+
+                    <app-state
+                      *ngIf="dividendLoading[getHoldingKey(holding, i)]"
+                      mode="loading"
+                      text="Učitavanje istorije dividendi..."
+                    ></app-state>
+
+                    <p
+                      *ngIf="dividendError[getHoldingKey(holding, i)] && !dividendLoading[getHoldingKey(holding, i)]"
+                      class="text-sm text-red-600 mb-2"
+                    >
+                      {{ dividendError[getHoldingKey(holding, i)] }}
+                    </p>
+
+                    <button
+                      *ngIf="dividendError[getHoldingKey(holding, i)] && !dividendLoading[getHoldingKey(holding, i)]"
+                      type="button"
+                      class="z-btn-secondary z-btn-sm mb-3"
+                      (click)="loadDividendHistory(holding, i)"
+                    >
+                      Pokušaj ponovo
+                    </button>
+
+                    <ng-container
+                      *ngIf="!dividendLoading[getHoldingKey(holding, i)] && !dividendError[getHoldingKey(holding, i)]"
+                    >
+                      <div
+                        *ngIf="getDividendTotalLabel(getHoldingKey(holding, i)) as totalLabel"
+                        class="mb-3 rounded-lg border border-border bg-background px-3 py-2"
+                      >
+                        <span class="text-xs text-muted-foreground uppercase tracking-wider">Ukupno primljeno</span>
+                        <p class="text-lg font-bold text-foreground">{{ totalLabel }}</p>
+                      </div>
+
+                      <div
+                        *ngIf="(dividendPayouts[getHoldingKey(holding, i)]?.length ?? 0) === 0"
+                        class="text-sm text-muted-foreground py-2"
+                      >
+                        Nema evidentiranih isplata dividendi za ovu poziciju.
+                      </div>
+
+                      <div
+                        *ngIf="(dividendPayouts[getHoldingKey(holding, i)]?.length ?? 0) > 0"
+                        class="overflow-x-auto rounded-lg border border-border"
+                      >
+                        <table class="z-table min-w-[480px]">
+                          <thead>
+                            <tr>
+                              <th>Datum isplate</th>
+                              <th>Iznos</th>
+                              <th>Valuta</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr
+                              *ngFor="let payout of dividendPayouts[getHoldingKey(holding, i)]"
+                              data-testid="dividend-payout-row"
+                            >
+                              <td>{{ formatPayoutDate(payout.payoutDate) }}</td>
+                              <td class="font-mono">{{ formatAmount(payout.amount) }}</td>
+                              <td>{{ payout.currency }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+              </ng-container>
             </tbody>
           </table>
         </div>

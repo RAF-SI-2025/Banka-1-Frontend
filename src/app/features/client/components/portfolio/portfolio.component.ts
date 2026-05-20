@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { PortfolioService } from '../../services/portfolio.service';
 import {
+  DividendPayout,
   PortfolioHolding,
   PortfolioListingType,
   PortfolioSummary,
@@ -33,6 +34,13 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   draftPublicQuantities: Record<string, number> = {};
   savingPublicQuantity: Record<string, boolean> = {};
   exercisingOption: Record<string, boolean> = {};
+
+  /** F10: prošireni red sa istorijom dividendi (samo STOCK). */
+  dividendExpanded: Record<string, boolean> = {};
+  dividendPayouts: Record<string, DividendPayout[]> = {};
+  dividendTotals: Record<string, { amount: number; currency: string } | null> = {};
+  dividendLoading: Record<string, boolean> = {};
+  dividendError: Record<string, string> = {};
 
   activeTab: 'holdings' | 'funds' = 'holdings';
   isSupervisor = false;
@@ -219,6 +227,100 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   isStock(holding: PortfolioHolding): boolean {
     return holding.listingType === 'STOCK';
+  }
+
+  canShowDividendHistory(holding: PortfolioHolding): boolean {
+    return this.isStock(holding);
+  }
+
+  isDividendExpanded(key: string): boolean {
+    return !!this.dividendExpanded[key];
+  }
+
+  toggleDividendPanel(holding: PortfolioHolding, index: number): void {
+    const key = this.getHoldingKey(holding, index);
+    const next = !this.dividendExpanded[key];
+    this.dividendExpanded[key] = next;
+
+    if (next && this.dividendPayouts[key] === undefined) {
+      this.loadDividendHistory(holding, index);
+    }
+  }
+
+  loadDividendHistory(holding: PortfolioHolding, index: number): void {
+    const key = this.getHoldingKey(holding, index);
+    const portfolioId = holding.id;
+
+    if (typeof portfolioId !== 'number') {
+      this.dividendError[key] =
+        'Istorija dividendi će biti dostupna kada backend vrati portfolio ID u listi pozicija.';
+      return;
+    }
+
+    this.dividendLoading[key] = true;
+    this.dividendError[key] = '';
+
+    this.portfolioService
+      .getDividendHistory(portfolioId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const payouts = response.payouts ?? [];
+          this.dividendPayouts[key] = payouts;
+          this.dividendTotals[key] = this.resolveDividendTotal(response, payouts);
+          this.dividendLoading[key] = false;
+        },
+        error: (error) => {
+          console.error('Error loading dividend history:', error);
+          this.dividendError[key] =
+            'Greška pri učitavanju istorije dividendi. Pokušajte ponovo.';
+          this.dividendLoading[key] = false;
+        },
+      });
+  }
+
+  getDividendTotalLabel(key: string): string | null {
+    const total = this.dividendTotals[key];
+    if (!total) return null;
+    return `${this.formatAmount(total.amount)} ${total.currency}`;
+  }
+
+  formatPayoutDate(value: string): string {
+    const raw = value?.includes('T') ? value.substring(0, 10) : value;
+    const date = new Date(`${raw}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return new Intl.DateTimeFormat('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  formatMoney(amount: number, currency: string): string {
+    return `${this.formatAmount(amount)} ${currency}`;
+  }
+
+  private resolveDividendTotal(
+    response: { totalReceived?: number; currency?: string },
+    payouts: DividendPayout[],
+  ): { amount: number; currency: string } | null {
+    if (payouts.length === 0 && response.totalReceived == null) {
+      return null;
+    }
+
+    const currency =
+      response.currency ??
+      payouts[0]?.currency ??
+      'RSD';
+
+    if (response.totalReceived != null && Number.isFinite(response.totalReceived)) {
+      return { amount: response.totalReceived, currency };
+    }
+
+    const amount = payouts.reduce((sum, p) => sum + (p.amount ?? 0), 0);
+    return { amount, currency };
   }
 
   isOption(holding: PortfolioHolding): boolean {
