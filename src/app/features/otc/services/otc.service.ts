@@ -188,13 +188,19 @@ export class OtcService {
       premium: s.premium.amount,
       settlementDate: s.settlementDate,
       status: s.isOngoing ? 'PENDING_BUYER' : 'ACCEPTED',
-      modifiedBy: `${s.lastModifiedBy.routingNumber}:${s.lastModifiedBy.id}`,
+      modifiedBy: s?.lastModifiedBy
+          ? `${s.lastModifiedBy.routingNumber}:${s.lastModifiedBy.id}`
+          : '',
       lastModified: '',
       interbank: true,
       counterpartyBankCode: n.remoteForeignBankId.routingNumber,
       counterpartyBankName: this.bankNameFor(n.remoteForeignBankId.routingNumber),
       localId: n.localId,
       remoteId: n.remoteForeignBankId.id,
+      // Null-safe: ako backend response ne sadrzi lastModifiedBy (npr. legacy
+      // entity-i pre PR_33), polje ostaje undefined — canCounter ce default na
+      // dozvoljeno umesto da baca TypeError pri renderu cele stranice.
+      lastModifierRouting: s?.lastModifiedBy?.routingNumber,
     };
   }
 

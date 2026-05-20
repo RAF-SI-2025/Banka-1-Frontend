@@ -10,6 +10,9 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 export type OtcFilterMode = 'all' | 'local' | 'banka2';
 
+/** Routing broj nase banke. Koristi se za turn check u inter-bank ponudama. */
+const MY_ROUTING = 111;
+
 @Component({
   selector: 'app-otc-offers',
   templateUrl: './otc-offers.component.html',
@@ -89,8 +92,27 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
   }
 
   canCounter(offer: OtcOffer): boolean {
-    if (offer.interbank) return true;
+    if (offer.interbank) {
+      // Turn check per protocol §3.3: ne mozemo counter ako smo poslednji modifier.
+      // Backend bi vratio 409 TurnViolationException — disable button proaktivno.
+      if (offer.lastModifierRouting != null && offer.lastModifierRouting === MY_ROUTING) {
+        return false;
+      }
+      return true;
+    }
     return this.canRespond(offer);
+  }
+
+  /**
+   * Hint poruka za inter-bank ponude kad ne mozemo counter — pokazuje se umesto
+   * dugmeta da user razume zasto je akcija nedostupna.
+   */
+  counterDisabledReason(offer: OtcOffer): string | null {
+    if (!offer.interbank) return null;
+    if (offer.lastModifierRouting === MY_ROUTING) {
+      return `Čeka se odgovor partner banke (${offer.counterpartyBankName || 'Banka 2'})`;
+    }
+    return null;
   }
 
   /** Reject is shown when it's the current user's turn to respond. */

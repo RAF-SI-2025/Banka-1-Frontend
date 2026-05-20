@@ -14,6 +14,10 @@ import { StateComponent } from '../../shared/components/state/state.component';
 
 const routes: Routes = [
   { path: '', component: OtcPortalComponent },
+  // Deep-link alias za "Aktivni pregovori" tab — istorijski URL `/otc/offers`
+  // se koristio u 4 mesta u FE-u (create-offer redirect, contracts link).
+  // Renderuje isti OtcPortalComponent i otvara 'negotiations' tab kroz query param.
+  { path: 'offers', component: OtcPortalComponent, data: { initialTab: 'negotiations' } },
   {
     path: 'create',
     component: OtcCreateOfferComponent,

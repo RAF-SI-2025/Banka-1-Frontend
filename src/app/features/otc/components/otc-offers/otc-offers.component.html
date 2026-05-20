@@ -111,7 +111,14 @@
                     Povuci
                   </button>
 
-                  <span *ngIf="!canAccept(o) && !canCounter(o) && !canReject(o) && !canWithdraw(o)"
+                  <!-- Inter-bank turn hint (kad smo poslednji modifier, cekamo partner banku) -->
+                  <span *ngIf="counterDisabledReason(o) as reason"
+                        class="text-xs text-muted-foreground italic"
+                        [title]="reason">
+                    {{ reason }}
+                  </span>
+
+                  <span *ngIf="!canAccept(o) && !canCounter(o) && !canReject(o) && !canWithdraw(o) && !counterDisabledReason(o)"
                         class="text-xs text-muted-foreground italic">
                     —
                   </span>

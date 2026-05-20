@@ -15,6 +15,13 @@ export interface OtcOffer {
   modifiedBy: string;
   lastModified: string;
   /**
+   * Routing broj poslednjeg modifikatora pregovora (samo za interbank).
+   * Counter dugme treba da bude disabled kad je `lastModifierRouting === MY_ROUTING`
+   * (111) — partner banka ce inace vratiti 409 TurnViolationException.
+   * Mapira se iz backend `OtcNegotiationDto.lastModifiedBy.routingNumber`.
+   */
+  lastModifierRouting?: number;
+  /**
    * PR_33 Phase B: opciona inter-bank polja.
    * Kad je `interbank=true`, ova ponuda dolazi iz Banka 2 (cross-bank pregovor)
    * i ne postoji u intra-bank `/otc/offers` listi.
