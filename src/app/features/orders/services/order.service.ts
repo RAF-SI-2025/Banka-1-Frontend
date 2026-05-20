@@ -11,7 +11,7 @@ export class OrderService {
   constructor(private readonly http: HttpClient) {}
 
   getMyOrders(): Observable<MyOrderResponse[]> {
-    return this.http.get<MyOrderResponse[]>(`${this.baseUrl}/my`);
+    return this.http.get<MyOrderResponse[]>(`${this.baseUrl}/my-orders`);
   }
 
   createBuyOrder(payload: CreateOrderRequest): Observable<OrderResponse> {
