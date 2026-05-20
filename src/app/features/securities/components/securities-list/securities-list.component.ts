@@ -14,7 +14,10 @@ import { AppPaginationComponent } from '../../../../shared/components/pagination
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T22: lucide-icon za drawer close button.
 import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
+import { PriceAlertModalComponent } from '../../../price-alerts/components/price-alert-modal/price-alert-modal.component';
+import { SecurityForAlert } from '../../../price-alerts/models/price-alert.model';
 import {
+
   Security,
   Stock,
   Future,
@@ -30,7 +33,7 @@ type SecurityTab = 'stocks' | 'futures' | 'forex';
 @Component({
   selector: 'app-securities-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent],
+  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent, PriceAlertModalComponent],
   templateUrl: './securities-list.component.html',
   styleUrls: ['./securities-list.component.scss'],
 })
@@ -57,6 +60,8 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   sortConfig: SortConfig = { field: 'ticker', direction: 'asc' };
 
   searchQuery = '';
+
+  alertSecurity: SecurityForAlert | null = null;
 
   constructor(
     private readonly securitiesService: SecuritiesService,
@@ -309,6 +314,23 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
   trackBySecurity(index: number, security: Security): number {
     return security.id;
+  }
+
+  openAlertModal(security: Security, event: Event): void {
+    event.stopPropagation();
+    this.alertSecurity = {
+      id: security.id,
+      ticker: security.ticker,
+      name: security.name,
+      price: security.price,
+      change: security.change,
+      changePercent: security.changePercent,
+      currency: security.currency,
+    };
+  }
+
+  closeAlertModal(): void {
+    this.alertSecurity = null;
   }
 
   // Futures specific

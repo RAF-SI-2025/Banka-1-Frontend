@@ -356,13 +356,22 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -415,13 +424,22 @@
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td class="text-muted-foreground">{{ asFuture(security).settlementDate }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -472,18 +490,33 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).spread.toFixed(4) }}</td>
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <app-price-alert-modal
+        *ngIf="alertSecurity"
+        [security]="alertSecurity!"
+        (closed)="closeAlertModal()"
+      ></app-price-alert-modal>
 
       <!-- Pagination -->
       <div
