@@ -1,5 +1,4 @@
-import { ApexOptions } from 'ng-apexcharts';
-
+export type ApexOptions = Record<string, any>;
 export type EffectiveTheme = 'light' | 'dark';
 
 export function readCssVar(name: string): string {
