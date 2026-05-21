@@ -14,7 +14,12 @@ import { AppPaginationComponent } from '../../../../shared/components/pagination
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T22: lucide-icon za drawer close button.
 import { LucideIconComponent } from '../../../../shared/icons/lucide-icon.component';
+import { Watchlist } from '../../../watchlist/models/watchlist.model';
+import { WatchlistService } from '../../../watchlist/services/watchlist.service';
+import { PriceAlertModalComponent } from '../../../price-alerts/components/price-alert-modal/price-alert-modal.component';
+import { SecurityForAlert } from '../../../price-alerts/models/price-alert.model';
 import {
+
   Security,
   Stock,
   Future,
@@ -30,7 +35,7 @@ type SecurityTab = 'stocks' | 'futures' | 'forex';
 @Component({
   selector: 'app-securities-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent],
+  imports: [CommonModule, FormsModule, AppPaginationComponent, StateComponent, LucideIconComponent, PriceAlertModalComponent],
   templateUrl: './securities-list.component.html',
   styleUrls: ['./securities-list.component.scss'],
 })
@@ -45,6 +50,9 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = '';
 
+  watchlists: Watchlist[] = [];
+  selectedWatchlistBySecurityId: Record<number, string> = {};
+
   currentPage = 0;
   pageSize = 10;
   totalElements = 0;
@@ -58,13 +66,16 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
 
   searchQuery = '';
 
+  alertSecurity: SecurityForAlert | null = null;
+
   constructor(
     private readonly securitiesService: SecuritiesService,
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly toastService: ToastService,
     private readonly exchangeService: ExchangeService,
-    private readonly exchangeManager: ExchangeManagerService
+    private readonly exchangeManager: ExchangeManagerService,
+    private readonly watchlistService: WatchlistService,
   ) {}
 
   ngOnInit(): void {
@@ -81,6 +92,10 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
       this.useMockData = isMock;
       this.currentPage = 0; // Reset na prvu stranicu
       this.loadSecurities(); // Učitaj podatke
+    });
+
+    this.watchlistService.watchlists$.subscribe((watchlists) => {
+      this.watchlists = watchlists;
     });
   }
 
@@ -311,6 +326,23 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
     return security.id;
   }
 
+  openAlertModal(security: Security, event: Event): void {
+    event.stopPropagation();
+    this.alertSecurity = {
+      id: security.id,
+      ticker: security.ticker,
+      name: security.name,
+      price: security.price,
+      change: security.change,
+      changePercent: security.changePercent,
+      currency: security.currency,
+    };
+  }
+
+  closeAlertModal(): void {
+    this.alertSecurity = null;
+  }
+
   // Futures specific
   asFuture(security: Security): Future {
     return security as Future;
@@ -324,5 +356,75 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   private syncDraftFilters(): void {
     this.draftFilters = { ...this.filters };
     delete this.draftFilters.search;
+  }
+
+  addToWatchlist(security: any, event?: Event): void {
+    event?.stopPropagation();
+
+    const watchlistId = this.selectedWatchlistBySecurityId[security.id];
+
+    if (!watchlistId) {
+      return;
+    }
+
+    const securityType =
+      security.securityType ??
+      security.type ??
+      security.listingType ??
+      this.getSecurityTypeFromActiveTab();
+
+    const price =
+      security.price ??
+      security.lastPrice ??
+      security.currentPrice ??
+      security.ask ??
+      0;
+
+    const dailyChange =
+      security.dailyChange ??
+      security.change ??
+      security.priceChange ??
+      0;
+
+    const dailyChangePercent =
+      security.dailyChangePercent ??
+      security.changePercent ??
+      security.changePercentage ??
+      0;
+
+    this.watchlistService.addSecurityToWatchlist(watchlistId, {
+      id: security.id,
+      ticker: security.ticker,
+      name: security.name,
+      securityType,
+      exchange:
+        security.exchange ??
+        security.exchangeAcronym ??
+        security.stockExchange ??
+        '-',
+      price: Number.isFinite(Number(price)) ? Number(price) : 0,
+      dailyChange: Number.isFinite(Number(dailyChange)) ? Number(dailyChange) : 0,
+      dailyChangePercent: Number.isFinite(Number(dailyChangePercent))
+        ? Number(dailyChangePercent)
+        : 0,
+      volume: Number.isFinite(Number(security.volume)) ? Number(security.volume) : 0,
+      currency: security.currency ?? 'USD',
+    });
+  }
+
+  private getSecurityTypeFromActiveTab(): 'STOCK' | 'FUTURE' | 'FOREX' {
+    if (this.activeTab === 'futures') {
+      return 'FUTURE';
+    }
+
+    if (this.activeTab === 'forex') {
+      return 'FOREX';
+    }
+
+    return 'STOCK';
+  }
+
+  onWatchlistSelectClick(event: Event): void {
+    event.stopPropagation();
   }
 }

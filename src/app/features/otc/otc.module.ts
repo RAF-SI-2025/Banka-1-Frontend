@@ -11,6 +11,7 @@ import { OtcContractsComponent } from './components/otc-contracts/otc-contracts.
 import { OtcCreateOfferComponent } from './components/otc-create-offer/otc-create-offer.component';
 import { roleGuard } from '../../core/guards/role.guard';
 import { StateComponent } from '../../shared/components/state/state.component';
+import { OtcHistoryComponent } from '../otc/components/otc-history/otc-history.component';
 
 const routes: Routes = [
   { path: '', component: OtcPortalComponent },
@@ -33,6 +34,7 @@ const routes: Routes = [
     OtcOffersComponent,
     OtcContractsComponent,
     OtcCreateOfferComponent,
+    OtcHistoryComponent,
   ],
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule.forChild(routes), StateComponent],
 })

@@ -1,0 +1,61 @@
+<div class="z-overlay" (click)="close()">
+  <div class="z-modal" (click)="$event.stopPropagation()">
+
+    <div class="z-modal-header">
+      <div>
+        <p class="text-xs font-bold tracking-widest text-primary uppercase mb-1">Price alert</p>
+        <h2 class="text-lg font-bold text-foreground">Postavi alert</h2>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          {{ security.ticker }} · {{ security.price | number:'1.2-2' }} {{ security.currency || 'USD' }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-1"
+        aria-label="Zatvori"
+        (click)="close()"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="z-modal-body space-y-4">
+      <div>
+        <label class="z-label">Uslov</label>
+        <select class="z-select" [(ngModel)]="condition">
+          <option *ngFor="let opt of conditionOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">{{ thresholdLabel }}</label>
+        <input
+          class="z-input"
+          type="number"
+          min="0"
+          step="0.01"
+          [placeholder]="thresholdPlaceholder"
+          [(ngModel)]="threshold"
+        />
+      </div>
+
+      <div>
+        <label class="z-label">Tip notifikacije</label>
+        <select class="z-select" [(ngModel)]="notificationType">
+          <option *ngFor="let opt of notificationOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+
+      <p *ngIf="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
+    </div>
+
+    <div class="z-modal-footer">
+      <button type="button" class="z-btn-outline" (click)="close()">Otkaži</button>
+      <button type="button" class="z-btn-primary" (click)="save()">Sačuvaj alert</button>
+    </div>
+
+  </div>
+</div>

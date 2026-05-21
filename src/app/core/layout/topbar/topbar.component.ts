@@ -8,6 +8,8 @@ import { Theme, ThemeService } from '../../services/theme.service';
 import { AppNotification } from '../../../shared/models/app-notification.model';
 import { AppNotificationService } from '../../../shared/services/app-notification.service';
 import { OtcService } from '../../../features/otc/services/otc.service';
+import { WatchlistService } from '../../../features/watchlist/services/watchlist.service';
+import { WatchlistSecurity } from '../../../features/watchlist/models/watchlist.model';
 
 type ThemeIcon = 'sun' | 'moon' | 'monitor';
 
@@ -53,9 +55,15 @@ export class TopbarComponent implements OnInit, OnDestroy {
   avatarMenuOpen = false;
   notificationMenuOpen = false;
   notifications: AppNotification[] = [];
-  userInitials = '';
   private notificationMenuFocusIndex = -1;
   private readonly destroy$ = new Subject<void>();
+  watchlistMenuOpen = false;
+
+  userInitials = '';
+  watchlistPreview: WatchlistSecurity[] = [];
+
+  private sub?: Subscription;
+  private watchlistSub?: Subscription;
 
   readonly themes: Theme[] = ['system', 'light', 'dark'];
 
@@ -65,6 +73,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private router: Router,
     private appNotifications: AppNotificationService,
     private otcService: OtcService,
+    private watchlistService: WatchlistService,
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +84,9 @@ export class TopbarComponent implements OnInit, OnDestroy {
         filter((e) => e instanceof NavigationEnd),
         takeUntil(this.destroy$),
       )
+
+    this.sub = this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e) => {
         this.refreshBreadcrumb((e as NavigationEnd).urlAfterRedirects);
       });
@@ -133,6 +145,16 @@ export class TopbarComponent implements OnInit, OnDestroy {
     if (n.route) {
       this.router.navigateByUrl(n.route);
     }
+    this.watchlistSub = this.watchlistService.watchlists$.subscribe((watchlists) => {
+      this.watchlistPreview = watchlists
+        .flatMap((watchlist) => watchlist.securities)
+        .slice(0, 4);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+    this.watchlistSub?.unsubscribe();
   }
 
   setTheme(t: Theme): void {
@@ -142,6 +164,12 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   openCommandPalette(): void {
     window.dispatchEvent(new CustomEvent(COMMAND_PALETTE_EVENT));
+  }
+
+  toggleWatchlistMenu(): void {
+    const next = !this.watchlistMenuOpen;
+    this.closeMenus();
+    this.watchlistMenuOpen = next;
   }
 
   toggleThemeMenu(): void {
@@ -168,6 +196,10 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.otcService.clearPollCache();
     /* `AuthService.logout()` vec navigira na /login (auth.service.ts:188), tako
        da ne treba dodatni `router.navigate`. */
+    this.watchlistMenuOpen = false;
+  }
+
+  logout(): void {
     this.auth.logout();
   }
 
@@ -177,6 +209,34 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   themeLabel(t: Theme): string {
     return THEME_LABELS[t];
+  }
+
+  formatHeaderPrice(security: WatchlistSecurity): string {
+    const currency = security.currency ?? 'USD';
+
+    return `${this.formatNumber(security.price)} ${currency}`;
+  }
+
+  formatHeaderChange(security: WatchlistSecurity): string {
+    const sign = security.dailyChangePercent >= 0 ? '+' : '';
+
+    return `${sign}${this.formatNumber(security.dailyChangePercent)}%`;
+  }
+
+  getHeaderChangeClass(security: WatchlistSecurity): string {
+    if (security.dailyChangePercent > 0) {
+      return 'quick-change-positive';
+    }
+
+    if (security.dailyChangePercent < 0) {
+      return 'quick-change-negative';
+    }
+
+    return 'quick-change-neutral';
+  }
+
+  formatHeaderVolume(security: WatchlistSecurity): string {
+    return new Intl.NumberFormat('sr-RS').format(security.volume);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -199,6 +259,17 @@ export class TopbarComponent implements OnInit, OnDestroy {
       e.preventDefault();
       this.openCommandPalette();
     }
+
+    if (e.key === 'Escape') {
+      this.closeMenus();
+    }
+  }
+
+  private formatNumber(value: number): string {
+    return new Intl.NumberFormat('sr-RS', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 
   private focusNotificationMenuItem(index: number): void {
@@ -221,20 +292,25 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.breadcrumb = segments;
   }
 
-  /**
-   * Email "aleksa.mojovic@banka.com" -> "AM".
-   * Email "admin@banka.com" -> "AD" (fallback: prva dva slova local part-a).
-   * Bez korisnika -> "?".
-   */
   private computeInitials(): string {
     const user = this.auth.getLoggedUser();
-    if (!user?.email) return '?';
+
+    if (!user?.email) {
+      return '?';
+    }
+
     const local = user.email.split('@')[0] ?? '';
-    if (!local) return '?';
+
+    if (!local) {
+      return '?';
+    }
+
     const parts = local.split(/[._-]+/).filter(Boolean);
+
     if (parts.length >= 2) {
       return ((parts[0][0] ?? '') + (parts[1][0] ?? '')).toUpperCase() || '?';
     }
+
     return local.slice(0, 2).toUpperCase() || '?';
   }
 }

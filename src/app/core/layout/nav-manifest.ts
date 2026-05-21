@@ -24,7 +24,8 @@ export type NavIcon =
   | 'users'
   | 'shieldcheck'
   | 'receipt'
-  | 'gauge';
+  | 'gauge'
+  | 'bell';
 
 export interface NavItem {
   label: string;
@@ -77,6 +78,9 @@ export const NAV_MANIFEST: NavGroup[] = [
       { label: 'Marzni racun',         route: '/margin',      icon: 'gauge',      requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING', 'ADMIN'] },
       { label: 'OTC trgovina',         route: '/otc',         icon: 'handshake',  requiredPermissions: ['OTC_TRADE', 'CLIENT_TRADING', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SUPERVISOR', 'ADMIN'] },
       { label: 'Fondovi',              route: '/funds',       icon: 'building',   requiredPermissions: ['FUND_AGENT_MANAGE', 'CLIENT_TRADING', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SUPERVISOR', 'ADMIN'] },
+      { label: 'Watchlista', route: '/watchlist', icon: 'trendingup', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING',],},
+      { label: 'Moji orderi', route: '/my-orders', icon: 'receipt', requiredPermissions: ['CLIENT_TRADING'] },
+      { label: 'Price alerti', route: '/price-alerts', icon: 'bell', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING',],},
     ],
   },
   {

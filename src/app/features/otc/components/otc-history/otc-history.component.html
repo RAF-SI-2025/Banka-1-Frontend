@@ -1,0 +1,115 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-foreground">Istorija OTC pregovora</h1>
+    <p class="text-sm text-muted-foreground mt-1">
+      Pregled svih završenih pregovora i detaljna istorija svake kontraponude.
+    </p>
+  </div>
+
+  <div class="z-card p-5 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <div>
+        <label class="z-label">Status</label>
+        <select [(ngModel)]="filters.status" class="z-select">
+          <option value="">Svi statusi</option>
+          <option value="ACCEPTED">Prihvaćeno</option>
+          <option value="REJECTED">Odbijeno</option>
+          <option value="EXPIRED">Isteklo</option>
+        </select>
+      </div>
+      <div>
+        <label class="z-label">Druga strana (Klijent)</label>
+        <input type="text" [(ngModel)]="filters.counterparty" placeholder="Npr. Klijent #1024" class="z-input">
+      </div>
+      <div>
+        <label class="z-label">Od datuma</label>
+        <input type="date" [(ngModel)]="filters.dateFrom" class="z-input">
+      </div>
+      <div>
+        <label class="z-label">Do datuma</label>
+        <input type="date" [(ngModel)]="filters.dateTo" class="z-input">
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 mt-4">
+      <button class="z-btn-outline" (click)="resetFilters()">Resetuj</button>
+      <button class="z-btn-primary" (click)="applyFilters()">Primeni filtere</button>
+    </div>
+  </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Učitavanje istorije pregovora..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <div *ngIf="!loading && !error && negotiations.length > 0" class="z-card overflow-hidden">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th class="w-10"></th>
+          <th class="text-left">Ticker</th>
+          <th class="text-left">Druga strana</th>
+          <th class="text-left">Status</th>
+          <th class="text-left">Kreirano</th>
+          <th class="text-left">Završeno</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let neg of negotiations">
+          <tr class="cursor-pointer hover:bg-muted/50 transition-colors" (click)="toggleRow(neg)">
+            <td class="text-center text-muted-foreground">
+              <span class="inline-block transition-transform" [class.rotate-90]="neg.expanded">▶</span>
+            </td>
+            <td class="font-mono font-bold">{{ neg.offer.stockTicker }}</td>
+            <td class="font-medium">Kupac: {{ neg.offer.buyerId }} | Prodavac: {{ neg.offer.sellerId }}</td>
+            <td>
+              <span class="z-badge" 
+                    [class.z-badge-green]="neg.offer.status === 'ACCEPTED'"
+                    [class.z-badge-red]="neg.offer.status === 'REJECTED' || neg.offer.status === 'WITHDRAWN'"
+                    [class.z-badge-gray]="neg.offer.status === 'EXPIRED'">
+                {{ neg.offer.status }}
+              </span>
+            </td>
+            <td class="text-sm">—</td> <td class="text-sm">{{ neg.offer.lastModified | date:'short' }}</td>
+          </tr>
+          
+          <tr *ngIf="neg.expanded" class="bg-muted/20 border-b border-border">
+            <td colspan="6" class="p-0">
+              <div class="p-4 pl-12 border-l-4 border-primary/40 bg-background/50">
+                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">
+                  Istorija kontraponuda ({{ neg.history.length }})
+                </p>
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-muted-foreground border-b border-border/50">
+                      <th class="text-left pb-2 font-medium">Vreme</th>
+                      <th class="text-left pb-2 font-medium">Izmenio</th>
+                      <th class="text-right pb-2 font-medium">Cena (Stara → Nova)</th>
+                      <th class="text-right pb-2 font-medium">Količina (Stara → Nova)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let h of neg.history" class="border-b border-border/20 last:border-0">
+                      <td class="py-2 text-muted-foreground">{{ h.timestamp | date:'short' }}</td>
+                      <td class="py-2 font-medium" [class.text-primary]="h.changedBy === 'Banka'">{{ h.changedBy }}</td>
+                      <td class="py-2 text-right font-mono">
+                        <span *ngIf="h.oldPrice" class="line-through text-muted-foreground mr-2">{{ h.oldPrice | number:'1.2-2' }}</span>
+                        <span class="font-semibold">{{ h.newPrice | number:'1.2-2' }}</span>
+                      </td>
+                      <td class="py-2 text-right font-mono">
+                        <span *ngIf="h.oldQuantity" class="line-through text-muted-foreground mr-2">{{ h.oldQuantity }}</span>
+                        <span class="font-semibold">{{ h.newQuantity }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <app-state *ngIf="!loading && !error && negotiations.length === 0"
+             mode="empty" title="Nema pregovora"
+             text="Nisu pronađeni pregovori koji odgovaraju izabranim filterima.">
+  </app-state>
+</div>

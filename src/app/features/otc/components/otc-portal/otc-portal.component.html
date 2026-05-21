@@ -45,6 +45,16 @@
             (click)="setTab('contracts')">
       Izvršeni ugovori
     </button>
+    <button type="button"
+                class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+                [class.border-b-2]="activeTab === 'history'"
+                [class.border-primary]="activeTab === 'history'"
+                [class.text-foreground]="activeTab === 'history'"
+                [class.text-muted-foreground]="activeTab !== 'history'"
+                (click)="setTab('history')">
+          Istorija pregovora
+    </button>
+    
   </div>
 
   <!-- Tab panels -->
@@ -53,5 +63,6 @@
     <app-otc-positions        *ngSwitchCase="'positions'"></app-otc-positions>
     <app-otc-offers           *ngSwitchCase="'negotiations'"></app-otc-offers>
     <app-otc-contracts        *ngSwitchCase="'contracts'"></app-otc-contracts>
+    <app-otc-history          *ngSwitchCase="'history'"></app-otc-history>
   </ng-container>
 </div>

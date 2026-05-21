@@ -35,6 +35,9 @@ import { OrdersOverviewComponent } from './features/employee/components/orders-o
 import { PortfolioComponent } from './features/client/components/portfolio/portfolio.component';
 import { ProfileComponent } from './features/client/components/profile/profile.component';
 import { portfolioAccessGuard } from './core/guards/portfolio-access.guard';
+import { WatchlistComponent } from './features/watchlist/components/watchlist/watchlist.component';
+import { MyOrdersComponent } from './features/orders/components/my-orders/my-orders.component';
+import { PriceAlertsPageComponent } from './features/price-alerts/components/price-alerts/price-alerts.component';
 
 const routes: Routes = [
   {
@@ -151,6 +154,21 @@ const routes: Routes = [
     path: 'profile',
     component: ProfileComponent,
     canActivate: [authGuard],
+  },
+  {
+    path: 'watchlist',
+    component: WatchlistComponent,
+  },
+  {
+    path: 'my-orders',
+    component: MyOrdersComponent,
+    canActivate: [authGuard, portfolioAccessGuard],
+  },
+  {
+    path: 'price-alerts',
+    component: PriceAlertsPageComponent,
+    canActivate: [authGuard, portfolioAccessGuard],
+    data: { title: 'Price alerti' },
   },
   {
     path: '',
