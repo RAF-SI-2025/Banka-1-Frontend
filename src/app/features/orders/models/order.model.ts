@@ -48,3 +48,42 @@ export interface OrderResponse {
   approximatePrice: number;
   fee: number;
 }
+
+export interface MyOrderResponse extends OrderResponse {
+  ticker?: string;
+  securityTicker?: string;
+  listingTicker?: string;
+
+  securityName?: string;
+  listingName?: string;
+
+  securityType?: 'STOCK' | 'FUTURE' | 'FOREX';
+
+  executionPrice?: number;
+  executedPrice?: number;
+
+  createdAt?: string;
+  creationDate?: string;
+  createdDate?: string;
+
+  executedAt?: string;
+  executionDate?: string;
+  doneAt?: string;
+
+  paidFee?: number;
+  commission?: number;
+
+  listing?: {
+    ticker?: string;
+    name?: string;
+    type?: 'STOCK' | 'FUTURE' | 'FOREX';
+    securityType?: 'STOCK' | 'FUTURE' | 'FOREX';
+  };
+
+  security?: {
+    ticker?: string;
+    name?: string;
+    type?: 'STOCK' | 'FUTURE' | 'FOREX';
+    securityType?: 'STOCK' | 'FUTURE' | 'FOREX';
+  };
+}

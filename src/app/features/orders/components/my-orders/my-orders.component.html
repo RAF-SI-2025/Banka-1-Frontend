@@ -1,0 +1,142 @@
+<section class="my-orders-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Trading</p>
+      <h1>Moji orderi</h1>
+      <p class="description">
+        Pregled svih ordera koje ste kreirali, njihovog statusa, izvršenja i provizije.
+      </p>
+    </div>
+
+    <button type="button" class="z-btn-outline" (click)="loadOrders()">
+      Osveži
+    </button>
+  </div>
+
+  <div class="z-card filters-card">
+    <div class="filters-title-row">
+      <div>
+        <p class="section-label">Filteri</p>
+        <p class="description">
+          Filtrirajte ordere po statusu, tipu hartije i datumu kreiranja.
+        </p>
+      </div>
+
+      <span class="count-badge">
+        {{ filteredOrders.length }} prikazano
+      </span>
+    </div>
+
+    <div class="filters-grid">
+      <div>
+        <label class="z-label">Status</label>
+        <select class="z-select" [(ngModel)]="selectedStatus">
+          <option *ngFor="let option of statusOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">Tip hartije</label>
+        <select class="z-select" [(ngModel)]="selectedSecurityType">
+          <option *ngFor="let option of securityTypeOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">Datum od</label>
+        <input class="z-input" type="date" [(ngModel)]="dateFrom" />
+      </div>
+
+      <div>
+        <label class="z-label">Datum do</label>
+        <input class="z-input" type="date" [(ngModel)]="dateTo" />
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="z-btn-outline" (click)="clearFilters()">
+          Poništi filtere
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="z-card table-card">
+    <div class="table-header">
+      <div>
+        <p class="section-label">Orderi</p>
+        <p class="description">
+          Tip ordera, hartija, količina, cena izvršenja, status i provizija.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="empty-state">
+      Učitavanje ordera...
+    </div>
+
+    <div *ngIf="!isLoading && errorMessage" class="empty-state error-state">
+      {{ errorMessage }}
+    </div>
+
+    <div
+      *ngIf="!isLoading && !errorMessage && filteredOrders.length === 0"
+      class="empty-state"
+    >
+      Nema ordera za izabrane filtere.
+    </div>
+
+    <div
+      *ngIf="!isLoading && !errorMessage && filteredOrders.length > 0"
+      class="table-wrapper"
+    >
+      <table class="z-table my-orders-table">
+        <thead>
+        <tr>
+          <th>Tip ordera</th>
+          <th>Ticker i naziv hartije</th>
+          <th>Tip hartije</th>
+          <th>Količina</th>
+          <th>Cena izvršenja</th>
+          <th>Status</th>
+          <th>Datum kreiranja</th>
+          <th>Datum izvršenja</th>
+          <th>Plaćena provizija</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr *ngFor="let order of filteredOrders; trackBy: trackById">
+          <td>{{ getOrderTypeLabel(order.orderType) }}</td>
+
+          <td>
+            <div class="ticker">{{ order.ticker }}</div>
+            <div class="security-name">{{ order.securityName }}</div>
+          </td>
+
+          <td>{{ order.securityType === 'ALL' ? '-' : order.securityType }}</td>
+
+          <td>{{ order.quantity }}</td>
+
+          <td>{{ formatMoney(order.executionPrice) }}</td>
+
+          <td>
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">
+                {{ getStatusLabel(order.status) }}
+              </span>
+          </td>
+
+          <td>{{ formatDate(order.createdAt) }}</td>
+
+          <td>{{ formatDate(order.executedAt) }}</td>
+
+          <td>{{ formatMoney(order.paidFee) }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
