@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 import { OtcService } from './otc.service';
@@ -156,7 +156,7 @@ describe('OtcService — inter-bank wrapper (PR_33 Phase B)', () => {
     httpMock.expectOne(interbankUrl).flush(interbankNegs);
   });
 
-  it('getActiveOffers() ne pada ako inter-bank API vrati 500', done => {
+  it('getActiveOffers() ne pada ako inter-bank API vrati 500', fakeAsync(() => {
     const localOffers: OtcOffer[] = [
       {
         id: 1, stockTicker: 'X', buyerId: 1, sellerId: 2, amount: 1,
@@ -164,12 +164,70 @@ describe('OtcService — inter-bank wrapper (PR_33 Phase B)', () => {
         status: 'PENDING_BUYER', modifiedBy: '1', lastModified: '',
       },
     ];
-    service.getActiveOffers().subscribe(merged => {
-      expect(merged.length).toBe(1);
-      expect(merged[0].interbank).toBe(false);
-      done();
-    });
+    let merged: OtcOffer[] = [];
+    service.getActiveOffers().subscribe((res) => (merged = res));
+
     httpMock.expectOne(`${localUrl}/offers/active`).flush(localOffers);
-    httpMock.expectOne(interbankUrl).flush({ msg: 'down' }, { status: 500, statusText: 'Server Error' });
+    httpMock
+      .expectOne(interbankUrl)
+      .flush({ msg: 'down' }, { status: 500, statusText: 'Server Error' });
+    tick(2000);
+    httpMock
+      .expectOne(interbankUrl)
+      .flush({ msg: 'down' }, { status: 500, statusText: 'Server Error' });
+    tick(4000);
+    httpMock
+      .expectOne(interbankUrl)
+      .flush({ msg: 'down' }, { status: 500, statusText: 'Server Error' });
+
+    expect(merged.length).toBe(1);
+    expect(merged[0].interbank).toBe(false);
+  }));
+});
+
+describe('OtcService — ETag caching (F11)', () => {
+  let service: OtcService;
+  let httpMock: HttpTestingController;
+
+  const localUrl = `${environment.apiUrl}/otc`;
+  const activeUrl = `${localUrl}/offers/active`;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [OtcService],
+    });
+    service = TestBed.inject(OtcService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('activeForCurrentUser šalje If-None-Match i koristi keš na 304', () => {
+    const body: OtcOffer[] = [
+      {
+        id: 1,
+        stockTicker: 'X',
+        buyerId: 1,
+        sellerId: 2,
+        amount: 1,
+        pricePerStock: 10,
+        premium: 1,
+        settlementDate: '2026-12-01',
+        status: 'PENDING_BUYER',
+        modifiedBy: '1',
+        lastModified: '',
+      },
+    ];
+
+    service.activeForCurrentUser().subscribe((res) => expect(res).toEqual(body));
+    httpMock
+      .expectOne(activeUrl)
+      .flush(body, { headers: { ETag: '"offers-v1"' } });
+
+    service.activeForCurrentUser().subscribe((res) => expect(res).toEqual(body));
+    const req2 = httpMock.expectOne(activeUrl);
+    expect(req2.request.headers.get('If-None-Match')).toBe('"offers-v1"');
+    req2.flush(null, { status: 304, statusText: 'Not Modified' });
   });
 });

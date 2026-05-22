@@ -21,6 +21,7 @@ import { ToastComponent } from './shared/components/toast/toast.component';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 import { ForbiddenComponent } from './shared/components/forbidden/forbidden.component';
 import { CommonModule } from '@angular/common';
+import { RecurringOrderComponent } from './features/orders/components/recurring-order/recurring-order.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { CommonModule } from '@angular/common';
     AppShellComponent,
     SidebarComponent,
     TopbarComponent,
-    CommandPaletteComponent
+    CommandPaletteComponent,
+    RecurringOrderComponent
   ],
   imports: [
     BrowserModule,

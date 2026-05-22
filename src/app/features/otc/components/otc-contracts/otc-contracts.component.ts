@@ -1,11 +1,16 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, Subscription } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
 
 import { OtcService } from '../../services/otc.service';
 import { StockPriceService } from '../../services/stock-price.service';
 import { OptionContract, OptionContractStatus } from '../../models/otc.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import {
+  daysUntilSettlement,
+  OTC_EXPIRY_WARNING_DAYS,
+} from '../../services/otc-notification-diff';
 
 interface OptionContractView {
   id: number;
@@ -69,6 +74,29 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
   /** PR_33 Phase B: filter banaka (intra/inter-bank). */
   bankFilter: OtcContractFilterMode = 'all';
 
+  /** Korisnik je zatvorio banner za ugovore koji ističu (reset na sledeći load). */
+  expiryAlertDismissed = false;
+
+  private readonly contractsSource = new BehaviorSubject<OptionContractView[]>([]);
+  private readonly bankFilterSource = new BehaviorSubject<OtcContractFilterMode>('all');
+
+  /** Memoizovano — ne računa se na svaki change detection ciklus. */
+  readonly expiringSoonContracts$ = combineLatest([
+    this.contractsSource,
+    this.bankFilterSource,
+  ]).pipe(
+    map(([contracts, mode]) => this.buildExpiringSoon(contracts, mode)),
+    shareReplay(1),
+  );
+
+  readonly visibleContracts$ = combineLatest([
+    this.contractsSource,
+    this.bankFilterSource,
+  ]).pipe(
+    map(([contracts, mode]) => this.filterVisible(contracts, mode)),
+    shareReplay(1),
+  );
+
   private priceSub?: Subscription;
 
   constructor(
@@ -87,6 +115,7 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
   }
 
   load(): void {
+    this.expiryAlertDismissed = false;
     this.loading = true;
     this.error = null;
     const filter = this.statusFilter.value;
@@ -94,29 +123,40 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
     this.otcService.myContracts(status).subscribe({
       next: items => {
         this.contracts = items.map(c => this.toView(c));
+        this.emitContracts();
         this.loading = false;
         this.subscribeLivePrices();
       },
       error: err => {
         this.error = err?.error?.message || 'Greska pri ucitavanju ugovora.';
         this.contracts = [];
+        this.emitContracts();
         this.loading = false;
       }
     });
   }
 
-  /**
-   * PR_33 Phase B: vraca contracts filtrirane po `bankFilter`-u.
-   * 'all' → svi; 'local' → samo intra-bank; 'banka2' → samo cross-bank.
-   */
-  get visibleContracts(): OptionContractView[] {
-    if (this.bankFilter === 'all') return this.contracts;
-    if (this.bankFilter === 'banka2') return this.contracts.filter(c => !!c.interbank);
-    return this.contracts.filter(c => !c.interbank);
+  daysUntilExpiry(c: OptionContractView): number | null {
+    return daysUntilSettlement(c?.settlementDate);
+  }
+
+  expiryDaysAriaLabel(c: OptionContractView): string {
+    const days = this.daysUntilExpiry(c);
+    if (days == null) return 'Nepoznat broj dana do isteka';
+    return days === 1 ? '1 dan do isteka' : `${days} dana do isteka`;
+  }
+
+  trackByContractId(_index: number, c: OptionContractView): number {
+    return c.id;
+  }
+
+  dismissExpiryAlert(): void {
+    this.expiryAlertDismissed = true;
   }
 
   setBankFilter(mode: OtcContractFilterMode): void {
     this.bankFilter = mode;
+    this.bankFilterSource.next(mode);
   }
 
   exercise(c: OptionContractView): void {
@@ -159,7 +199,39 @@ export class OtcContractsComponent implements OnInit, OnDestroy {
         const sign = c.counterpartyRole === 'SELLER' ? 1 : -1;
         return { ...c, liveProfit: sign * profitPerShare * c.amount };
       });
+      this.emitContracts();
     });
+  }
+
+  private emitContracts(): void {
+    this.contractsSource.next(this.contracts);
+  }
+
+  private filterVisible(
+    contracts: OptionContractView[],
+    mode: OtcContractFilterMode,
+  ): OptionContractView[] {
+    if (mode === 'all') return contracts;
+    if (mode === 'banka2') return contracts.filter((c) => !!c.interbank);
+    return contracts.filter((c) => !c.interbank);
+  }
+
+  /** Celina 4: aktivni ugovori koji ističu za ≤ OTC_EXPIRY_WARNING_DAYS. */
+  private buildExpiringSoon(
+    contracts: OptionContractView[],
+    mode: OtcContractFilterMode,
+  ): OptionContractView[] {
+    return this.filterVisible(contracts, mode)
+      .filter((c) => {
+        if (c.status !== 'ACTIVE') return false;
+        const days = daysUntilSettlement(c.settlementDate);
+        return days != null && days > 0 && days <= OTC_EXPIRY_WARNING_DAYS;
+      })
+      .sort(
+        (a, b) =>
+          (daysUntilSettlement(a.settlementDate) ?? 99) -
+          (daysUntilSettlement(b.settlementDate) ?? 99),
+      );
   }
 
   private toView(c: OptionContract): OptionContractView {

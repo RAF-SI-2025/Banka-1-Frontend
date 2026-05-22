@@ -27,10 +27,15 @@
 
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && stock">
-      <!-- Stock name -->
-      <h2 class="text-xl font-semibold text-foreground mb-6">
-        {{ stock.ticker }} - {{ stock.name }}
-      </h2>
+      <!-- Stock name + alert button -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold text-foreground">
+          {{ stock.ticker }} - {{ stock.name }}
+        </h2>
+        <button type="button" class="z-btn-outline" (click)="openAlertModal()">
+          Postavi alert
+        </button>
+      </div>
 
       <!-- Main info card with chart -->
       <div class="z-card mb-6">
@@ -231,4 +236,10 @@
       </div>
     </div>
   </div>
+
+  <app-price-alert-modal
+    *ngIf="alertSecurity"
+    [security]="alertSecurity!"
+    (closed)="closeAlertModal()"
+  ></app-price-alert-modal>
 </div>

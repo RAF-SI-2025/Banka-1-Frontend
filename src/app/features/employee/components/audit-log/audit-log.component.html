@@ -1,0 +1,121 @@
+<div class="page-layout">
+  <div class="page-content">
+
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">
+          Audit log
+        </h1>
+
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled važnih sistemskih akcija
+        </p>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="z-card p-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+        <input
+          type="text"
+          placeholder="Tip akcije"
+          [(ngModel)]="filterActionType"
+          (input)="onFiltersChange()"
+          class="z-input" />
+
+        <input
+          type="text"
+          placeholder="Korisnik"
+          [(ngModel)]="filterUser"
+          (input)="onFiltersChange()"
+          class="z-input" />
+
+        <input
+          type="date"
+          [(ngModel)]="filterFromDate"
+          (change)="onFiltersChange()"
+          class="z-input" />
+
+        <input
+          type="date"
+          [(ngModel)]="filterToDate"
+          (change)="onFiltersChange()"
+          class="z-input" />
+
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="z-card overflow-hidden">
+
+      <!-- LOADING -->
+      <div
+        *ngIf="isLoading"
+        class="flex justify-center items-center p-12">
+
+        <svg
+          class="w-8 h-8 text-primary animate-spin"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2">
+
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+        </svg>
+      </div>
+
+      <!-- EMPTY -->
+      <div
+        *ngIf="!isLoading && auditLogs.length === 0"
+        class="text-center p-12 text-muted-foreground text-sm">
+
+        Nema dostupnih audit logova.
+      </div>
+
+      <!-- DATA -->
+      <table
+        *ngIf="!isLoading && auditLogs.length > 0"
+        class="z-table">
+
+        <thead>
+          <tr>
+            <th>Tip akcije</th>
+            <th>Izvršio</th>
+            <th>Odnosi se na</th>
+            <th>Nova vrednost</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let log of auditLogs">
+
+            <td class="font-medium">
+              {{ log.actionType }}
+            </td>
+
+            <td>
+              {{ log.performedBy }}
+            </td>
+
+            <td>
+              {{ log.target }}
+            </td>
+
+            <td>
+              {{ log.newValue }}
+            </td>
+
+            <td>
+              {{ formatTimestamp(log.timestamp) }}
+            </td>
+
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+</div>

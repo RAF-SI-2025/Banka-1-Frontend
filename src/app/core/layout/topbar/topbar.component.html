@@ -1,45 +1,119 @@
-<!-- PR_31 hotfix: h-14 = 56px visina, identicna sidebar header-u (h-14)
-     da se separatori u sidebaru i topbar bottom border poklapaju visinski. -->
 <header class="z-topbar relative h-14 py-0">
   <div class="flex items-center gap-1.5 text-sm min-w-0">
     <ng-container *ngIf="breadcrumb.length === 0">
       <span class="text-muted-foreground">Banka 1</span>
     </ng-container>
+
     <ng-container *ngFor="let seg of breadcrumb; let i = index; let last = last">
-      <span [class.text-foreground]="last"
-            [class.font-semibold]="last"
-            [class.text-muted-foreground]="!last"
-            class="truncate max-w-[160px]">
+      <span
+        [class.text-foreground]="last"
+        [class.font-semibold]="last"
+        [class.text-muted-foreground]="!last"
+        class="truncate max-w-[160px]"
+      >
         {{ seg }}
       </span>
+
       <span *ngIf="!last" class="text-muted-foreground/60">/</span>
     </ng-container>
   </div>
 
   <div class="flex items-center gap-2 flex-shrink-0">
-    <button type="button" (click)="openCommandPalette()"
-            class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs cursor-pointer"
-            aria-label="Otvori paletu komandi">
+    <!-- Watchlist quick access -->
+    <div class="relative">
+      <button
+        type="button"
+        class="watchlist-trigger"
+        (click)="toggleWatchlistMenu()"
+        [attr.aria-expanded]="watchlistMenuOpen"
+        aria-label="Brzi pregled watchliste"
+      >
+        <span>Watchlista</span>
+      </button>
+
+      <div
+        *ngIf="watchlistMenuOpen"
+        class="quick-watchlist-menu"
+        role="menu"
+      >
+        <div class="quick-watchlist-header">
+          <div>
+            <p class="quick-eyebrow">Brzi pregled</p>
+            <h3>Watchlista</h3>
+          </div>
+
+          <a
+            routerLink="/watchlist"
+            class="quick-open-link"
+            (click)="closeMenus()"
+          >
+            Otvori sve
+          </a>
+        </div>
+
+        <div *ngIf="watchlistPreview.length === 0" class="quick-empty">
+          Još nema hartija u watchlisti.
+        </div>
+
+        <div
+          *ngFor="let security of watchlistPreview"
+          class="quick-watchlist-row"
+        >
+          <div class="quick-security-main">
+            <strong>{{ security.ticker }}</strong>
+            <span>{{ security.name }}</span>
+          </div>
+
+          <div class="quick-security-price">
+            <strong>{{ formatHeaderPrice(security) }}</strong>
+            <span [ngClass]="getHeaderChangeClass(security)">
+              {{ formatHeaderChange(security) }}
+            </span>
+          </div>
+
+          <div class="quick-security-volume">
+            <small>Volumen</small>
+            <span>{{ formatHeaderVolume(security) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      (click)="openCommandPalette()"
+      class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs cursor-pointer"
+      aria-label="Otvori paletu komandi"
+    >
       <lucide-icon name="search" [size]="12"></lucide-icon>
       <span>Pretrazi</span>
       <kbd class="font-mono text-[10px] px-1 py-0.5 rounded bg-background border border-border">Ctrl+K</kbd>
     </button>
 
     <div class="relative">
-      <button type="button" (click)="toggleThemeMenu()"
-              class="z-btn-icon"
-              [attr.aria-label]="'Tema: ' + themeLabel(theme.current)"
-              [attr.aria-expanded]="themeMenuOpen">
+      <button
+        type="button"
+        (click)="toggleThemeMenu()"
+        class="z-btn-icon"
+        [attr.aria-label]="'Tema: ' + themeLabel(theme.current)"
+        [attr.aria-expanded]="themeMenuOpen"
+      >
         <lucide-icon [name]="iconForTheme(theme.current)" [size]="16"></lucide-icon>
       </button>
-      <div *ngIf="themeMenuOpen"
-           role="menu"
-           class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg">
-        <button type="button" *ngFor="let t of themes"
-                role="menuitem"
-                (click)="setTheme(t)"
-                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/40 cursor-pointer border-0 bg-transparent text-left"
-                [class.font-semibold]="theme.current === t">
+
+      <div
+        *ngIf="themeMenuOpen"
+        role="menu"
+        class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg"
+      >
+        <button
+          type="button"
+          *ngFor="let t of themes"
+          role="menuitem"
+          (click)="setTheme(t)"
+          class="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/40 cursor-pointer border-0 bg-transparent text-left"
+          [class.font-semibold]="theme.current === t"
+        >
           <lucide-icon [name]="iconForTheme(t)" [size]="14"></lucide-icon>
           <span>{{ themeLabel(t) }}</span>
           <span *ngIf="theme.current === t" class="ml-auto text-primary">&check;</span>
@@ -47,24 +121,92 @@
       </div>
     </div>
 
-    <button type="button" class="z-btn-icon" aria-label="Notifikacije">
-      <lucide-icon name="bell" [size]="16"></lucide-icon>
-    </button>
+    <div class="relative">
+      <button *ngIf="notificationMenuOpen"
+              type="button"
+              class="fixed inset-0 z-40 cursor-default border-0 bg-transparent p-0"
+              aria-label="Zatvori notifikacije"
+              tabindex="-1"
+              (click)="toggleNotificationMenu()"></button>
+
+      <button type="button" class="z-btn-icon relative"
+              data-testid="notification-bell"
+              (click)="toggleNotificationMenu()"
+              [attr.aria-label]="notificationBellAriaLabel()"
+              [attr.aria-expanded]="notificationMenuOpen"
+              [attr.aria-controls]="notificationMenuOpen ? 'notification-menu' : null"
+              aria-haspopup="menu">
+        <lucide-icon name="bell" [size]="16" aria-hidden="true"></lucide-icon>
+        <span *ngIf="unreadNotificationCount > 0"
+              role="status"
+              [attr.aria-label]="unreadBadgeAriaLabel()"
+              class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+          {{ unreadNotificationCount > 9 ? '9+' : unreadNotificationCount }}
+        </span>
+      </button>
+      <div *ngIf="notificationMenuOpen"
+           id="notification-menu"
+           data-testid="notification-menu"
+           role="menu"
+           aria-label="Notifikaciona lista"
+           class="absolute right-0 top-full mt-1 z-50 w-[min(360px,calc(100vw-2rem))] max-h-[min(420px,70vh)] overflow-y-auto py-1 bg-card border border-border rounded-lg shadow-lg">
+        <div class="px-3 py-2 border-b border-border">
+          <p class="text-sm font-semibold text-foreground">Notifikacije</p>
+          <p class="text-xs text-muted-foreground">OTC pregovori i ugovori</p>
+        </div>
+        <button *ngIf="notifications.length === 0" type="button" disabled
+                role="menuitem"
+                aria-label="Nema novih obaveštenja"
+                class="w-full px-3 py-6 text-sm text-muted-foreground text-center border-0 bg-transparent cursor-default">
+          Nema novih obaveštenja.
+        </button>
+        <button *ngFor="let n of notifications; trackBy: trackByNotificationId"
+                type="button" role="menuitem"
+                data-testid="notification-item"
+                class="w-full text-left px-3 py-2.5 text-sm border-0 bg-transparent cursor-pointer hover:bg-accent/40 border-b border-border/60 last:border-b-0"
+                [class.font-medium]="!n.read"
+                [class.text-foreground]="!n.read"
+                [class.text-muted-foreground]="n.read"
+                [attr.aria-label]="n.message"
+                (click)="openNotification(n)"
+                (keydown)="onNotificationMenuKeydown($event, n)">
+          <span class="block leading-snug">{{ n.message }}</span>
+          <span class="block text-[10px] text-muted-foreground mt-1">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+        </button>
+      </div>
+    </div>
 
     <div class="relative">
-      <button type="button" (click)="toggleAvatarMenu()"
-              class="w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center cursor-pointer border-0"
-              [attr.aria-label]="'Korisnik ' + userInitials"
-              [attr.aria-expanded]="avatarMenuOpen">
+      <button
+        type="button"
+        (click)="toggleAvatarMenu()"
+        class="w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center cursor-pointer border-0"
+        [attr.aria-label]="'Korisnik ' + userInitials"
+        [attr.aria-expanded]="avatarMenuOpen"
+      >
         {{ userInitials }}
       </button>
-      <div *ngIf="avatarMenuOpen"
-           role="menu"
-           class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg">
-        <a routerLink="/profile" role="menuitem" (click)="closeMenus()"
-           class="block px-3 py-2 text-sm text-foreground hover:bg-accent/40">Profil</a>
-        <button type="button" role="menuitem" (click)="logout()"
-                class="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 cursor-pointer border-0 bg-transparent">
+
+      <div
+        *ngIf="avatarMenuOpen"
+        role="menu"
+        class="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 bg-card border border-border rounded-lg shadow-lg"
+      >
+        <a
+          routerLink="/profile"
+          role="menuitem"
+          (click)="closeMenus()"
+          class="block px-3 py-2 text-sm text-foreground hover:bg-accent/40"
+        >
+          Profil
+        </a>
+
+        <button
+          type="button"
+          role="menuitem"
+          (click)="logout()"
+          class="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 cursor-pointer border-0 bg-transparent"
+        >
           Odjava
         </button>
       </div>

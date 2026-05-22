@@ -15,6 +15,8 @@ import {
 import { StateComponent } from '../../../../shared/components/state/state.component';
 // PR_31 Phase 7 T23: ApexCharts zameni Canvas drawChart().
 import { PriceChartComponent, PriceSeriesPoint } from '../../../../shared/charts/price-chart/price-chart.component';
+import { PriceAlertModalComponent } from '../../../price-alerts/components/price-alert-modal/price-alert-modal.component';
+import { SecurityForAlert } from '../../../price-alerts/models/price-alert.model';
 
 type Period = 'day' | 'week' | 'month' | 'year' | '5year' | 'all';
 
@@ -26,7 +28,7 @@ interface DetailRow {
 @Component({
   selector: 'app-stock-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, StateComponent, PriceChartComponent],
+  imports: [CommonModule, FormsModule, StateComponent, PriceChartComponent, PriceAlertModalComponent],
   templateUrl: './stock-detail.component.html',
   styleUrls: ['./stock-detail.component.scss'],
 })
@@ -35,6 +37,8 @@ export class StockDetailComponent implements OnInit, OnDestroy {
 
   ticker = '';
   stock: Stock | null = null;
+
+  alertSecurity: SecurityForAlert | null = null;
   priceHistory: PriceHistory | null = null;
   optionChain: OptionChain | null = null;
 
@@ -300,6 +304,23 @@ export class StockDetailComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/securities']);
+  }
+
+  openAlertModal(): void {
+    if (!this.stock) return;
+    this.alertSecurity = {
+      id: this.stock.id,
+      ticker: this.stock.ticker,
+      name: this.stock.name,
+      price: this.stock.price,
+      change: this.stock.change,
+      changePercent: this.stock.changePercent,
+      currency: this.stock.currency,
+    };
+  }
+
+  closeAlertModal(): void {
+    this.alertSecurity = null;
   }
 
   trackByStrike(index: number, strike: number): number {

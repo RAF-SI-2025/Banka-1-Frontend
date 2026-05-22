@@ -150,19 +150,67 @@
           <span>{{ errorMessage }}</span>
         </div>
 
+        <!-- Lockout notification with countdown -->
+        <div *ngIf="isAccountLocked"
+             class="flex items-start gap-2.5 p-3.5 mb-5 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 text-sm"
+             role="alert"
+             aria-live="assertive"
+             id="lockout-message"
+             [attr.aria-label]="'Nalog je zaključan. Pokušajte ponovo za ' + getFormattedRemainingTime()">
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5 animate-spin" 
+               viewBox="0 0 24 24" 
+               fill="none" 
+               stroke="currentColor" 
+               stroke-width="2" 
+               stroke-linecap="round" 
+               stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <div class="flex-1">
+            <p class="font-semibold">Nalog je zaključan</p>
+            <p class="text-sm mt-1">
+              Zbog više neuspešnih pokušaja, nalog je zaključan na
+              <strong class="font-mono text-base" [attr.aria-label]="'Preostalo vreme: ' + getFormattedRemainingTime()">
+                {{ getFormattedRemainingTime() }}
+              </strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Email notification -->
+        <div *ngIf="emailSentNotification && !isAccountLocked"
+             class="flex items-start gap-2.5 p-3.5 mb-5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm"
+             role="status">
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22 6 12 13 2 6"></polyline>
+          </svg>
+          <div>
+            <p class="font-semibold">Email poslat</p>
+            <p class="text-sm mt-1">
+              Obaveštenje o zaključavanju naloga je poslato na vašu email adresu.
+              Email sadrži opciju za resetovanje lozinke.
+            </p>
+          </div>
+        </div>
+
         <form (ngSubmit)="onSubmit()" novalidate class="space-y-4">
           <div>
             <label for="email" class="z-label">Email</label>
             <input id="email" data-cy="email" type="email" name="email" [(ngModel)]="email"
                    placeholder="ime.prezime@banka1.rs" autocomplete="email"
+                   [disabled]="isAccountLocked || isLoading"
+                   [attr.aria-describedby]="isAccountLocked ? 'lockout-message' : null"
                    class="z-input" />
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label for="password" class="z-label !mb-0">Lozinka</label>
-              <button type="button" (click)="goToForgotPassword()"
-                      class="text-xs text-primary hover:underline font-semibold bg-transparent border-0 cursor-pointer">
+              <button type="button" (click)="goToForgotPassword()" [disabled]="isAccountLocked || isLoading"
+                      class="text-xs text-primary hover:underline font-semibold bg-transparent border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 Zaboravljena?
               </button>
             </div>
@@ -170,11 +218,13 @@
               <input id="password" data-cy="password" [type]="isPasswordVisible ? 'text' : 'password'"
                      name="password" [(ngModel)]="password"
                      placeholder="••••••••" autocomplete="current-password"
+                     [disabled]="isAccountLocked || isLoading"
+                     [attr.aria-describedby]="isAccountLocked ? 'lockout-message' : null"
                      class="z-input pr-11" />
-              <button type="button" (click)="togglePasswordVisibility()"
+              <button type="button" (click)="togglePasswordVisibility()" [disabled]="isAccountLocked || isLoading"
                       [title]="isPasswordVisible ? 'Sakri lozinku' : 'Prikazi lozinku'"
                       [attr.aria-label]="isPasswordVisible ? 'Sakri lozinku' : 'Prikazi lozinku'"
-                      class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer rounded">
+                      class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer rounded disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg *ngIf="!isPasswordVisible" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -187,13 +237,13 @@
             </div>
           </div>
 
-          <button type="submit" data-cy="login-btn" [disabled]="isLoading"
+          <button type="submit" data-cy="login-btn" [disabled]="isLoading || isAccountLocked"
                   class="z-btn-primary z-btn-lg z-btn-full mt-2">
             <svg *ngIf="isLoading" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
             </svg>
-            {{ isLoading ? 'Prijavljivanje...' : 'Prijavi se' }}
-            <svg *ngIf="!isLoading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            {{ isLoading ? 'Prijavljivanje...' : (isAccountLocked ? 'Nalog zaključan' : 'Prijavi se') }}
+            <svg *ngIf="!isLoading && !isAccountLocked" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>

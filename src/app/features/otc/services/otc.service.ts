@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, forkJoin, of, timer } from 'rxjs';
+import { catchError, map, retry, tap } from 'rxjs/operators';
+
+import { OtcEtagCache } from './otc-etag-cache';
 
 import { environment } from 'src/environments/environment';
 import {
@@ -31,27 +33,44 @@ const BANKA2_LABEL = 'Banka 2';
 export class OtcService {
   private readonly baseUrl = `${environment.apiUrl}/otc`;
   private readonly interbankUrl = `${environment.apiUrl}/api/interbank/otc/negotiations`;
+  private readonly activeOffersUrl = `${this.baseUrl}/offers/active`;
+  private readonly etagCache: OtcEtagCache;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.etagCache = new OtcEtagCache(http);
+  }
+
+  /** Briše ETag keš (npr. pri odjavi). */
+  clearPollCache(): void {
+    this.etagCache.clear();
+  }
 
   createOffer(req: CreateOtcOfferRequest): Observable<OtcOffer> {
-    return this.http.post<OtcOffer>(`${this.baseUrl}/offers`, req);
+    return this.http.post<OtcOffer>(`${this.baseUrl}/offers`, req).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   counterOffer(offerId: number, req: CounterOfferRequest): Observable<OtcOffer> {
-    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/counter`, req);
+    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/counter`, req).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   accept(offerId: number): Observable<OtcOffer> {
-    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/accept`, null);
+    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/accept`, null).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   reject(offerId: number): Observable<OtcOffer> {
-    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/reject`, null);
+    return this.http.post<OtcOffer>(`${this.baseUrl}/offers/${offerId}/reject`, null).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   activeForCurrentUser(): Observable<OtcOffer[]> {
-    return this.http.get<OtcOffer[]>(`${this.baseUrl}/offers/active`);
+    return this.etagCache.getJson<OtcOffer[]>(this.activeOffersUrl);
   }
 
   getPublicStocks(): Observable<OtcPublicStockGroup[]> {
@@ -75,11 +94,15 @@ export class OtcService {
   }
 
   withdrawOffer(offerId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/offers/${offerId}/withdraw`, null);
+    return this.http.post<void>(`${this.baseUrl}/offers/${offerId}/withdraw`, null).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   exercise(contractId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/contracts/${contractId}/exercise`, null);
+    return this.http.post<void>(`${this.baseUrl}/contracts/${contractId}/exercise`, null).pipe(
+      tap(() => this.etagCache.invalidateByPrefix(`${this.baseUrl}/contracts/my`)),
+    );
   }
 
   /**
@@ -90,7 +113,7 @@ export class OtcService {
     const url = status
       ? `${this.baseUrl}/contracts/my?status=${status}`
       : `${this.baseUrl}/contracts/my`;
-    return this.http.get<OptionContract[]>(url);
+    return this.etagCache.getJson<OptionContract[]>(url);
   }
 
   // ------------------------------------------------------------------
@@ -101,7 +124,7 @@ export class OtcService {
   // ------------------------------------------------------------------
 
   getInterbankNegotiations(): Observable<InterbankNegotiationView[]> {
-    return this.http.get<InterbankNegotiationView[]>(this.interbankUrl);
+    return this.etagCache.getJson<InterbankNegotiationView[]>(this.interbankUrl);
   }
 
   /**
@@ -115,22 +138,36 @@ export class OtcService {
   }
 
   createInterbankNegotiation(req: CreateInterbankNegotiationRequest): Observable<InterbankNegotiationView> {
-    return this.http.post<InterbankNegotiationView>(this.interbankUrl, req);
+    return this.http.post<InterbankNegotiationView>(this.interbankUrl, req).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   counterInterbankNegotiation(
     localId: string,
     req: CounterInterbankNegotiationRequest,
   ): Observable<void> {
-    return this.http.put<void>(`${this.interbankUrl}/${localId}/counter`, req);
+    return this.http.put<void>(`${this.interbankUrl}/${localId}/counter`, req).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   acceptInterbankNegotiation(localId: string): Observable<void> {
-    return this.http.post<void>(`${this.interbankUrl}/${localId}/accept`, null);
+    return this.http.post<void>(`${this.interbankUrl}/${localId}/accept`, null).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
   }
 
   deleteInterbankNegotiation(localId: string): Observable<void> {
-    return this.http.delete<void>(`${this.interbankUrl}/${localId}`);
+    return this.http.delete<void>(`${this.interbankUrl}/${localId}`).pipe(
+      tap(() => this.invalidateOfferPollCache()),
+    );
+  }
+
+  private invalidateOfferPollCache(): void {
+    this.etagCache.invalidateUrl(this.activeOffersUrl);
+    this.etagCache.invalidateUrl(this.interbankUrl);
+    this.etagCache.invalidateByPrefix(`${this.baseUrl}/contracts/my`);
   }
 
   /**
@@ -147,7 +184,11 @@ export class OtcService {
       catchError(() => of([] as OtcOffer[])),
     );
     const interbank$ = this.getInterbankNegotiations().pipe(
-      map(items => items.map(n => this.toOfferFromNegotiation(n))),
+      retry({
+        count: 2,
+        delay: (_err, retryCount) => timer(2 ** retryCount * 1000),
+      }),
+      map((items) => items.map((n) => this.toOfferFromNegotiation(n))),
       catchError(() => of([] as OtcOffer[])),
     );
     return forkJoin([local$, interbank$]).pipe(

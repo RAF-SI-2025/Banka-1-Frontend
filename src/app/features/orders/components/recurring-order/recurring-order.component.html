@@ -1,0 +1,153 @@
+<div class="page-layout">
+  <div class="page-content">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">
+          Trajni nalozi
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Kreiranje i pregled aktivnih trajnih naloga za hartije od vrednosti
+        </p>
+      </div>
+    </div>
+
+    <div class="z-card p-4 mb-4">
+      <h2 class="text-lg font-semibold mb-4">
+        Novi trajni nalog
+      </h2>
+
+      <form (ngSubmit)="createRecurringOrder()" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div>
+          <label class="text-sm text-muted-foreground">Hartija</label>
+          <input
+            type="text"
+            placeholder="Ticker"
+            [(ngModel)]="ticker"
+            name="ticker"
+            class="z-input mt-1" />
+        </div>
+
+        <div>
+          <label class="text-sm text-muted-foreground">Iznos u RSD</label>
+          <input
+            type="number"
+            min="1"
+            [(ngModel)]="amountRsd"
+            name="amountRsd"
+            class="z-input mt-1" />
+        </div>
+
+        <div>
+          <label class="text-sm text-muted-foreground">Valuta</label>
+          <select
+            [(ngModel)]="currency"
+            name="currency"
+            class="z-input mt-1">
+            <option *ngFor="let c of currencies" [ngValue]="c">
+              {{ c }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-muted-foreground">Interval</label>
+          <select
+            [(ngModel)]="interval"
+            name="interval"
+            class="z-input mt-1">
+            <option *ngFor="let option of intervals" [ngValue]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="interval === 'MONTHLY'">
+          <label class="text-sm text-muted-foreground">Dan u mesecu</label>
+          <input
+            type="number"
+            min="1"
+            max="31"
+            [(ngModel)]="dayOfMonth"
+            name="dayOfMonth"
+            class="z-input mt-1" />
+        </div>
+
+        <div class="md:col-span-5 flex justify-end">
+          <button
+            type="submit"
+            class="z-btn-primary"
+            [disabled]="isSubmitting">
+            Kreiraj trajni nalog
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="z-card overflow-hidden">
+      <div *ngIf="isLoading" class="text-center p-12 text-muted-foreground text-sm">
+        Učitavanje trajnih naloga...
+      </div>
+
+      <div *ngIf="!isLoading && recurringOrders.length === 0" class="text-center p-12 text-muted-foreground text-sm">
+        Nema aktivnih trajnih naloga.
+      </div>
+
+      <table *ngIf="!isLoading && recurringOrders.length > 0" class="z-table">
+        <thead>
+          <tr>
+            <th>Hartija</th>
+            <th class="text-right">Iznos</th>
+            <th>Interval</th>
+            <th>Sledeće izvršavanje</th>
+            <th>Status</th>
+            <th class="text-right">Akcije</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let order of recurringOrders">
+            <td class="font-semibold">
+              {{ order.ticker }}
+            </td>
+
+            <td class="text-right">
+              {{ formatCurrency(order.amountRsd) }} {{ order.currency }}
+            </td>
+
+            <td>
+              {{ getIntervalLabel(order.interval) }}
+            </td>
+
+            <td>
+              {{ formatDate(order.nextExecution) }}
+            </td>
+
+            <td>
+              {{ order.status }}
+            </td>
+
+            <td>
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="pauseOrder(order)"
+                  [disabled]="order.status !== 'ACTIVE'">
+                  Pauziraj
+                </button>
+
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="cancelOrder(order)"
+                  [disabled]="order.status === 'CANCELLED'">
+                  Otkaži
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

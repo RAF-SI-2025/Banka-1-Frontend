@@ -19,6 +19,7 @@ import { OrdersOverviewComponent } from './components/orders-overview/orders-ove
 import { AppPaginationComponent } from '../../shared/components/pagination/pagination.component';
 // PR_31 T11: shared StateComponent za loading/empty/error markup.
 import { StateComponent } from '../../shared/components/state/state.component';
+import { AuditLogComponent } from './components/audit-log/audit-log.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { StateComponent } from '../../shared/components/state/state.component';
     AccountCardsPlaceholderComponent,
     LoanRequestManagementComponent,
     LoanManagementComponent,
-    OrdersOverviewComponent],
+    OrdersOverviewComponent,
+    AuditLogComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,

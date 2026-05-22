@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { LoanService } from '../../services/loan.service';
 import { AccountService } from '../../services/account.service';
+import { phoneValidator } from '../../../../shared/validators/custom-validators';
 import {
   LoanRequestDto,
   LoanRequestResponse,
@@ -117,7 +118,7 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
 
       // Sekcija 3: Račun i kontakt
       accountNumber: ['', Validators.required],
-      contactPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]{7,15}$/)]]
+      contactPhone: ['', [Validators.required, phoneValidator()]]
     });
   }
 
@@ -211,6 +212,9 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
     }
     if (field.errors['min']) {
       return `Minimalna vrednost je ${field.errors['min'].min}.`;
+    }
+    if (field.errors['invalidPhoneFormat']) {
+      return 'Broj telefona može sadržavati samo cifre i opciono + na početku.';
     }
     if (field.errors['pattern']) {
       return 'Format nije validan.';

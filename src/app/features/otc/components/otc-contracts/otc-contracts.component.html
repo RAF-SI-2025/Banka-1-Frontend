@@ -12,6 +12,36 @@
       </a>
     </div>
 
+    <ng-container *ngIf="expiringSoonContracts$ | async as expiringSoon">
+      <div *ngIf="expiringSoon.length > 0 && !expiryAlertDismissed"
+           class="z-alert z-alert-warning mb-6 relative pr-10"
+           data-testid="otc-expiry-warning"
+           role="alert"
+           aria-live="assertive"
+           aria-atomic="true"
+           aria-labelledby="otc-expiry-alert-title">
+        <button type="button"
+                class="absolute top-2 right-2 z-btn-icon text-muted-foreground hover:text-foreground"
+                aria-label="Zatvori upozorenje"
+                (click)="dismissExpiryAlert()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <p id="otc-expiry-alert-title" class="font-semibold text-sm">Ugovori koji uskoro ističu</p>
+        <ul class="mt-2 text-sm space-y-1 list-disc list-inside"
+            role="list"
+            aria-label="Lista ugovora koji uskoro ističu">
+          <li *ngFor="let c of expiringSoon; trackBy: trackByContractId" role="listitem">
+            <span>{{ c.stockTicker }}</span>
+            — ističe za
+            <span [attr.aria-label]="expiryDaysAriaLabel(c)">
+              <span aria-hidden="true">{{ daysUntilExpiry(c) }} {{ daysUntilExpiry(c) === 1 ? 'dan' : 'dana' }}</span>
+            </span>
+            (settlement {{ c.settlementDate | slice:0:10 }})
+          </li>
+        </ul>
+      </div>
+    </ng-container>
+
     <div class="z-card p-4 mb-6">
       <div class="flex items-center gap-4 flex-wrap">
         <label class="z-label mb-0 whitespace-nowrap">Filter po statusu</label>
@@ -35,8 +65,8 @@
           <option value="banka2">Banka 2</option>
         </select>
 
-        <span class="text-xs text-muted-foreground">
-          Prikazano {{ visibleContracts.length }} od {{ contracts.length }}
+        <span class="text-xs text-muted-foreground" *ngIf="visibleContracts$ | async as visible">
+          Prikazano {{ visible.length }} od {{ contracts.length }}
         </span>
       </div>
     </div>
@@ -46,6 +76,7 @@
     <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
 
     <ng-container *ngIf="!loading && !error">
+      <ng-container *ngIf="visibleContracts$ | async as visibleContracts">
       <app-state *ngIf="visibleContracts.length === 0"
                  mode="empty" title="Nema ugovora za izabrani filter"
                  text="Promeniti filter ili poslati novu ponudu da bi se kreirao prvi ugovor."></app-state>
@@ -123,6 +154,7 @@
           </table>
         </div>
       </div>
+      </ng-container>
     </ng-container>
   </div>
 </div>

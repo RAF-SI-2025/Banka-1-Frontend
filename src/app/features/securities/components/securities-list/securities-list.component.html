@@ -5,7 +5,7 @@
     </div>
 
     <div class="z-card">
-      <!-- Tabs (PR_31 Phase 7 T22: z-tabs/z-tab/z-tab-active) -->
+      <!-- Tabs -->
       <div class="z-tabs">
         <button
           type="button"
@@ -15,6 +15,7 @@
         >
           Akcije
         </button>
+
         <button
           type="button"
           class="z-tab"
@@ -23,6 +24,7 @@
         >
           Fjučersi
         </button>
+
         <button
           *ngIf="!isClient"
           type="button"
@@ -50,6 +52,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
+
               <input
                 type="text"
                 [(ngModel)]="searchQuery"
@@ -84,17 +87,29 @@
             Osveži
           </button>
 
-          <!-- Mock data toggle (PR_31 Phase 7 T22: bg-blue-500 -> bg-primary) -->
+          <!-- Mock data toggle -->
           <label class="flex items-center gap-2 cursor-pointer select-none ml-2">
-            <span class="text-sm text-muted-foreground">{{ useMockData ? 'Mock podaci' : 'Live podaci' }}</span>
+            <span class="text-sm text-muted-foreground">
+              {{ useMockData ? 'Mock podaci' : 'Live podaci' }}
+            </span>
+
             <div class="relative">
-              <input type="checkbox" class="sr-only" [checked]="useMockData" (change)="toggleMockData()">
-              <div class="w-10 h-6 rounded-full transition-colors"
-                   [ngClass]="useMockData ? 'bg-primary' : 'bg-muted-foreground/30'">
-              </div>
-              <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
-                   [ngClass]="useMockData ? 'translate-x-4' : 'translate-x-0'">
-              </div>
+              <input
+                type="checkbox"
+                class="sr-only"
+                [checked]="useMockData"
+                (change)="toggleMockData()"
+              />
+
+              <div
+                class="w-10 h-6 rounded-full transition-colors"
+                [ngClass]="useMockData ? 'bg-primary' : 'bg-muted-foreground/30'"
+              ></div>
+
+              <div
+                class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                [ngClass]="useMockData ? 'translate-x-4' : 'translate-x-0'"
+              ></div>
             </div>
           </label>
 
@@ -127,18 +142,33 @@
           </button>
         </div>
 
-        <!-- PR_31 Phase 7 T22: filter drawer (zameni custom popover; 8+ polja). -->
-        <div *ngIf="isFilterOpen" class="z-drawer-overlay" (click)="closeFilterPanel()"></div>
-        <aside *ngIf="isFilterOpen" class="z-drawer-panel" role="dialog" aria-label="Filteri">
+        <!-- Filter drawer -->
+        <div
+          *ngIf="isFilterOpen"
+          class="z-drawer-overlay"
+          (click)="closeFilterPanel()"
+        ></div>
+
+        <aside
+          *ngIf="isFilterOpen"
+          class="z-drawer-panel"
+          role="dialog"
+          aria-label="Filteri"
+        >
           <header class="flex items-center justify-between px-6 py-4 border-b border-border">
             <h2 class="text-lg font-bold tracking-tight">Filteri</h2>
-            <button type="button" class="z-btn-icon" (click)="closeFilterPanel()" aria-label="Zatvori">
+
+            <button
+              type="button"
+              class="z-btn-icon"
+              (click)="closeFilterPanel()"
+              aria-label="Zatvori"
+            >
               <lucide-icon name="x" [size]="14"></lucide-icon>
             </button>
           </header>
 
           <div class="px-6 py-4 space-y-4">
-            <!-- Exchange filter -->
             <div>
               <label class="z-label">Berza</label>
               <input
@@ -149,7 +179,6 @@
               />
             </div>
 
-            <!-- Price range -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="z-label">Cena od</label>
@@ -161,6 +190,7 @@
                   class="z-input"
                 />
               </div>
+
               <div>
                 <label class="z-label">Cena do</label>
                 <input
@@ -173,7 +203,6 @@
               </div>
             </div>
 
-            <!-- Volume range -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="z-label">Volumen od</label>
@@ -185,6 +214,7 @@
                   class="z-input"
                 />
               </div>
+
               <div>
                 <label class="z-label">Volumen do</label>
                 <input
@@ -197,7 +227,6 @@
               </div>
             </div>
 
-            <!-- Margin range -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="z-label">Marža od</label>
@@ -209,6 +238,7 @@
                   class="z-input"
                 />
               </div>
+
               <div>
                 <label class="z-label">Marža do</label>
                 <input
@@ -221,7 +251,6 @@
               </div>
             </div>
 
-            <!-- Settlement date filter for futures -->
             <ng-container *ngIf="activeTab === 'futures'">
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -234,6 +263,7 @@
                     class="z-input"
                   />
                 </div>
+
                 <div>
                   <label class="z-label">Datum izmirenja do</label>
                   <input
@@ -247,7 +277,6 @@
               </div>
             </ng-container>
 
-            <!-- Bid/Ask filter for all types -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="z-label">Bid od</label>
@@ -260,6 +289,7 @@
                   class="z-input"
                 />
               </div>
+
               <div>
                 <label class="z-label">Bid do</label>
                 <input
@@ -272,6 +302,7 @@
                 />
               </div>
             </div>
+
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="z-label">Ask od</label>
@@ -284,6 +315,7 @@
                   class="z-input"
                 />
               </div>
+
               <div>
                 <label class="z-label">Ask do</label>
                 <input
@@ -299,17 +331,34 @@
           </div>
 
           <footer class="px-6 py-4 border-t border-border flex justify-between gap-2">
-            <button type="button" class="z-btn-outline" (click)="clearFilters()">Resetuj</button>
-            <button type="button" class="z-btn-primary" (click)="applyFilters()">Primeni</button>
+            <button type="button" class="z-btn-outline" (click)="clearFilters()">
+              Resetuj
+            </button>
+
+            <button type="button" class="z-btn-primary" (click)="applyFilters()">
+              Primeni
+            </button>
           </footer>
         </aside>
 
-        <!-- PR_31 T11: shared StateComponent zameni inline loading/empty/error markup. -->
-        <app-state *ngIf="isLoading" mode="loading" text="Učitavanje hartija..."></app-state>
-        <app-state *ngIf="!isLoading && errorMessage" mode="error" [text]="errorMessage"></app-state>
-        <app-state *ngIf="!isLoading && !errorMessage && securities.length === 0"
-                   mode="empty" title="Nema hartija"
-                   text="Nema hartija od vrednosti za zadate filtere."></app-state>
+        <app-state
+          *ngIf="isLoading"
+          mode="loading"
+          text="Učitavanje hartija..."
+        ></app-state>
+
+        <app-state
+          *ngIf="!isLoading && errorMessage"
+          mode="error"
+          [text]="errorMessage"
+        ></app-state>
+
+        <app-state
+          *ngIf="!isLoading && !errorMessage && securities.length === 0"
+          mode="empty"
+          title="Nema hartija"
+          text="Nema hartija od vrednosti za zadate filtere."
+        ></app-state>
 
         <!-- Stocks table -->
         <table
@@ -317,30 +366,85 @@
           class="z-table"
         >
           <thead>
-            <tr>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
-                TICKER {{ getSortIcon('ticker') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
-                NAZIV {{ getSortIcon('name') }}
-              </th>
-              <th>BERZA</th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
-                CENA {{ getSortIcon('price') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
-                PROMENA (%) {{ getSortIcon('change') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
-                VOLUMEN {{ getSortIcon('volume') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('margin')">
-                POČETNA MARŽA {{ getSortIcon('margin') }}
-              </th>
-              <th>AKCIJA</th>
-            </tr>
+          <tr>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
+              TICKER {{ getSortIcon('ticker') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
+              NAZIV {{ getSortIcon('name') }}
+            </th>
+            <th>BERZA</th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
+              CENA {{ getSortIcon('price') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
+              PROMENA (%) {{ getSortIcon('change') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
+              VOLUMEN {{ getSortIcon('volume') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('margin')">
+              POČETNA MARŽA {{ getSortIcon('margin') }}
+            </th>
+            <th>AKCIJA</th>
+          </tr>
           </thead>
+
           <tbody>
+          <tr
+            *ngFor="let security of securities; trackBy: trackBySecurity"
+            class="cursor-pointer hover:bg-muted/50"
+            (click)="onRowClick(security)"
+          >
+            <td class="font-semibold">{{ security.ticker }}</td>
+            <td>{{ security.name }}</td>
+            <td class="text-muted-foreground">{{ security.exchange }}</td>
+            <td class="font-medium font-mono tabular-nums">
+              {{ formatPrice(security.price) }} {{ security.currency }}
+            </td>
+            <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
+              {{ formatChange(security.change, security.changePercent) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ formatVolume(security.volume) }}
+            </td>
+            <td class="font-medium font-mono tabular-nums">
+              {{ formatPrice(security.initialMarginCost) }}
+            </td>
+            <td>
+              <div class="watchlist-actions" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="onBuy(security, $event)"
+                >
+                  Kupi
+                </button>
+
+                <select
+                  class="z-select watchlist-select"
+                  [(ngModel)]="selectedWatchlistBySecurityId[security.id]"
+                  (click)="onWatchlistSelectClick($event)"
+                >
+                  <option [ngValue]="undefined" disabled>
+                    Izaberi watchlistu
+                  </option>
+
+                  <option *ngFor="let watchlist of watchlists" [ngValue]="watchlist.id">
+                    {{ watchlist.name }}
+                  </option>
+                </select>
+
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="addToWatchlist(security, $event)"
+                >
+                  Dodaj na watchlist
+                </button>
+              </div>
+            </td>
+          </tr>
             <tr
               *ngFor="let security of securities; trackBy: trackBySecurity"
               class="cursor-pointer hover:bg-muted/50"
@@ -356,13 +460,22 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -374,31 +487,89 @@
           class="z-table"
         >
           <thead>
-            <tr>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
-                TICKER {{ getSortIcon('ticker') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
-                NAZIV {{ getSortIcon('name') }}
-              </th>
-              <th>BERZA</th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
-                CENA {{ getSortIcon('price') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
-                PROMENA (%) {{ getSortIcon('change') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
-                VOLUMEN {{ getSortIcon('volume') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('margin')">
-                POČETNA MARŽA {{ getSortIcon('margin') }}
-              </th>
-              <th>DATUM IZMIRENJA</th>
-              <th>AKCIJA</th>
-            </tr>
+          <tr>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
+              TICKER {{ getSortIcon('ticker') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
+              NAZIV {{ getSortIcon('name') }}
+            </th>
+            <th>BERZA</th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
+              CENA {{ getSortIcon('price') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
+              PROMENA (%) {{ getSortIcon('change') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
+              VOLUMEN {{ getSortIcon('volume') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('margin')">
+              POČETNA MARŽA {{ getSortIcon('margin') }}
+            </th>
+            <th>DATUM IZMIRENJA</th>
+            <th>AKCIJA</th>
+          </tr>
           </thead>
+
           <tbody>
+          <tr
+            *ngFor="let security of securities; trackBy: trackBySecurity"
+            class="cursor-pointer hover:bg-muted/50"
+            (click)="onRowClick(security)"
+          >
+            <td class="font-semibold">{{ security.ticker }}</td>
+            <td>{{ security.name }}</td>
+            <td class="text-muted-foreground">{{ security.exchange }}</td>
+            <td class="font-medium font-mono tabular-nums">
+              {{ formatPrice(security.price) }} {{ security.currency }}
+            </td>
+            <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
+              {{ formatChange(security.change, security.changePercent) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ formatVolume(security.volume) }}
+            </td>
+            <td class="font-medium font-mono tabular-nums">
+              {{ formatPrice(security.initialMarginCost) }}
+            </td>
+            <td class="text-muted-foreground">
+              {{ asFuture(security).settlementDate }}
+            </td>
+            <td>
+              <div class="watchlist-actions" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="onBuy(security, $event)"
+                >
+                  Kupi
+                </button>
+
+                <select
+                  class="z-select watchlist-select"
+                  [(ngModel)]="selectedWatchlistBySecurityId[security.id]"
+                  (click)="onWatchlistSelectClick($event)"
+                >
+                  <option [ngValue]="undefined" disabled>
+                    Izaberi watchlistu
+                  </option>
+
+                  <option *ngFor="let watchlist of watchlists" [ngValue]="watchlist.id">
+                    {{ watchlist.name }}
+                  </option>
+                </select>
+
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="addToWatchlist(security, $event)"
+                >
+                  Dodaj na watchlist
+                </button>
+              </div>
+            </td>
+          </tr>
             <tr
               *ngFor="let security of securities; trackBy: trackBySecurity"
               class="cursor-pointer hover:bg-muted/50"
@@ -415,13 +586,22 @@
               <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
               <td class="text-muted-foreground">{{ asFuture(security).settlementDate }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -433,29 +613,89 @@
           class="z-table"
         >
           <thead>
-            <tr>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
-                TICKER {{ getSortIcon('ticker') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
-                NAZIV {{ getSortIcon('name') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
-                CENA {{ getSortIcon('price') }}
-              </th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
-                PROMENA (%) {{ getSortIcon('change') }}
-              </th>
-              <th>BID</th>
-              <th>ASK</th>
-              <th>SPREAD</th>
-              <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
-                VOLUMEN {{ getSortIcon('volume') }}
-              </th>
-              <th>AKCIJA</th>
-            </tr>
+          <tr>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('ticker')">
+              TICKER {{ getSortIcon('ticker') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('name')">
+              NAZIV {{ getSortIcon('name') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('price')">
+              CENA {{ getSortIcon('price') }}
+            </th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('change')">
+              PROMENA (%) {{ getSortIcon('change') }}
+            </th>
+            <th>BID</th>
+            <th>ASK</th>
+            <th>SPREAD</th>
+            <th class="cursor-pointer hover:bg-muted/50" (click)="toggleSort('volume')">
+              VOLUMEN {{ getSortIcon('volume') }}
+            </th>
+            <th>AKCIJA</th>
+          </tr>
           </thead>
+
           <tbody>
+          <tr
+            *ngFor="let security of securities; trackBy: trackBySecurity"
+            class="cursor-pointer hover:bg-muted/50"
+            (click)="onRowClick(security)"
+          >
+            <td class="font-semibold">{{ security.ticker }}</td>
+            <td>{{ security.name }}</td>
+            <td class="font-medium font-mono tabular-nums">
+              {{ formatPrice(security.price) }}
+            </td>
+            <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
+              {{ formatChange(security.change, security.changePercent) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ asForex(security).bid.toFixed(4) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ asForex(security).ask.toFixed(4) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ asForex(security).spread.toFixed(4) }}
+            </td>
+            <td class="text-muted-foreground font-mono tabular-nums">
+              {{ formatVolume(security.volume) }}
+            </td>
+            <td>
+              <div class="watchlist-actions" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="z-btn-primary z-btn-sm"
+                  (click)="onBuy(security, $event)"
+                >
+                  Kupi
+                </button>
+
+                <select
+                  class="z-select watchlist-select"
+                  [(ngModel)]="selectedWatchlistBySecurityId[security.id]"
+                  (click)="onWatchlistSelectClick($event)"
+                >
+                  <option [ngValue]="undefined" disabled>
+                    Izaberi watchlistu
+                  </option>
+
+                  <option *ngFor="let watchlist of watchlists" [ngValue]="watchlist.id">
+                    {{ watchlist.name }}
+                  </option>
+                </select>
+
+                <button
+                  type="button"
+                  class="z-btn-outline z-btn-sm"
+                  (click)="addToWatchlist(security, $event)"
+                >
+                  Dodaj na watchlist
+                </button>
+              </div>
+            </td>
+          </tr>
             <tr
               *ngFor="let security of securities; trackBy: trackBySecurity"
               class="cursor-pointer hover:bg-muted/50"
@@ -472,18 +712,33 @@
               <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).spread.toFixed(4) }}</td>
               <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
               <td>
-                <button
-                  type="button"
-                  class="z-btn-primary z-btn-sm"
-                  (click)="onBuy(security, $event)"
-                >
-                  Kupi
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="z-btn-primary z-btn-sm"
+                    (click)="onBuy(security, $event)"
+                  >
+                    Kupi
+                  </button>
+                  <button
+                    type="button"
+                    class="z-btn-outline z-btn-sm"
+                    (click)="openAlertModal(security, $event)"
+                  >
+                    Postavi alert
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <app-price-alert-modal
+        *ngIf="alertSecurity"
+        [security]="alertSecurity!"
+        (closed)="closeAlertModal()"
+      ></app-price-alert-modal>
 
       <!-- Pagination -->
       <div
@@ -494,11 +749,13 @@
           Prikazuje se {{ currentPage * pageSize + 1 }} do
           {{ getLastItem() }} od {{ totalElements }} stavki
         </span>
+
         <app-pagination
           [total]="totalElements"
           [pageSize]="pageSize"
           [page]="currentPage + 1"
-          (pageChange)="goToPage($event - 1)">
+          (pageChange)="goToPage($event - 1)"
+        >
         </app-pagination>
       </div>
     </div>

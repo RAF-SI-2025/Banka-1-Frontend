@@ -3,6 +3,8 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
+import { OtcNotificationMonitorService } from '../../../features/otc/services/otc-notification-monitor.service';
+
 /** Rute koje renderuju samo router-outlet (bez sidebar/topbar shell-a). */
 const AUTH_ROUTE_PATTERN =
   /^\/(login|forgot-password|reset-password|activate|landing)($|[?#/])/;
@@ -23,10 +25,14 @@ export class AppShellComponent implements OnInit, OnDestroy {
   isAuthRoute = false;
   private sub?: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private otcNotificationMonitor: OtcNotificationMonitorService,
+  ) {}
 
   ngOnInit(): void {
     this.isAuthRoute = this.computeIsAuth(this.router.url);
+    this.syncOtcMonitor();
     this.sub = this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
@@ -34,11 +40,21 @@ export class AppShellComponent implements OnInit, OnDestroy {
       )
       .subscribe((url) => {
         this.isAuthRoute = this.computeIsAuth(url);
+        this.syncOtcMonitor();
       });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.otcNotificationMonitor.stop();
+  }
+
+  private syncOtcMonitor(): void {
+    if (this.isAuthRoute) {
+      this.otcNotificationMonitor.stop();
+    } else {
+      this.otcNotificationMonitor.start();
+    }
   }
 
   private computeIsAuth(url: string): boolean {
