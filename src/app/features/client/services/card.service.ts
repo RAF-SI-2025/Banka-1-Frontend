@@ -166,6 +166,10 @@ export class CardService {
     return this.http.post<CardRequestResponseDto>(`${this.cardsBase}/request/business`, body);
   }
 
+  public sendVerificationCode(accountNumber: string): Observable<CardRequestResponseDto> {
+    return this.http.post<CardRequestResponseDto>(`${this.cardsBase}/request/verify`, { accountNumber });
+  }
+
   public maskCardNumber(cardNumber: string): string {
     const digits = cardNumber.replace(/\D/g, '');
 

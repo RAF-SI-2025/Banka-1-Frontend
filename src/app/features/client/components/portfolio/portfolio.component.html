@@ -38,6 +38,15 @@
               (click)="setTab('funds')">
         Moji fondovi
       </button>
+      <button type="button"
+              class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              [class.border-primary]="activeTab === 'dividends'"
+              [class.text-primary]="activeTab === 'dividends'"
+              [class.border-transparent]="activeTab !== 'dividends'"
+              [class.text-muted-foreground]="activeTab !== 'dividends'"
+              (click)="setTab('dividends')">
+        Dividende
+      </button>
     </div>
 
     <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
@@ -280,6 +289,54 @@
 
       </ng-container>
     </ng-container> <!-- end funds tab -->
+
+    <!-- ── Dividends tab ── -->
+    <ng-container *ngIf="activeTab === 'dividends'">
+      <app-state *ngIf="dividendsLoading" mode="loading" text="Učitavanje dividendi..."></app-state>
+
+      <ng-container *ngIf="!dividendsLoading && !dividendsFetched" (ngIf)="loadDividends()"></ng-container>
+
+      <div *ngIf="!dividendsLoading && dividendsFetched" class="z-card">
+        <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Primljene dividende</p>
+            <p class="text-sm text-muted-foreground mt-1">Akumulirane dividende od hartija u vašem portfoliju.</p>
+          </div>
+          <span class="z-badge z-badge-green">{{ dividends.length }} isplata</span>
+        </div>
+
+        <div *ngIf="dividends.length === 0" class="py-10 text-center border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground text-sm">
+          <p>Trenutno nemaš primljene dividende.</p>
+        </div>
+
+        <div *ngIf="dividends.length > 0" class="overflow-x-auto rounded-xl border border-border">
+          <table class="z-table dividends-table min-w-[980px]">
+            <thead>
+              <tr>
+                <th>Hartija</th>
+                <th>Količina</th>
+                <th>Bruto iznos</th>
+                <th>Porez (15%)</th>
+                <th>Neto iznos</th>
+                <th>Valuta</th>
+                <th>Datum isplate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let dividend of dividends">
+                <td class="font-semibold">{{ dividend.stockTicker }}</td>
+                <td>{{ dividend.quantity | number:'1.0-0' }}</td>
+                <td>{{ dividend.grossAmount | number:'1.2-2' }}</td>
+                <td class="text-amber-600 font-semibold">{{ dividend.taxAmountRsd | number:'1.2-2' }}</td>
+                <td class="text-green-600 font-semibold">{{ dividend.netAmount | number:'1.2-2' }}</td>
+                <td>{{ dividend.currency }}</td>
+                <td class="text-muted-foreground">{{ dividend.paymentDate | date:'shortDate' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container> <!-- end dividends tab -->
 
   </div>
 </div>

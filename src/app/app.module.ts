@@ -32,8 +32,7 @@ import { RecurringOrderComponent } from './features/orders/components/recurring-
     AppShellComponent,
     SidebarComponent,
     TopbarComponent,
-    CommandPaletteComponent,
-    RecurringOrderComponent
+    CommandPaletteComponent
   ],
   imports: [
     BrowserModule,
@@ -46,7 +45,8 @@ import { RecurringOrderComponent } from './features/orders/components/recurring-
     // import-a iz StateComponent-a (StateComponent je standalone — ne moze
     // imports-ovati ne-standalone komponentu). Spec-ovi koji ga koriste su
     // takodje azurirani da ga drze u imports umesto declarations.
-    LucideIconComponent
+    LucideIconComponent,
+    RecurringOrderComponent
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

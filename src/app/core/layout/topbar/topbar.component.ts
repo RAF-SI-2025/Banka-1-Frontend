@@ -8,8 +8,7 @@ import { Theme, ThemeService } from '../../services/theme.service';
 import { AppNotification } from '../../../shared/models/app-notification.model';
 import { AppNotificationService } from '../../../shared/services/app-notification.service';
 import { OtcService } from '../../../features/otc/services/otc.service';
-import { WatchlistService } from '../../../features/watchlist/services/watchlist.service';
-import { WatchlistSecurity } from '../../../features/watchlist/models/watchlist.model';
+import { WatchlistService, WatchlistItemDto, WatchlistDto } from '../../../features/watchlist/services/watchlist.service';
 
 type ThemeIcon = 'sun' | 'moon' | 'monitor';
 
@@ -60,7 +59,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   watchlistMenuOpen = false;
 
   userInitials = '';
-  watchlistPreview: WatchlistSecurity[] = [];
+  watchlistPreview: WatchlistItemDto[] = [];
 
   private sub?: Subscription;
   private watchlistSub?: Subscription;
@@ -147,9 +146,9 @@ export class TopbarComponent implements OnInit, OnDestroy {
     if (n.route) {
       this.router.navigateByUrl(n.route);
     }
-    this.watchlistSub = this.watchlistService.watchlists$.subscribe((watchlists) => {
+    this.watchlistSub = this.watchlistService.getWatchlists().subscribe((watchlists: WatchlistDto[]) => {
       this.watchlistPreview = watchlists
-        .flatMap((watchlist) => watchlist.securities)
+        .flatMap((watchlist: WatchlistDto) => watchlist.items || [])
         .slice(0, 4);
     });
   }
@@ -205,31 +204,29 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return THEME_LABELS[t];
   }
 
-  formatHeaderPrice(security: WatchlistSecurity): string {
-    const currency = security.currency ?? 'USD';
-
-    return `${this.formatNumber(security.price)} ${currency}`;
+  formatHeaderPrice(security: WatchlistItemDto): string {
+    return `${this.formatNumber(security.price)}`;
   }
 
-  formatHeaderChange(security: WatchlistSecurity): string {
-    const sign = security.dailyChangePercent >= 0 ? '+' : '';
+  formatHeaderChange(security: WatchlistItemDto): string {
+    const sign = security.changePercent >= 0 ? '+' : '';
 
-    return `${sign}${this.formatNumber(security.dailyChangePercent)}%`;
+    return `${sign}${this.formatNumber(security.changePercent)}%`;
   }
 
-  getHeaderChangeClass(security: WatchlistSecurity): string {
-    if (security.dailyChangePercent > 0) {
+  getHeaderChangeClass(security: WatchlistItemDto): string {
+    if (security.changePercent > 0) {
       return 'quick-change-positive';
     }
 
-    if (security.dailyChangePercent < 0) {
+    if (security.changePercent < 0) {
       return 'quick-change-negative';
     }
 
     return 'quick-change-neutral';
   }
 
-  formatHeaderVolume(security: WatchlistSecurity): string {
+  formatHeaderVolume(security: WatchlistItemDto): string {
     return new Intl.NumberFormat('sr-RS').format(security.volume);
   }
 

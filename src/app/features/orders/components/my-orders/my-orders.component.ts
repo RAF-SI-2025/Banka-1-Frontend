@@ -7,9 +7,9 @@ import {
   OrderStatus,
   OrderType,
 } from '../../models/order.model';
-import { OrderService } from '../../services/order.service';
+import { OrderService, MyOrdersPageRequest } from '../../services/order.service';
 
-type SecurityTypeFilter = 'ALL' | 'STOCK' | 'FUTURE' | 'FOREX';
+type SecurityTypeFilter = 'ALL' | 'STOCK' | 'FUTURE' | 'FOREX' | 'OPTION';
 type OrderStatusFilter = 'ALL' | OrderStatus;
 
 interface MyOrderView {
@@ -43,13 +43,20 @@ export class MyOrdersComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
 
+  // Pagination
+  currentPage = 0;
+  pageSize = 20;
+  totalElements = 0;
+  totalPages = 0;
+
   readonly statusOptions: { value: OrderStatusFilter; label: string }[] = [
     { value: 'ALL', label: 'Svi statusi' },
     { value: 'PENDING', label: 'Pending' },
-    { value: 'PENDING_CONFIRMATION', label: 'Pending' },
-    { value: 'APPROVED', label: 'Approved' },
-    { value: 'DECLINED', label: 'Declined' },
-    { value: 'DONE', label: 'Done' },
+    { value: 'PENDING_CONFIRMATION', label: 'Na čekanju' },
+    { value: 'APPROVED', label: 'Odobren' },
+    { value: 'DECLINED', label: 'Odbijen' },
+    { value: 'DONE', label: 'Završen' },
+    { value: 'CANCELLED', label: 'Otkazan' },
   ];
 
   readonly securityTypeOptions: { value: SecurityTypeFilter; label: string }[] = [
@@ -57,6 +64,7 @@ export class MyOrdersComponent implements OnInit {
     { value: 'STOCK', label: 'Akcije' },
     { value: 'FUTURE', label: 'Fjučersi' },
     { value: 'FOREX', label: 'Forex' },
+    { value: 'OPTION', label: 'Opcije' },
   ];
 
   constructor(private readonly orderService: OrderService) {}
@@ -66,42 +74,28 @@ export class MyOrdersComponent implements OnInit {
   }
 
   get filteredOrders(): MyOrderView[] {
-    return this.orders.filter((order) => {
-      const matchesStatus =
-        this.selectedStatus === 'ALL' || order.status === this.selectedStatus;
-
-      const matchesSecurityType =
-        this.selectedSecurityType === 'ALL' ||
-        order.securityType === this.selectedSecurityType;
-
-      const createdDate = order.createdAt ? new Date(order.createdAt) : null;
-
-      const matchesDateFrom =
-        !this.dateFrom ||
-        !createdDate ||
-        createdDate >= new Date(`${this.dateFrom}T00:00:00`);
-
-      const matchesDateTo =
-        !this.dateTo ||
-        !createdDate ||
-        createdDate <= new Date(`${this.dateTo}T23:59:59`);
-
-      return (
-        matchesStatus &&
-        matchesSecurityType &&
-        matchesDateFrom &&
-        matchesDateTo
-      );
-    });
+    // All filtering is now done server-side via pagination
+    return this.orders;
   }
 
   loadOrders(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.orderService.getMyOrders().subscribe({
-      next: (orders) => {
-        this.orders = orders.map((order) => this.mapOrder(order));
+    const request: MyOrdersPageRequest = {
+      status: this.selectedStatus === 'ALL' ? '' : this.selectedStatus,
+      listingType: this.selectedSecurityType === 'ALL' ? '' : this.selectedSecurityType,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+      page: this.currentPage,
+      size: this.pageSize,
+    };
+
+    this.orderService.getMyOrdersPaged(request).subscribe({
+      next: (response) => {
+        this.orders = response.content.map((order) => this.mapOrder(order));
+        this.totalElements = response.totalElements;
+        this.totalPages = response.totalPages;
         this.isLoading = false;
       },
       error: () => {
@@ -112,11 +106,37 @@ export class MyOrdersComponent implements OnInit {
     });
   }
 
+  onFilterChange(): void {
+    this.currentPage = 0; // Reset to first page when filters change
+    this.loadOrders();
+  }
+
   clearFilters(): void {
     this.selectedStatus = 'ALL';
     this.selectedSecurityType = 'ALL';
     this.dateFrom = '';
     this.dateTo = '';
+    this.currentPage = 0;
+    this.loadOrders();
+  }
+
+  goToPage(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadOrders();
+    }
+  }
+
+  get pageNumbers(): number[] {
+    const pages: number[] = [];
+    const startPage = Math.max(0, this.currentPage - 2);
+    const endPage = Math.min(this.totalPages - 1, this.currentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   }
 
   getOrderTypeLabel(type: OrderType): string {
@@ -132,12 +152,12 @@ export class MyOrdersComponent implements OnInit {
 
   getStatusLabel(status: OrderStatus): string {
     const labels: Record<OrderStatus, string> = {
-      PENDING_CONFIRMATION: 'Pending',
+      PENDING_CONFIRMATION: 'Na čekanju',
       PENDING: 'Pending',
-      APPROVED: 'Approved',
-      DECLINED: 'Declined',
-      DONE: 'Done',
-      CANCELLED: 'Cancelled',
+      APPROVED: 'Odobren',
+      DECLINED: 'Odbijen',
+      DONE: 'Završen',
+      CANCELLED: 'Otkazan',
     };
 
     return labels[status] ?? status;

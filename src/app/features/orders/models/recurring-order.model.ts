@@ -8,20 +8,18 @@ export type RecurringOrderStatus =
   | 'PAUSED'
   | 'CANCELLED';
 
+export type RecurringOrderMode = 'BY_QUANTITY' | 'BY_AMOUNT';
+
+export type OrderDirection = 'BUY' | 'SELL';
+
 export interface RecurringOrder {
   id: number;
-
-  ticker: string;
-
-  amountRsd: number;
-
-  currency: string;
-
-  interval: RecurringInterval;
-
-  dayOfMonth?: number;
-
-  nextExecution: string;
-
+  listingId: number;
+  direction: OrderDirection;
+  mode: RecurringOrderMode;
+  value: number;
+  accountId: number;
+  cadence: RecurringInterval;
+  nextRun: string;
   status: RecurringOrderStatus;
 }

@@ -318,6 +318,15 @@ export class SecuritiesService {
     );
   }
 
+  /**
+   * Get flat list of all securities (stocks) for dropdowns and selections
+   */
+  getSecurities(): Observable<any[]> {
+    return this.getStocks({}, 0, 1000).pipe(
+      map(page => page.content)
+    );
+  }
+
   getClientStocks(
     filters: SecuritiesFilters = {},
     page = 0,

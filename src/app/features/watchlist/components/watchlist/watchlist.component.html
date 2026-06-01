@@ -111,16 +111,16 @@
 
                     <td>
               <span class="z-badge z-badge-gray">
-                {{ security.securityType || '-' }}
+                {{ security.listingType || '-' }}
               </span>
                     </td>
 
-                    <td>{{ security.exchange || '-' }}</td>
+                    <td>{{ security.listingType || '-' }}</td>
 
-                    <td>{{ formatPrice(security) }}</td>
+                    <td>{{ formatMoney(security.price) }} RSD</td>
 
                     <td>
-              <span [ngClass]="getChangeClass(security)">
+              <span [ngClass]="getChangeClass(security.change)">
                 {{ formatDailyChange(security) }}
               </span>
                     </td>

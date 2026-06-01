@@ -207,13 +207,13 @@ export class RequestCardComponent implements OnInit {
     }
 
     this.sendVerificationCode();
-   
+    this.step = 2;
+  }
 
   public handleVerification(sessionId: number): void {
     this.showVerificationModal = false;
     this.verificationId = sessionId;
     this.submitRequest();
-  } this.step = 2;
   }
 
   /**
@@ -256,35 +256,31 @@ export class RequestCardComponent implements OnInit {
 
     if (!p.address.trim()) {
       return 'Adresa ovlašćenog lica je obavezna.';
-    }howVerificationModal = true;
+    }
+
+    return null;
   }
 
   private sendVerificationCode(): void {
-    this.showVerificationModal = true;     error: (err: HttpErrorResponse) => {
-          this.isLoading = false;
-          this.errorMessage =
-            err.error?.message || 'Kod nije ispravan. Pokušajte ponovo.';
-        },
-      });
-  }
+    if (!this.selectedAccount) {
+      this.errorMessage = 'Račun nije izabran.';
+      return;
+    }
 
-  public backToStepOne(): void {
-    this.step = 1;
+    this.isLoading = true;
     this.errorMessage = '';
-  }
 
-  public startNewRequest(): void {
-    this.step = 1;
-    this.resultState = '';
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.verificationCode = '';
-    this.verificationId = null;
-    this.sessionId = null;
-  }
-
-  public getAccountLabel(account: AccountDto): string {
-    return this.cardService.formatAccountLabel(account);
+    this.cardService.sendVerificationCode(this.selectedAccount.brojRacuna).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.showVerificationModal = true;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isLoading = false;
+        this.errorMessage =
+          err.error?.message || 'Kod nije ispravan. Pokušajte ponovo.';
+      },
+    });
   }
 
   private submitRequest(): void {

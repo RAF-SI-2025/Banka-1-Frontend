@@ -23,14 +23,14 @@
       </div>
 
       <span class="count-badge">
-        {{ filteredOrders.length }} prikazano
+        {{ totalElements }} ukupno
       </span>
     </div>
 
     <div class="filters-grid">
       <div>
         <label class="z-label">Status</label>
-        <select class="z-select" [(ngModel)]="selectedStatus">
+        <select class="z-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
           <option *ngFor="let option of statusOptions" [ngValue]="option.value">
             {{ option.label }}
           </option>
@@ -39,7 +39,7 @@
 
       <div>
         <label class="z-label">Tip hartije</label>
-        <select class="z-select" [(ngModel)]="selectedSecurityType">
+        <select class="z-select" [(ngModel)]="selectedSecurityType" (change)="onFilterChange()">
           <option *ngFor="let option of securityTypeOptions" [ngValue]="option.value">
             {{ option.label }}
           </option>
@@ -48,12 +48,12 @@
 
       <div>
         <label class="z-label">Datum od</label>
-        <input class="z-input" type="date" [(ngModel)]="dateFrom" />
+        <input class="z-input" type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" />
       </div>
 
       <div>
         <label class="z-label">Datum do</label>
-        <input class="z-input" type="date" [(ngModel)]="dateTo" />
+        <input class="z-input" type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" />
       </div>
 
       <div class="filter-actions">
@@ -95,48 +95,84 @@
     >
       <table class="z-table my-orders-table">
         <thead>
-        <tr>
-          <th>Tip ordera</th>
-          <th>Ticker i naziv hartije</th>
-          <th>Tip hartije</th>
-          <th>Količina</th>
-          <th>Cena izvršenja</th>
-          <th>Status</th>
-          <th>Datum kreiranja</th>
-          <th>Datum izvršenja</th>
-          <th>Plaćena provizija</th>
-        </tr>
+          <tr>
+            <th>Tip ordera</th>
+            <th>Ticker i naziv hartije</th>
+            <th>Tip hartije</th>
+            <th>Količina</th>
+            <th>Cena izvršenja</th>
+            <th>Status</th>
+            <th>Datum kreiranja</th>
+            <th>Datum izvršenja</th>
+            <th>Plaćena provizija</th>
+          </tr>
         </thead>
 
         <tbody>
-        <tr *ngFor="let order of filteredOrders; trackBy: trackById">
-          <td>{{ getOrderTypeLabel(order.orderType) }}</td>
+          <tr *ngFor="let order of filteredOrders; trackBy: trackById">
+            <td>{{ getOrderTypeLabel(order.orderType) }}</td>
 
-          <td>
-            <div class="ticker">{{ order.ticker }}</div>
-            <div class="security-name">{{ order.securityName }}</div>
-          </td>
+            <td>
+              <div class="ticker">{{ order.ticker }}</div>
+              <div class="security-name">{{ order.securityName }}</div>
+            </td>
 
-          <td>{{ order.securityType === 'ALL' ? '-' : order.securityType }}</td>
+            <td>{{ order.securityType === 'ALL' ? '-' : order.securityType }}</td>
 
-          <td>{{ order.quantity }}</td>
+            <td>{{ order.quantity }}</td>
 
-          <td>{{ formatMoney(order.executionPrice) }}</td>
+            <td>{{ formatMoney(order.executionPrice) }}</td>
 
-          <td>
+            <td>
               <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">
                 {{ getStatusLabel(order.status) }}
               </span>
-          </td>
+            </td>
 
-          <td>{{ formatDate(order.createdAt) }}</td>
+            <td>{{ formatDate(order.createdAt) }}</td>
 
-          <td>{{ formatDate(order.executedAt) }}</td>
+            <td>{{ formatDate(order.executedAt) }}</td>
 
-          <td>{{ formatMoney(order.paidFee) }}</td>
-        </tr>
+            <td>{{ formatMoney(order.paidFee) }}</td>
+          </tr>
         </tbody>
       </table>
+
+      <div class="pagination-controls" *ngIf="totalPages > 1">
+        <button 
+          type="button" 
+          class="z-btn-outline"
+          [disabled]="currentPage === 0"
+          (click)="goToPage(currentPage - 1)"
+        >
+          Prethodna
+        </button>
+
+        <div class="page-numbers">
+          <button 
+            *ngFor="let page of pageNumbers"
+            type="button"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)"
+            class="page-btn"
+          >
+            {{ page + 1 }}
+          </button>
+        </div>
+
+        <button 
+          type="button" 
+          class="z-btn-outline"
+          [disabled]="currentPage === totalPages - 1"
+          (click)="goToPage(currentPage + 1)"
+        >
+          Sledeća
+        </button>
+      </div>
+
+      <div class="pagination-info">
+        Stranica {{ currentPage + 1 }} od {{ totalPages }}
+      </div>
     </div>
   </div>
 </section>

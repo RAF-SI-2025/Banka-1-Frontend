@@ -1,20 +1,19 @@
-export type WatchlistSecurityType = 'STOCK' | 'FUTURE' | 'FOREX';
+export type WatchlistSecurityType = 'STOCK' | 'FUTURE' | 'FOREX' | 'OPTION';
 
-export interface WatchlistSecurity {
+export interface WatchlistItemDto {
   id: number;
+  listingId: number;
   ticker: string;
   name: string;
-  securityType: WatchlistSecurityType;
-  exchange?: string;
   price: number;
-  dailyChange: number;
-  dailyChangePercent: number;
+  change: number;
+  changePercent: number;
   volume: number;
-  currency?: string;
+  listingType: WatchlistSecurityType;
 }
 
 export interface Watchlist {
-  id: string;
+  id: number;
   name: string;
-  securities: WatchlistSecurity[];
+  items?: WatchlistItemDto[];
 }

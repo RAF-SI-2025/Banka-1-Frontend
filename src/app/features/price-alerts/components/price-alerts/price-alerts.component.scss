@@ -1,4 +1,4 @@
-.recurring-orders-page {
+.price-alerts-page {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -62,7 +62,7 @@
     }
   }
 
-  .orders-card {
+  .alerts-card {
     .table-header {
       display: flex;
       justify-content: space-between;
@@ -127,27 +127,18 @@
           background: #fff3cd;
           color: #856404;
         }
-
-        &.status-danger {
-          background: #f8d7da;
-          color: #721c24;
-        }
       }
 
-      .font-semibold {
+      .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
         font-weight: 600;
-      }
 
-      .font-mono {
-        font-family: monospace;
-      }
-
-      .text-sm {
-        font-size: 0.875rem;
-      }
-
-      .text-muted {
-        color: var(--color-text-secondary);
+        &.badge-info {
+          background: #d1ecf1;
+          color: #0c5460;
+        }
       }
     }
   }
@@ -156,5 +147,10 @@
     padding: 2rem;
     text-align: center;
     color: var(--color-text-secondary);
+  }
+
+  .text-muted {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
   }
 }

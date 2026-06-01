@@ -94,8 +94,13 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
       this.loadSecurities(); // Učitaj podatke
     });
 
-    this.watchlistService.watchlists$.subscribe((watchlists) => {
-      this.watchlists = watchlists;
+    this.watchlistService.getWatchlists().subscribe({
+      next: (watchlists) => {
+        this.watchlists = watchlists;
+      },
+      error: () => {
+        this.watchlists = [];
+      }
     });
   }
 
@@ -392,23 +397,13 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
       security.changePercentage ??
       0;
 
-    this.watchlistService.addSecurityToWatchlist(watchlistId, {
-      id: security.id,
-      ticker: security.ticker,
-      name: security.name,
-      securityType,
-      exchange:
-        security.exchange ??
-        security.exchangeAcronym ??
-        security.stockExchange ??
-        '-',
-      price: Number.isFinite(Number(price)) ? Number(price) : 0,
-      dailyChange: Number.isFinite(Number(dailyChange)) ? Number(dailyChange) : 0,
-      dailyChangePercent: Number.isFinite(Number(dailyChangePercent))
-        ? Number(dailyChangePercent)
-        : 0,
-      volume: Number.isFinite(Number(security.volume)) ? Number(security.volume) : 0,
-      currency: security.currency ?? 'USD',
+    this.watchlistService.addItemToWatchlist(Number(watchlistId), security.id).subscribe({
+      next: () => {
+        // Item added successfully
+      },
+      error: (err) => {
+        console.error('Error adding to watchlist:', err);
+      }
     });
   }
 

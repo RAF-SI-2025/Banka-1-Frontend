@@ -58,13 +58,18 @@ export class PriceAlertModalComponent {
       return;
     }
 
-    this.priceAlertService.createAlert({
-      security: this.security,
+    this.priceAlertService.createPriceAlert({
+      listingId: this.security.id,
       condition: this.condition,
       threshold: thresholdValue,
       notificationType: this.notificationType,
+    }).subscribe({
+      next: () => {
+        this.closed.emit();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Greška pri kreiranju alarma.';
+      }
     });
-
-    this.closed.emit();
   }
 }

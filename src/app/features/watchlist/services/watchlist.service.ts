@@ -1,95 +1,61 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { Watchlist, WatchlistSecurity } from '../models/watchlist.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-const STORAGE_KEY = 'banka1_watchlists';
+export type SecurityListingType = 'STOCK' | 'FUTURE' | 'FOREX' | 'OPTION';
+
+export interface WatchlistItemDto {
+  id: number;
+  listingId: number;
+  ticker: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  listingType: SecurityListingType;
+}
+
+export interface WatchlistDto {
+  id: number;
+  name: string;
+  items?: WatchlistItemDto[];
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class WatchlistService {
-  private readonly watchlistsSubject = new BehaviorSubject<Watchlist[]>(
-    this.loadInitialWatchlists(),
-  );
+  private readonly baseUrl = `${environment.apiUrl}/watchlists`;
 
-  readonly watchlists$ = this.watchlistsSubject.asObservable();
+  constructor(private readonly http: HttpClient) {}
 
-  get currentWatchlists(): Watchlist[] {
-    return this.watchlistsSubject.value;
+  getWatchlists(): Observable<WatchlistDto[]> {
+    return this.http.get<WatchlistDto[]>(this.baseUrl);
   }
 
-  createWatchlist(name: string): void {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      return;
+  getWatchlist(id: number, listingType?: SecurityListingType): Observable<WatchlistDto> {
+    let params = new HttpParams();
+    if (listingType) {
+      params = params.set('listingType', listingType);
     }
-
-    const newWatchlist: Watchlist = {
-      id: crypto.randomUUID(),
-      name: trimmedName,
-      securities: [],
-    };
-
-    this.updateWatchlists([...this.currentWatchlists, newWatchlist]);
+    return this.http.get<WatchlistDto>(`${this.baseUrl}/${id}`, { params });
   }
 
-  addSecurityToWatchlist(watchlistId: string, security: WatchlistSecurity): void {
-    const updated = this.currentWatchlists.map((watchlist) => {
-      if (watchlist.id !== watchlistId) {
-        return watchlist;
-      }
-
-      const alreadyExists = watchlist.securities.some(
-        (item) => item.id === security.id || item.ticker === security.ticker,
-      );
-
-      if (alreadyExists) {
-        return watchlist;
-      }
-
-      return {
-        ...watchlist,
-        securities: [...watchlist.securities, security],
-      };
-    });
-
-    this.updateWatchlists(updated);
+  createWatchlist(name: string): Observable<WatchlistDto> {
+    return this.http.post<WatchlistDto>(this.baseUrl, { name });
   }
 
-  removeSecurityFromWatchlist(watchlistId: string, securityId: number): void {
-    const updated = this.currentWatchlists.map((watchlist) => {
-      if (watchlist.id !== watchlistId) {
-        return watchlist;
-      }
-
-      return {
-        ...watchlist,
-        securities: watchlist.securities.filter(
-          (security) => security.id !== securityId,
-        ),
-      };
-    });
-
-    this.updateWatchlists(updated);
+  deleteWatchlist(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  private loadInitialWatchlists(): Watchlist[] {
-    const saved = localStorage.getItem(STORAGE_KEY);
-
-    if (saved) {
-      try {
-        return JSON.parse(saved) as Watchlist[];
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-
-    return [];
+  addItemToWatchlist(watchlistId: number, listingId: number): Observable<WatchlistItemDto> {
+    return this.http.post<WatchlistItemDto>(`${this.baseUrl}/${watchlistId}/items`, { listingId });
   }
 
-  private updateWatchlists(watchlists: Watchlist[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-    this.watchlistsSubject.next(watchlists);
+  removeItemFromWatchlist(watchlistId: number, itemId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${watchlistId}/items/${itemId}`);
   }
 }

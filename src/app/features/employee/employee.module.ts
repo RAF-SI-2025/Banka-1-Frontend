@@ -31,15 +31,17 @@ import { AuditLogComponent } from './components/audit-log/audit-log.component';
     LoanRequestManagementComponent,
     LoanManagementComponent,
     OrdersOverviewComponent,
-    AuditLogComponent],
+  ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
     RouterModule,
     AccountManagementComponent,
-    ExchangeListComponent,
     AppPaginationComponent,
-    StateComponent],
+    StateComponent,
+    AuditLogComponent,
+    ExchangeListComponent,
+  ],
 })
 export class EmployeeModule {}

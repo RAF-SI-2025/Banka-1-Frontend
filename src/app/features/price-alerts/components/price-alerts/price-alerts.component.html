@@ -1,49 +1,165 @@
-<div>
-  <div class="flex items-start justify-between mb-6">
+<section class="price-alerts-page">
+  <div class="page-header">
     <div>
-      <p class="text-xs font-bold tracking-widest text-primary uppercase mb-1">Trading</p>
-      <h1 class="text-2xl font-bold text-foreground">Price alerti</h1>
-      <p class="text-sm text-muted-foreground mt-1">
-        Pregled aktivnih alerta za hartije. Backend scheduler proverava iste aktivne alarme.
+      <p class="eyebrow">Trading</p>
+      <h1>Price Alerti</h1>
+      <p class="description">
+        Postavite alarme za hartije od vrednosti i primajte notifikacije kada se cene promene.
       </p>
     </div>
-    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground">
-      {{ activeAlerts.length }} aktivnih
-    </span>
+
+    <button type="button" class="z-btn-outline" (click)="toggleCreateForm()">
+      {{ showCreateForm ? 'Poništi' : 'Novi alarm' }}
+    </button>
   </div>
 
-  <!-- Aktivni alerti -->
-  <div class="z-card mb-6">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-      <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Aktivni alerti</p>
+  <!-- Create Form -->
+  <div *ngIf="showCreateForm" class="z-card create-form-card">
+    <div class="form-header">
+      <p class="section-label">Kreiraj novi alarm</p>
+      <p class="description">
+        Izaberite hartiju, uslov i tip notifikacije.
+      </p>
     </div>
 
-    <div *ngIf="activeAlerts.length === 0" class="px-5 py-10 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl m-5">
-      Nema aktivnih price alerta. Postavi alert sa liste hartija od vrednosti.
+    <div class="form-grid">
+      <div>
+        <label class="z-label">Hartija od vrednosti *</label>
+        <select 
+          class="z-select"
+          [(ngModel)]="selectedListingId"
+          [disabled]="securitiesLoading"
+        >
+          <option [ngValue]="null">-- Izaberite hartiju --</option>
+          <option *ngFor="let sec of securities" [ngValue]="sec.id">
+            {{ sec.ticker }} - {{ sec.name }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">Uslov *</label>
+        <select class="z-select" [(ngModel)]="selectedCondition">
+          <option *ngFor="let cond of conditions" [ngValue]="cond.value">
+            {{ cond.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">Prag vrednosti *</label>
+        <input 
+          type="number" 
+          class="z-input" 
+          [(ngModel)]="selectedThreshold"
+          [placeholder]="selectedCondition === 'DAILY_DROP_PERCENT' ? 'Npr. 5 za 5%' : 'Npr. 100.50'"
+        />
+      </div>
+
+      <div>
+        <label class="z-label">Tip notifikacije *</label>
+        <select class="z-select" [(ngModel)]="selectedNotificationType">
+          <option *ngFor="let type of notificationTypes" [ngValue]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="z-btn-primary"
+          [disabled]="isCreating || !selectedListingId || selectedThreshold === null"
+          (click)="createAlert()"
+        >
+          {{ isCreating ? 'Kreiranje...' : 'Kreiraj alarm' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts List -->
+  <div class="z-card alerts-card">
+    <div class="table-header">
+      <div>
+        <p class="section-label">Aktivni alarmi</p>
+        <p class="description">
+          Upravljajte vašim price alarmima.
+        </p>
+      </div>
+      <span class="count-badge">
+        {{ alerts.length }} ukupno
+      </span>
     </div>
 
-    <div *ngIf="activeAlerts.length > 0" class="overflow-x-auto">
-      <table class="z-table">
+    <div *ngIf="isLoading" class="empty-state">
+      Učitavanje alarama...
+    </div>
+
+    <div *ngIf="!isLoading && alerts.length === 0" class="empty-state">
+      Nema postavljenih alarama. Kliknite "Novi alarm" da kreirate jedan.
+    </div>
+
+    <div *ngIf="!isLoading && alerts.length > 0" class="table-wrapper">
+      <table class="z-table price-alerts-table">
         <thead>
           <tr>
-            <th>Ticker</th>
             <th>Hartija</th>
             <th>Uslov</th>
+            <th>Prag vrednosti</th>
             <th>Notifikacija</th>
-            <th>Kreirano</th>
-            <th>Akcija</th>
+            <th>Kreiran</th>
+            <th>Poslednja aktivacija</th>
+            <th>Status</th>
+            <th>Akcije</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let alert of activeAlerts">
-            <td class="font-semibold">{{ alert.ticker }}</td>
-            <td>{{ alert.securityName }}</td>
-            <td class="font-mono text-sm">{{ conditionLabel(alert) }}</td>
-            <td>{{ notificationLabel(alert) }}</td>
-            <td class="text-muted-foreground text-sm">{{ formatDate(alert.createdAt) }}</td>
+          <tr *ngFor="let alert of alerts; trackBy: trackById">
             <td>
-              <button type="button" class="z-btn-outline z-btn-sm" (click)="deactivate(alert)">
-                Deaktiviraj
+              <div class="font-semibold">{{ getSecurityName(alert.listingId) }}</div>
+            </td>
+
+            <td>{{ getConditionLabel(alert.condition) }}</td>
+
+            <td class="font-mono">
+              {{ alert.condition === 'DAILY_DROP_PERCENT' ? alert.threshold + '%' : formatMoney(alert.threshold) }}
+            </td>
+
+            <td>
+              <span class="badge badge-info">{{ alert.notificationType }}</span>
+            </td>
+
+            <td class="text-sm text-muted">
+              {{ formatDate(alert.createdAt) }}
+            </td>
+
+            <td class="text-sm text-muted">
+              {{ formatDate(alert.lastTriggeredAt) }}
+            </td>
+
+            <td>
+              <span class="status-badge" [ngClass]="alert.active ? 'status-success' : 'status-warning'">
+                {{ alert.active ? 'Aktivan' : 'Neaktivan' }}
+              </span>
+            </td>
+
+            <td class="actions">
+              <button
+                type="button"
+                class="z-btn-outline z-btn-sm"
+                (click)="toggleAlert(alert.id, alert.active)"
+                [title]="alert.active ? 'Deaktiviraj' : 'Aktiviraj'"
+              >
+                {{ alert.active ? 'Deaktiviraj' : 'Aktiviraj' }}
+              </button>
+              <button
+                type="button"
+                class="z-btn-danger z-btn-sm"
+                (click)="deleteAlert(alert.id)"
+                title="Obriši"
+              >
+                Obriši
               </button>
             </td>
           </tr>
@@ -51,38 +167,4 @@
       </table>
     </div>
   </div>
-
-  <!-- Neaktivni / okinuti alerti -->
-  <div *ngIf="inactiveAlerts.length > 0" class="z-card">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-      <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Istorija alerta</p>
-    </div>
-
-    <div class="overflow-x-auto">
-      <table class="z-table">
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th>Hartija</th>
-            <th>Uslov</th>
-            <th>Status</th>
-            <th>Okidanje</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let alert of inactiveAlerts">
-            <td class="font-semibold text-muted-foreground">{{ alert.ticker }}</td>
-            <td class="text-muted-foreground">{{ alert.securityName }}</td>
-            <td class="font-mono text-sm text-muted-foreground">{{ conditionLabel(alert) }}</td>
-            <td>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                Neaktivan
-              </span>
-            </td>
-            <td class="text-muted-foreground text-sm">{{ formatDate(alert.triggeredAt) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+</section>

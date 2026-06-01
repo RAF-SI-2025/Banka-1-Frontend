@@ -1,121 +1,149 @@
-<div class="page-layout">
-  <div class="page-content">
+<section class="audit-log-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Audit Log</h1>
+      <p class="description">
+        Pregled svih akcija izvršenih u sistemu. Filtrirajte po akciji, korisniku i datumu.
+      </p>
+    </div>
 
-    <div class="flex justify-between items-start mb-6">
+    <button type="button" class="z-btn-outline" (click)="loadAuditLogs()">
+      Osveži
+    </button>
+  </div>
+
+  <div class="z-card filters-card">
+    <div class="filters-title-row">
       <div>
-        <h1 class="text-2xl font-bold text-foreground">
-          Audit log
-        </h1>
+        <p class="section-label">Filteri</p>
+        <p class="description">
+          Filtrirajte log zapise po tipu akcije, korisniku i datumskom opsegu.
+        </p>
+      </div>
 
-        <p class="text-sm text-muted-foreground mt-1">
-          Pregled važnih sistemskih akcija
+      <span class="count-badge">
+        {{ totalElements }} ukupno
+      </span>
+    </div>
+
+    <div class="filters-grid">
+      <div>
+        <label class="z-label">Tip akcije</label>
+        <select class="z-select" [(ngModel)]="filterActionType" (change)="onFiltersChange()">
+          <option *ngFor="let opt of actionTypeOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="z-label">ID Korisnika</label>
+        <input 
+          type="text" 
+          class="z-input" 
+          [(ngModel)]="filterActorId" 
+          (change)="onFiltersChange()"
+          placeholder="Npr. 123"
+        />
+      </div>
+
+      <div>
+        <label class="z-label">Datum od</label>
+        <input class="z-input" type="date" [(ngModel)]="filterFromDate" (change)="onFiltersChange()" />
+      </div>
+
+      <div>
+        <label class="z-label">Datum do</label>
+        <input class="z-input" type="date" [(ngModel)]="filterToDate" (change)="onFiltersChange()" />
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="z-btn-outline" (click)="clearFilters()">
+          Poništi filtere
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="z-card table-card">
+    <div class="table-header">
+      <div>
+        <p class="section-label">Audit zapisi</p>
+        <p class="description">
+          Detaljni pregled svih akcija sa vremenom izvršavanja i korisnicima.
         </p>
       </div>
     </div>
 
-    <!-- FILTERS -->
-    <div class="z-card p-4 mb-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-        <input
-          type="text"
-          placeholder="Tip akcije"
-          [(ngModel)]="filterActionType"
-          (input)="onFiltersChange()"
-          class="z-input" />
-
-        <input
-          type="text"
-          placeholder="Korisnik"
-          [(ngModel)]="filterUser"
-          (input)="onFiltersChange()"
-          class="z-input" />
-
-        <input
-          type="date"
-          [(ngModel)]="filterFromDate"
-          (change)="onFiltersChange()"
-          class="z-input" />
-
-        <input
-          type="date"
-          [(ngModel)]="filterToDate"
-          (change)="onFiltersChange()"
-          class="z-input" />
-
-      </div>
+    <div *ngIf="isLoading" class="empty-state">
+      Učitavanje audit logova...
     </div>
 
-    <!-- TABLE -->
-    <div class="z-card overflow-hidden">
+    <div *ngIf="!isLoading && auditLogs.length === 0" class="empty-state">
+      Nema audit zapisa za izabrane filtere.
+    </div>
 
-      <!-- LOADING -->
-      <div
-        *ngIf="isLoading"
-        class="flex justify-center items-center p-12">
-
-        <svg
-          class="w-8 h-8 text-primary animate-spin"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2">
-
-          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-        </svg>
-      </div>
-
-      <!-- EMPTY -->
-      <div
-        *ngIf="!isLoading && auditLogs.length === 0"
-        class="text-center p-12 text-muted-foreground text-sm">
-
-        Nema dostupnih audit logova.
-      </div>
-
-      <!-- DATA -->
-      <table
-        *ngIf="!isLoading && auditLogs.length > 0"
-        class="z-table">
-
+    <div *ngIf="!isLoading && auditLogs.length > 0" class="table-wrapper">
+      <table class="z-table audit-table">
         <thead>
           <tr>
+            <th>Vreme</th>
+            <th>Korisnik</th>
             <th>Tip akcije</th>
-            <th>Izvršio</th>
-            <th>Odnosi se na</th>
+            <th>Ciljna institucija</th>
             <th>Nova vrednost</th>
-            <th>Timestamp</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr *ngFor="let log of auditLogs">
-
-            <td class="font-medium">
-              {{ log.actionType }}
-            </td>
-
+          <tr *ngFor="let log of auditLogs; trackBy: trackById">
+            <td class="text-sm">{{ formatTimestamp(log.timestamp) }}</td>
+            <td class="font-semibold">{{ log.actorName }}</td>
             <td>
-              {{ log.performedBy }}
+              <span class="action-badge">{{ log.actionType }}</span>
             </td>
-
-            <td>
-              {{ log.target }}
-            </td>
-
-            <td>
-              {{ log.newValue }}
-            </td>
-
-            <td>
-              {{ formatTimestamp(log.timestamp) }}
-            </td>
-
+            <td>{{ log.target }}</td>
+            <td class="text-sm text-muted">{{ log.newValue || '-' }}</td>
           </tr>
         </tbody>
-
       </table>
-    </div>
 
+      <div class="pagination-controls" *ngIf="totalPages > 1">
+        <button 
+          type="button" 
+          class="z-btn-outline"
+          [disabled]="currentPage === 0"
+          (click)="goToPage(currentPage - 1)"
+        >
+          Prethodna
+        </button>
+
+        <div class="page-numbers">
+          <button 
+            *ngFor="let page of pageNumbers"
+            type="button"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)"
+            class="page-btn"
+          >
+            {{ page + 1 }}
+          </button>
+        </div>
+
+        <button 
+          type="button" 
+          class="z-btn-outline"
+          [disabled]="currentPage === totalPages - 1"
+          (click)="goToPage(currentPage + 1)"
+        >
+          Sledeća
+        </button>
+      </div>
+
+      <div class="pagination-info">
+        Stranica {{ currentPage + 1 }} od {{ totalPages }}
+      </div>
+    </div>
   </div>
-</div>
+</section>

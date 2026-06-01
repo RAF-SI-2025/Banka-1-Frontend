@@ -15,6 +15,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { StateComponent } from '../../../../shared/components/state/state.component';
 import { FundService } from '../../../funds/services/fund.service';
 import { ClientFundPosition, InvestmentFund } from '../../../funds/models/fund.model';
+import { DividendService, DividendPayoutDto } from '../../services/dividend.service';
 
 @Component({
   selector: 'app-portfolio',
@@ -34,13 +35,18 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   savingPublicQuantity: Record<string, boolean> = {};
   exercisingOption: Record<string, boolean> = {};
 
-  activeTab: 'holdings' | 'funds' = 'holdings';
+  activeTab: 'holdings' | 'funds' | 'dividends' = 'holdings';
   isSupervisor = false;
   fundPositions: ClientFundPosition[] = [];
   supervisedFunds: InvestmentFund[] = [];
   fundsLoading = false;
   fundsError: string | null = null;
   fundsFetched = false;
+
+  // Dividends
+  dividends: DividendPayoutDto[] = [];
+  dividendsLoading = false;
+  dividendsFetched = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -50,6 +56,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     private readonly toastService: ToastService,
     private readonly router: Router,
     private readonly fundService: FundService,
+    private readonly dividendService: DividendService,
   ) {}
 
   ngOnInit(): void {
@@ -97,16 +104,19 @@ export class PortfolioComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading portfolio:', error);
           this.errorMessage =
-            'Gre�ka pri ucitavanju portfolija. Pokušajte ponovo.';
+            'Greška pri učitavanju portfolija. Pokušajte ponovo.';
           this.isLoading = false;
         },
       });
   }
 
-  setTab(tab: 'holdings' | 'funds'): void {
+  setTab(tab: 'holdings' | 'funds' | 'dividends'): void {
     this.activeTab = tab;
     if (tab === 'funds' && !this.fundsFetched) {
       this.loadFunds();
+    }
+    if (tab === 'dividends' && !this.dividendsFetched) {
+      this.loadDividends();
     }
   }
 
@@ -127,8 +137,24 @@ export class PortfolioComponent implements OnInit, OnDestroy {
         this.fundsFetched = true;
       },
       error: (err: any) => {
-        this.fundsError = err?.error?.message || 'Greska pri ucitavanju fondova.';
+        this.fundsError = err?.error?.message || 'Greška pri učitavanju fondova.';
         this.fundsLoading = false;
+      },
+    });
+  }
+
+  loadDividends(): void {
+    this.dividendsLoading = true;
+    this.dividendService.getDividends().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => {
+        this.dividends = data;
+        this.dividendsLoading = false;
+        this.dividendsFetched = true;
+      },
+      error: () => {
+        this.dividends = [];
+        this.dividendsLoading = false;
+        this.dividendsFetched = true;
       },
     });
   }
@@ -147,7 +173,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     const holdingId = holding.id;
 
     if (typeof holdingId !== 'number') {
-      this.toastService.info('Backend trenutno ne vraca portfolio ID, pa ova akcija još nije dostupna.');
+      this.toastService.info('Backend trenutno ne vraća portfolio ID, pa ova akcija još nije dostupna.');
       return;
     }
 
