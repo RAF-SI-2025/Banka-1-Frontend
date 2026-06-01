@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '@/core/services/auth.service';
 import { ToastService } from '@/shared/services/toast.service';
 import { environment } from 'src/environments/environment';
+import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 
 import {
   AccountDto,
@@ -26,7 +27,7 @@ const MAX_CARDS_BUSINESS_OWNER = 1;
 @Component({
   selector: 'app-request-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, VerificationModalComponent],
   templateUrl: './request-card.component.html',
   styleUrls: ['./request-card.component.scss'],
 })
@@ -61,6 +62,7 @@ export class RequestCardComponent implements OnInit {
   public verificationId: number | null = null;
 
   public cardCountForSelectedAccount = 0;
+  public showVerificationModal = false;
 
   public readonly brandOptions: { value: CardBrand; label: string }[] = [
     { value: 'VISA', label: 'Visa' },
@@ -205,7 +207,13 @@ export class RequestCardComponent implements OnInit {
     }
 
     this.sendVerificationCode();
-    this.step = 2;
+   
+
+  public handleVerification(sessionId: number): void {
+    this.showVerificationModal = false;
+    this.verificationId = sessionId;
+    this.submitRequest();
+  } this.step = 2;
   }
 
   /**
@@ -248,82 +256,11 @@ export class RequestCardComponent implements OnInit {
 
     if (!p.address.trim()) {
       return 'Adresa ovlašćenog lica je obavezna.';
-    }
-
-    return null;
-  }
-
-  public resendVerificationCode(): void {
-    this.sendVerificationCode();
+    }howVerificationModal = true;
   }
 
   private sendVerificationCode(): void {
-    this.errorMessage = '';
-
-    const clientId = this.authService.getUserIdFromToken();
-    const clientEmail = this.authService.getLoggedUser()?.email;
-
-    if (!clientId || !clientEmail || !this.selectedAccount) {
-      this.toastService.error('Nije moguće poslati verifikacioni kod.');
-      return;
-    }
-
-    this.http
-      .post<{ sessionId: number }>(
-        `${environment.apiUrl}/verification/generate`,
-        {
-          clientId,
-          operationType: 'CARD_REQUEST',
-          relatedEntityId: this.selectedAccount.brojRacuna,
-          clientEmail,
-        },
-      )
-      .subscribe({
-        next: (res) => {
-          this.sessionId = res.sessionId;
-          this.toastService.info('Verifikacioni kod je poslat na vaš email.');
-        },
-        error: () => {
-          this.toastService.error('Greška pri slanju verifikacionog koda.');
-        },
-      });
-  }
-
-  public confirmVerification(): void {
-    this.errorMessage = '';
-
-    if (!this.verificationCode.trim()) {
-      this.errorMessage = 'Unesite verifikacioni kod.';
-      return;
-    }
-
-    if (!this.sessionId) {
-      this.errorMessage = 'Greška: verifikacijska sesija nije inicijalizovana.';
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.http
-      .post<{ status: string }>(
-        `${environment.apiUrl}/verification/validate`,
-        {
-          sessionId: this.sessionId,
-          code: this.verificationCode,
-        },
-      )
-      .subscribe({
-        next: (res) => {
-          if (res.status === 'VERIFIED') {
-            this.verificationId = this.sessionId;
-            this.isLoading = false;
-            this.submitRequest();
-          } else {
-            this.isLoading = false;
-            this.errorMessage = 'Kodeks nije verifikovan. Pokušajte ponovo.';
-          }
-        },
-        error: (err: HttpErrorResponse) => {
+    this.showVerificationModal = true;     error: (err: HttpErrorResponse) => {
           this.isLoading = false;
           this.errorMessage =
             err.error?.message || 'Kod nije ispravan. Pokušajte ponovo.';
@@ -445,6 +382,24 @@ export class RequestCardComponent implements OnInit {
       this.isValidPhone(p.phone) &&
       this.isValidDateOfBirth(p.dateOfBirth)
     );
+  }
+
+  public backToStepOne(): void {
+    this.step = 1;
+    this.errorMessage = '';
+  }
+
+  public startNewRequest(): void {
+    this.step = 1;
+    this.resultState = '';
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.verificationCode = '';
+    this.verificationId = null;
+  }
+
+  public getAccountLabel(account: AccountDto): string {
+    return this.cardService.formatAccountLabel(account);
   }
 
   /**

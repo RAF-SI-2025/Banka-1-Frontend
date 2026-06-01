@@ -6,12 +6,12 @@ import { Account } from '../../models/account.model';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AccountService } from '../../services/account.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { environment } from '../../../../../environments/environment';
+import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 
 @Component({
   selector: 'app-change-limit-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, VerificationModalComponent],
   templateUrl: './change-limit-modal.component.html',
   styleUrls: ['./change-limit-modal.component.css']
 })
@@ -22,8 +22,7 @@ export class ChangeLimitModalComponent implements OnInit {
 
   public limitForm!: FormGroup;
   public isSubmitting = false;
-  public isSendingCode = false;
-  public sessionId: number | null = null;
+  public showVerificationModal = false;
 
   constructor(
     private fb: FormBuilder,
@@ -35,7 +34,6 @@ export class ChangeLimitModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.generateOtp();
   }
 
   private initForm(): void {
@@ -43,7 +41,6 @@ export class ChangeLimitModalComponent implements OnInit {
       {
         dailyLimit: [this.account?.dailyLimit || 0, [Validators.required, Validators.min(0)]],
         monthlyLimit: [this.account?.monthlyLimit || 0, [Validators.required, Validators.min(0)]],
-        otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
       },
       { validators: this.limitValidator }
     );
@@ -58,79 +55,43 @@ export class ChangeLimitModalComponent implements OnInit {
     return null;
   }
 
-  public generateOtp(): void {
-    this.isSendingCode = true;
-    const clientId = this.authService.getUserIdFromToken();
-    const clientEmail = this.authService.getLoggedUser()?.email;
-
-    if (!clientId || !clientEmail) {
-      this.toastService.error('Nije moguće poslati verifikacioni kod.');
-      this.isSendingCode = false;
-      return;
-    }
-
-    this.http.post<{ sessionId: number }>(
-      `${environment.apiUrl}/verification/generate`,
-      {
-        clientId,
-        operationType: 'LIMIT_CHANGE',
-        relatedEntityId: this.account.accountNumber,
-        clientEmail
-      }
-    ).subscribe({
-      next: (res) => {
-        this.sessionId = res.sessionId;
-        this.isSendingCode = false;
-        this.toastService.info('Verifikacioni kod je poslat na vaš email.');
-      },
-      error: () => {
-        this.isSendingCode = false;
-        this.toastService.error('Greška pri slanju verifikacionog koda.');
-      }
-    });
-  }
-
   public onClose(): void {
     this.close.emit();
   }
 
   public onSubmit(): void {
-    if (this.limitForm.invalid || this.sessionId === null) {
+    if (this.limitForm.invalid) {
       this.limitForm.markAllAsTouched();
       return;
     }
+    this.showVerificationModal = true;
+  }
 
+  public handleVerification(sessionId: number): void {
+    this.showVerificationModal = false;
+    this.doChangeLimit(sessionId);
+  }
+
+  private doChangeLimit(sessionId: number): void {
     this.isSubmitting = true;
-    const { dailyLimit, monthlyLimit, otpCode } = this.limitForm.value;
+    const { dailyLimit, monthlyLimit } = this.limitForm.value;
 
-    this.http.post(
-      `${environment.apiUrl}/verification/validate`,
-      { sessionId: this.sessionId, code: otpCode },
-      { responseType: 'text' }
+    this.accountService.changeLimit(
+      this.account.accountNumber,
+      dailyLimit,
+      monthlyLimit,
+      sessionId
     ).subscribe({
       next: () => {
-        this.accountService.changeLimit(
-          this.account.accountNumber,
-          dailyLimit,
-          monthlyLimit,
-          this.sessionId!
-        ).subscribe({
-          next: () => {
-            this.toastService.success('Limiti računa su uspešno ažurirani.');
-            this.isSubmitting = false;
-            this.account.dailyLimit = dailyLimit;
-            this.account.monthlyLimit = monthlyLimit;
-            this.limitUpdated.emit();
-          },
-          error: (err) => {
-            const errorMessage = err.error?.message || 'Greška pri ažuriranju limita.';
-            this.toastService.error(errorMessage);
-            this.isSubmitting = false;
-          }
-        });
+        this.toastService.success('Limiti računa su uspešno ažurirani.');
+        this.isSubmitting = false;
+        this.account.dailyLimit = dailyLimit;
+        this.account.monthlyLimit = monthlyLimit;
+        this.limitUpdated.emit();
       },
-      error: () => {
-        this.toastService.error('Pogrešan verifikacioni kod.');
+      error: (err) => {
+        const errorMessage = err.error?.message || 'Greška pri ažuriranju limita.';
+        this.toastService.error(errorMessage);
         this.isSubmitting = false;
       }
     });

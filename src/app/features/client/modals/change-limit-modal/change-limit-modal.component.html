@@ -5,7 +5,7 @@
         <h2 class="text-lg font-semibold">Promena limita</h2>
         <p class="text-xs text-muted-foreground mt-0.5">Postavite nove limite za {{ account.name }}</p>
       </div>
-      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none" (click)="onClose()" aria-label="Close modal">
+      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none" (click)="onClose()" aria-label="Close modal" [disabled]="isSubmitting">
         <span>&times;</span>
       </button>
     </div>
@@ -44,34 +44,23 @@
             Mesečni limit ne sme biti manji od dnevnog.
           </p>
         </div>
-
-        <div>
-          <label class="z-label" for="otpCode">
-            Verifikacioni kod
-            <span *ngIf="isSendingCode" class="text-xs text-muted-foreground ml-2">Slanje koda...</span>
-            <button *ngIf="!isSendingCode" type="button" class="text-xs text-primary hover:underline ml-2" (click)="generateOtp()">Pošalji ponovo</button>
-          </label>
-          <input
-            id="otpCode"
-            type="text"
-            class="z-input"
-            formControlName="otpCode"
-            placeholder="Unesite 6-cifreni kod sa emaila"
-            maxlength="6"
-            [class.border-red-500]="limitForm.get('otpCode')?.invalid && limitForm.get('otpCode')?.touched"
-          />
-          <p class="z-error" *ngIf="limitForm.get('otpCode')?.hasError('required') && limitForm.get('otpCode')?.touched">
-            Verifikacioni kod je obavezan.
-          </p>
-        </div>
       </div>
 
       <div class="z-modal-footer">
         <button type="button" class="z-btn z-btn-outline" (click)="onClose()" [disabled]="isSubmitting">Odustani</button>
-        <button type="submit" class="z-btn z-btn-primary" [disabled]="isSubmitting">
+        <button type="submit" class="z-btn z-btn-primary" [disabled]="isSubmitting || limitForm.invalid">
           {{ isSubmitting ? 'Čuvanje...' : 'Sačuvaj izmene' }}
         </button>
       </div>
     </form>
+
+    <!-- Verification Modal -->
+    <app-verification-modal
+      *ngIf="showVerificationModal"
+      [operationType]="'LIMIT_CHANGE'"
+      [relatedEntityId]="account.accountNumber"
+      (confirmed)="handleVerification($event)"
+      (closed)="showVerificationModal = false">
+    </app-verification-modal>
   </div>
 </div>

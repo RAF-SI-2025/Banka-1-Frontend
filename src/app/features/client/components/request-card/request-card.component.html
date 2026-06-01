@@ -155,39 +155,14 @@
     </div>
   </div>
 
-  <!-- STEP 2: Verifikacija -->
-  <div *ngIf="step === 2" class="z-card p-8">
-    <div class="max-w-md mx-auto text-center space-y-5">
-      <div class="rc-verification-icon w-16 h-16 mx-auto rounded-2xl flex items-center justify-center">
-        <svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <polyline points="9 12 11 14 15 10"></polyline>
-        </svg>
-      </div>
-
-      <div>
-        <h2 class="text-xl font-bold text-foreground">Verifikacija</h2>
-        <p class="text-sm text-muted-foreground mt-1">Unesite kod koji ste dobili na email.</p>
-      </div>
-
-      <div class="text-left">
-        <label class="z-label" for="rc-otp">Verifikacioni kod</label>
-        <input id="rc-otp"
-               class="z-input text-center tracking-[0.4em] font-mono text-lg font-bold"
-               type="text"
-               [(ngModel)]="verificationCode"
-               placeholder="000000"
-               maxlength="6"
-               title="Verifikacioni kod" />
-      </div>
-
-      <div class="flex flex-col sm:flex-row justify-center gap-2 pt-2">
-        <button type="button" class="z-btn-outline z-btn-sm" (click)="backToStepOne()">Nazad</button>
-        <button type="button" class="z-btn-secondary z-btn-sm" (click)="resendVerificationCode()">Pošalji ponovo</button>
-        <button type="button" class="z-btn-primary z-btn-sm" (click)="confirmVerification()">Potvrdi</button>
-      </div>
-    </div>
-  </div>
+  <!-- STEP 2: Verifikacija (Modal) -->
+  <app-verification-modal
+    *ngIf="step === 2 && showVerificationModal"
+    [operationType]="'CARD_REQUEST'"
+    [relatedEntityId]="selectedAccount?.brojRacuna || ''"
+    (confirmed)="handleVerification($event)"
+    (closed)="backToStepOne()">
+  </app-verification-modal>
 
   <!-- STEP 3: Rezultat -->
   <div *ngIf="step === 3" class="z-card p-8">
