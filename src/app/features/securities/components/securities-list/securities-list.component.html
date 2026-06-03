@@ -445,39 +445,6 @@
               </div>
             </td>
           </tr>
-            <tr
-              *ngFor="let security of securities; trackBy: trackBySecurity"
-              class="cursor-pointer hover:bg-muted/50"
-              (click)="onRowClick(security)"
-            >
-              <td class="font-semibold">{{ security.ticker }}</td>
-              <td>{{ security.name }}</td>
-              <td class="text-muted-foreground">{{ security.exchange }}</td>
-              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }} {{ security.currency }}</td>
-              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
-                {{ formatChange(security.change, security.changePercent) }}
-              </td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
-              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
-              <td>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="z-btn-primary z-btn-sm"
-                    (click)="onBuy(security, $event)"
-                  >
-                    Kupi
-                  </button>
-                  <button
-                    type="button"
-                    class="z-btn-outline z-btn-sm"
-                    (click)="openAlertModal(security, $event)"
-                  >
-                    Postavi alert
-                  </button>
-                </div>
-              </td>
-            </tr>
           </tbody>
         </table>
 
@@ -570,40 +537,6 @@
               </div>
             </td>
           </tr>
-            <tr
-              *ngFor="let security of securities; trackBy: trackBySecurity"
-              class="cursor-pointer hover:bg-muted/50"
-              (click)="onRowClick(security)"
-            >
-              <td class="font-semibold">{{ security.ticker }}</td>
-              <td>{{ security.name }}</td>
-              <td class="text-muted-foreground">{{ security.exchange }}</td>
-              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }} {{ security.currency }}</td>
-              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
-                {{ formatChange(security.change, security.changePercent) }}
-              </td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
-              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.initialMarginCost) }}</td>
-              <td class="text-muted-foreground">{{ asFuture(security).settlementDate }}</td>
-              <td>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="z-btn-primary z-btn-sm"
-                    (click)="onBuy(security, $event)"
-                  >
-                    Kupi
-                  </button>
-                  <button
-                    type="button"
-                    class="z-btn-outline z-btn-sm"
-                    (click)="openAlertModal(security, $event)"
-                  >
-                    Postavi alert
-                  </button>
-                </div>
-              </td>
-            </tr>
           </tbody>
         </table>
 
@@ -696,40 +629,6 @@
               </div>
             </td>
           </tr>
-            <tr
-              *ngFor="let security of securities; trackBy: trackBySecurity"
-              class="cursor-pointer hover:bg-muted/50"
-              (click)="onRowClick(security)"
-            >
-              <td class="font-semibold">{{ security.ticker }}</td>
-              <td>{{ security.name }}</td>
-              <td class="font-medium font-mono tabular-nums">{{ formatPrice(security.price) }}</td>
-              <td class="font-mono tabular-nums" [ngClass]="getChangeClass(security.change)">
-                {{ formatChange(security.change, security.changePercent) }}
-              </td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).bid.toFixed(4) }}</td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).ask.toFixed(4) }}</td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ asForex(security).spread.toFixed(4) }}</td>
-              <td class="text-muted-foreground font-mono tabular-nums">{{ formatVolume(security.volume) }}</td>
-              <td>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="z-btn-primary z-btn-sm"
-                    (click)="onBuy(security, $event)"
-                  >
-                    Kupi
-                  </button>
-                  <button
-                    type="button"
-                    class="z-btn-outline z-btn-sm"
-                    (click)="openAlertModal(security, $event)"
-                  >
-                    Postavi alert
-                  </button>
-                </div>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>

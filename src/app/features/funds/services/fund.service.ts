@@ -61,11 +61,15 @@ export class FundService {
   // Client endpoints
 
   invest(fundId: number, req: InvestmentRequest): Observable<ClientFundTransaction> {
-    return this.http.post<ClientFundTransaction>(`${this.baseUrl}/${fundId}/invest`, req);
+    return this.http.post<any>(`${this.baseUrl}/${fundId}/invest`, req).pipe(
+      map((tx) => this.mapTransaction(tx)),
+    );
   }
 
   redeem(fundId: number, req: RedemptionRequest): Observable<ClientFundTransaction> {
-    return this.http.post<ClientFundTransaction>(`${this.baseUrl}/${fundId}/redeem`, req);
+    return this.http.post<any>(`${this.baseUrl}/${fundId}/redeem`, req).pipe(
+      map((tx) => this.mapTransaction(tx)),
+    );
   }
 
   myPositions(): Observable<ClientFundPosition[]> {
@@ -73,17 +77,23 @@ export class FundService {
   }
 
   myTransactions(): Observable<ClientFundTransaction[]> {
-    return this.http.get<ClientFundTransaction[]>(`${this.baseUrl}/my-transactions`);
+    return this.http.get<any[]>(`${this.baseUrl}/my-transactions`).pipe(
+      map((items) => (items ?? []).map((tx) => this.mapTransaction(tx))),
+    );
   }
 
   // Supervisor endpoints
 
   bankInvest(fundId: number, req: BankInvestRequest): Observable<ClientFundTransaction> {
-    return this.http.post<ClientFundTransaction>(`${this.baseUrl}/${fundId}/bank-invest`, req);
+    return this.http.post<any>(`${this.baseUrl}/${fundId}/bank-invest`, req).pipe(
+      map((tx) => this.mapTransaction(tx)),
+    );
   }
 
   bankRedeem(fundId: number, req: BankRedeemRequest): Observable<ClientFundTransaction> {
-    return this.http.post<ClientFundTransaction>(`${this.baseUrl}/${fundId}/bank-redeem`, req);
+    return this.http.post<any>(`${this.baseUrl}/${fundId}/bank-redeem`, req).pipe(
+      map((tx) => this.mapTransaction(tx)),
+    );
   }
 
   bankPositions(): Observable<ClientFundPosition[]> {
@@ -103,7 +113,23 @@ export class FundService {
   }
 
   fundTransactions(fundId: number): Observable<ClientFundTransaction[]> {
-    return this.http.get<ClientFundTransaction[]>(`${this.baseUrl}/${fundId}/transactions`);
+    return this.http.get<any[]>(`${this.baseUrl}/${fundId}/transactions`).pipe(
+      map((items) => (items ?? []).map((tx) => this.mapTransaction(tx))),
+    );
+  }
+
+  private mapTransaction(tx: any): ClientFundTransaction {
+    return {
+      id: tx.id ?? tx.ID,
+      clientId: tx.clientId ?? tx.ClientID,
+      fundId: tx.fundId ?? tx.FundID,
+      amount: tx.amount ?? tx.Amount,
+      inflow: tx.inflow ?? tx.Inflow,
+      status: tx.status ?? tx.Status,
+      occurredAt: tx.occurredAt ?? tx.OccurredAt,
+      clientAccountNumber: tx.clientAccountNumber ?? tx.ClientAccountNumber,
+      failureReason: tx.failureReason ?? tx.FailureReason ?? null,
+    } as ClientFundTransaction;
   }
 
   private mapFund(fund: any): InvestmentFund {

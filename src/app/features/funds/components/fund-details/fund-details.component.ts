@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import * as ApexCharts from 'apexcharts';
+import ApexCharts from 'apexcharts';
 import { FundService } from '../../services/fund.service';
 import { ClientFundPosition, FundHolding, InvestmentFund } from '../../models/fund.model';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -114,8 +114,9 @@ export class FundDetailsComponent implements OnInit {
   loadCharts(): void {
       this.fundService.getFundHistory(this.fundId, this.selectedPeriod).subscribe({
         next: (data: any) => {
-          this.renderHistoryChart(data.labels, data.values);
-          this.renderComparisonChart(data.labels, data.fundPerformances, data.systemAveragePerformances);
+          const chartData = this.normalizePerformanceData(data);
+          this.renderHistoryChart(chartData.labels, chartData.values);
+          this.renderComparisonChart(chartData.labels, chartData.fundPerformances, chartData.systemAveragePerformances);
         },
         error: err => {
           console.error('Nije moguće ucitati istoriju za grafikone:', err);
@@ -123,6 +124,52 @@ export class FundDetailsComponent implements OnInit {
         }
       });
     }
+
+  private normalizePerformanceData(data: any): {
+    labels: string[];
+    values: number[];
+    fundPerformances: number[];
+    systemAveragePerformances: number[];
+  } {
+    if (Array.isArray(data)) {
+      const sorted = [...data].sort((a, b) =>
+        new Date(a?.timestamp ?? 0).getTime() - new Date(b?.timestamp ?? 0).getTime()
+      );
+      const labels = sorted.map(point => this.formatChartLabel(point?.timestamp));
+      const values = sorted.map(point => this.toNumber(point?.totalValue));
+      const firstProfit = this.toNumber(sorted[0]?.profit);
+      const fundPerformances = sorted.map(point => this.toNumber(point?.profit) - firstProfit);
+      return {
+        labels,
+        values,
+        fundPerformances,
+        systemAveragePerformances: fundPerformances.map(() => 0),
+      };
+    }
+
+    return {
+      labels: Array.isArray(data?.labels) ? data.labels : [],
+      values: Array.isArray(data?.values) ? data.values.map((value: unknown) => this.toNumber(value)) : [],
+      fundPerformances: Array.isArray(data?.fundPerformances)
+        ? data.fundPerformances.map((value: unknown) => this.toNumber(value))
+        : [],
+      systemAveragePerformances: Array.isArray(data?.systemAveragePerformances)
+        ? data.systemAveragePerformances.map((value: unknown) => this.toNumber(value))
+        : [],
+    };
+  }
+
+  private formatChartLabel(timestamp: string | null | undefined): string {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return String(timestamp);
+    return date.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' });
+  }
+
+  private toNumber(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
 
   private triggerMockCharts(): void {
     const mockLabels = this.getMockLabels(this.selectedPeriod);
@@ -184,7 +231,7 @@ export class FundDetailsComponent implements OnInit {
         tooltip: { theme: 'dark' }
       };
 
-      this.historyChartInstance = new (ApexCharts as any)(this.historyChartCanvas.nativeElement!, options);
+      this.historyChartInstance = new ApexCharts(this.historyChartCanvas.nativeElement!, options as any);
       this.historyChartInstance?.render();
     }, 50);
   }
@@ -237,7 +284,7 @@ export class FundDetailsComponent implements OnInit {
         tooltip: { theme: 'dark' }
       };
 
-      this.comparisonChartInstance = new (ApexCharts as any)(this.comparisonChartCanvas.nativeElement!, options);
+      this.comparisonChartInstance = new ApexCharts(this.comparisonChartCanvas.nativeElement!, options as any);
       this.comparisonChartInstance?.render();
     }, 50);
   }
@@ -284,7 +331,7 @@ export class FundDetailsComponent implements OnInit {
     if (this.investForm.invalid || !this.fund) return;
     const { amount } = this.investForm.value;
     if (amount < this.fund.minimumContribution) {
-      this.error = `Iznos mora biti manji od minimalnog uloga fonda koji iznosi ${this.fund.minimumContribution.toFixed(2)} RSD.`;
+      this.error = `Iznos mora biti veći ili jednak minimalnom ulogu fonda koji iznosi ${this.fund.minimumContribution.toFixed(2)} RSD.`;
       return;
     }
     this.fundService.invest(this.fundId, this.investForm.value).subscribe({
