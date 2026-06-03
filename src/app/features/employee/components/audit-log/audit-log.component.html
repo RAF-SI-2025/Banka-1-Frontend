@@ -82,7 +82,9 @@
           <tr>
             <th>Tip akcije</th>
             <th>Izvršio</th>
+            <th>Uloga</th>
             <th>Odnosi se na</th>
+            <th>Stara vrednost</th>
             <th>Nova vrednost</th>
             <th>Timestamp</th>
           </tr>
@@ -96,11 +98,19 @@
             </td>
 
             <td>
-              {{ log.performedBy }}
+              {{ log.actorName }}
             </td>
 
             <td>
-              {{ log.target }}
+              {{ log.actorRole }}
+            </td>
+
+            <td>
+              {{ log.targetName }}
+            </td>
+
+            <td>
+              {{ log.oldValue }}
             </td>
 
             <td>
@@ -108,7 +118,7 @@
             </td>
 
             <td>
-              {{ formatTimestamp(log.timestamp) }}
+              {{ formatTimestamp(log.createdAt) }}
             </td>
 
           </tr>

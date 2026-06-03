@@ -609,6 +609,7 @@ private mapListingDetailsToSecurity(item: any): Security {
           changePercent: p.changePercent,
           dollarVolume: p.dollarVolume,
         })),
+        optionGroups: item.optionGroups ?? [],
       } as Stock))
     );
   }

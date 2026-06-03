@@ -133,38 +133,56 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   loadSettlementDates(): void {
     if (!this.stock) return;
 
-    this.securitiesService
-      .getOptionSettlementDates(this.stock.id.toString())
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (dates) => {
-          this.settlementDates = dates;
-          if (dates.length > 0) {
-            this.selectedSettlementDate = dates[0];
-            this.loadOptionChain();
-          }
-        },
-        error: (err) => {
-          console.error('Error loading settlement dates:', err);
-        },
-      });
+    const groups = this.stock.optionGroups ?? [];
+    this.settlementDates = groups
+      .map((og: any) => og.settlementDate)
+      .filter((d: string | null) => !!d)
+      .sort();
+
+    if (this.settlementDates.length > 0) {
+      this.selectedSettlementDate = this.settlementDates[0];
+      this.loadOptionChain();
+    }
   }
 
   loadOptionChain(): void {
     if (!this.selectedSettlementDate || !this.stock) return;
 
-    this.securitiesService
-      .getOptionChain(this.stock.id.toString(), this.selectedSettlementDate)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (chain) => {
-          this.optionChain = chain;
-          this.updateDisplayedOptions();
-        },
-        error: (err) => {
-          console.error('Error loading option chain:', err);
-        },
-      });
+    const groups = this.stock.optionGroups ?? [];
+    const matching = groups.find((og: any) => og.settlementDate === this.selectedSettlementDate);
+
+    if (!matching) {
+      this.optionChain = null;
+      this.updateDisplayedOptions();
+      return;
+    }
+
+    const expiry = new Date(this.selectedSettlementDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysToExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    const mapOption = (opt: any, type: 'CALL' | 'PUT') => ({
+      strike: opt.strikePrice ?? opt.strike ?? 0,
+      type,
+      last: opt.last ?? 0,
+      theta: opt.theta ?? 0,
+      bid: opt.bid ?? 0,
+      ask: opt.ask ?? 0,
+      volume: opt.volume ?? 0,
+      openInterest: opt.openInterest ?? 0,
+      inTheMoney: opt.inTheMoney ?? false,
+    });
+
+    const calls = (matching.calls ?? []).map((o: any) => mapOption(o, 'CALL'));
+    const puts  = (matching.puts  ?? []).map((o: any) => mapOption(o, 'PUT'));
+    const strikes: number[] = [...new Set([
+      ...calls.map((c: any) => c.strike),
+      ...puts.map((p: any)  => p.strike),
+    ])].sort((a: any, b: any) => a - b);
+
+    this.optionChain = { settlementDate: matching.settlementDate, daysToExpiry, calls, puts, strikes };
+    this.updateDisplayedOptions();
   }
 
   onSettlementDateChange(): void {
@@ -244,21 +262,27 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   buildDetailRows(): void {
     if (!this.stock) return;
     const s = this.stock;
-    const nan = 'NaN';
+    const history = s.priceHistory ?? [];
+
+    const open     = history.length > 0 ? this.formatPrice(history[0].price) : '—';
+    const high     = history.length > 0 ? this.formatPrice(Math.max(...history.map(p => p.price))) : '—';
+    const low      = history.length > 0 ? this.formatPrice(Math.min(...history.map(p => p.price))) : '—';
+    const prevClose = history.length > 1 ? this.formatPrice(history[history.length - 2].price) : '—';
+    const marketCap = s.outstandingShares ? this.formatLargeNumber(s.outstandingShares * s.price) : '—';
 
     this.detailRows = [
       { label: 'Bid',                   value: this.formatPrice(s.bid) },
       { label: 'Ask',                   value: this.formatPrice(s.ask) },
-      { label: 'Otvaranje',             value: nan },
-      { label: 'Najviša',               value: nan },
-      { label: 'Najniža',               value: nan },
-      { label: 'Prethodno zatvaranje',  value: nan },
-      { label: 'Tržišna kapitalizacija',value: nan },
-      { label: 'P/E odnos',             value: nan },
-      { label: 'Dividendni prinos',     value: s.dividendYield !== undefined ? (s.dividendYield * 100).toFixed(2) + '%' : nan },
-      { label: 'Dollar volumen',        value: s.dollarVolume !== undefined ? this.formatLargeNumber(s.dollarVolume) : nan },
-      { label: 'Akcije u opticaju',     value: s.outstandingShares !== undefined ? this.formatLargeNumber(s.outstandingShares) : nan },
-      { label: 'Veličina ugovora',      value: s.contractSize !== undefined ? s.contractSize.toString() : nan }];
+      { label: 'Otvaranje',             value: open },
+      { label: 'Najviša',               value: high },
+      { label: 'Najniža',               value: low },
+      { label: 'Prethodno zatvaranje',  value: prevClose },
+      { label: 'Tržišna kapitalizacija',value: marketCap },
+      { label: 'P/E odnos',             value: '—' },
+      { label: 'Dividendni prinos',     value: s.dividendYield !== undefined ? (s.dividendYield * 100).toFixed(2) + '%' : '—' },
+      { label: 'Dollar volumen',        value: s.dollarVolume !== undefined ? this.formatLargeNumber(s.dollarVolume) : '—' },
+      { label: 'Akcije u opticaju',     value: s.outstandingShares !== undefined ? this.formatLargeNumber(s.outstandingShares) : '—' },
+      { label: 'Veličina ugovora',      value: s.contractSize !== undefined ? s.contractSize.toString() : '—' }];
   }
 
   getCallByStrike(strike: number): StockOption | undefined {

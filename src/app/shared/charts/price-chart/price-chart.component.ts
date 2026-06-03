@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { Subscription } from 'rxjs';
 
@@ -14,7 +14,7 @@ export interface PriceSeriesPoint { x: number | string | Date; y: number; }
   imports: [CommonModule],
   templateUrl: './price-chart.component.html',
 })
-export class PriceChartComponent implements OnInit, OnChanges, OnDestroy {
+export class PriceChartComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('chartContainer') chartContainer!: ElementRef;
   @Input() series: PriceSeriesPoint[] = [];
   @Input() label = 'Cena';
@@ -34,8 +34,12 @@ export class PriceChartComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.renderChart();
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.chart && (changes['series'] || changes['label'] || changes['height'] || changes['type'])) {
+    if (changes['series'] || changes['label'] || changes['height'] || changes['type']) {
       this.renderChart();
     }
   }

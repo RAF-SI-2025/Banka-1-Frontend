@@ -8,7 +8,7 @@ import { AuditLog } from '../models/audit-log';
   providedIn: 'root'
 })
 export class AuditLogService {
-  private apiUrl = `${environment.apiUrl}/audit-logs`;
+  private apiUrl = `${environment.apiUrl}/audit-log`;
 
   constructor(private http: HttpClient) {}
 
