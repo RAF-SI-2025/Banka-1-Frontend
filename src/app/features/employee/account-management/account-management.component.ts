@@ -6,13 +6,13 @@ import { Router } from '@angular/router';
 import { Account } from '../../client/models/account.model';
 import { AccountService } from '../../client/services/account.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
-
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../shared/components/state/state.component';
 @Component({
   selector: 'app-account-management',
   templateUrl: './account-management.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, StateComponent],
   styleUrls: ['./account-management.component.scss']
 })
 export class AccountManagementComponent implements OnInit {
@@ -174,28 +174,34 @@ export class AccountManagementComponent implements OnInit {
         item.tekuciIliDevizni
       );
       const accountNumber = item.brojRacuna || '';
+      const backendStatus = (item.status || 'ACTIVE') as Account['status'];
       return {
         id: 0,
         name: ownerName,
         accountNumber: accountNumber,
-        balance: 0,
-        availableBalance: 0,
-        reservedFunds: 0,
-        currency: item.tekuciIliDevizni === 'devizni' ? 'EUR' : 'RSD',
-        status: 'ACTIVE',
+        balance: Number(item.stanje ?? 0),
+        availableBalance: Number(item.raspolozivoStanje ?? 0),
+        reservedFunds: Number(item.rezervisanaSredstva ?? 0),
+        currency: item.currency || (item.tekuciIliDevizni === 'devizni' ? 'EUR' : 'RSD'),
+        status: backendStatus,
         subtype: subtype,
-        ownerId: 0,
+        ownerId: Number(item.vlasnik ?? 0),
         ownerName: ownerName,
-        employeeId: 0,
+        employeeId: Number(item.zaposlen ?? 0),
         maintenanceFee: 0,
-        dailyLimit: 0,
-        monthlyLimit: 0,
-        dailySpending: 0,
-        monthlySpending: 0,
-        createdAt: new Date().toISOString(),
-        expiryDate: '',
-      } as Account;
+        dailyLimit: Number(item.dnevniLimit ?? 0),
+        monthlyLimit: Number(item.mesecniLimit ?? 0),
+        dailySpending: Number(item.dnevnaPotrosnja ?? 0),
+        monthlySpending: Number(item.mesecnaPotrosnja ?? 0),
+        createdAt: item.datumIVremeKreiranja ?? new Date().toISOString(),
+        expiryDate: item.datumIsteka ?? '',
+        isSystemAccount: Boolean(item.isSystemAccount),
+      } as Account & { isSystemAccount: boolean };
     });
+  }
+
+  isSystemAccount(account: Account): boolean {
+    return Boolean((account as any).isSystemAccount);
   }
 
   getOwnershipType(account: Account): string {

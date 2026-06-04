@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { CurrencyCalculatorComponent } from '../currency-calculator/currency-calculator.component';
 import { ExchangeRate, ExchangeRateService } from '../../services/exchange-rate.service';
 
@@ -9,7 +8,7 @@ type Tab = 'rates' | 'calculator';
 @Component({
   selector: 'app-exchange-rate',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, CurrencyCalculatorComponent],
+  imports: [CommonModule, CurrencyCalculatorComponent],
   templateUrl: './exchange-rate.component.html',
   styleUrls: ['./exchange-rate.component.scss']
 })

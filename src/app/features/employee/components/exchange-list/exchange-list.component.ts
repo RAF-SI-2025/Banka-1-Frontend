@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from '@/shared/components/navbar/navbar.component';
-import { ExchangeManagerService } from '../../services/exchange-manager.service'; 
+import { ExchangeManagerService, ExchangeInfo } from '../../services/exchange-manager.service';
 
 @Component({
   selector: 'app-exchange-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './exchange-list.component.html',
   styleUrls: ['./exchange-list.component.css']
 })
@@ -65,6 +64,24 @@ export class ExchangeListComponent implements OnInit, OnDestroy {
       return this.exchanges;
     }
     return this.exchanges.filter(ex => this.exchangeManager.isExchangeOpen(ex));
+  }
+
+  /**
+   * Spec Celina 3 (Sc 82): "dugme koje uključuje/isključuje vreme berze kako bi
+   * mogli da testiramo aplikaciju i van vremena rada berzi". Backend toggle obrne
+   * `isActive` polje (kada je `false`, server tretira berzu kao stalno otvorenu).
+   */
+  public toggleWorkingHours(exchange: ExchangeInfo, event: Event): void {
+    event.stopPropagation();
+    this.exchangeManager.toggleExchangeActive(exchange.id).subscribe({
+      next: () => {
+        exchange.isActive = !exchange.isActive;
+        this.exchanges = [...this.exchanges];
+      },
+      error: (err) => {
+        console.error('Toggle radnog vremena nije uspeo', err);
+      },
+    });
   }
 
   ngOnDestroy(): void {

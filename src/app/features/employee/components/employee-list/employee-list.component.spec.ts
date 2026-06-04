@@ -1,12 +1,17 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { EmployeeListComponent } from './employee-list.component';
 import { EmployeeService } from '../../services/employee.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { Employee } from '../../models/employee';
 
+// PR_31 phase 1: spec rewritten to match current server-paginated component
+// (no client-side filteredEmployees/applyFilters/currentSearchTerm).
 const mockEmployees: Employee[] = [
   {
     id: 1,
@@ -16,8 +21,9 @@ const mockEmployees: Employee[] = [
     datumRodjenja: '1990-01-01',
     pol: 'M',
     brojTelefona: '+381601234567',
+    role: 'EMPLOYEE',
     aktivan: true,
-    permisije: ['CREATE', 'EDIT']
+    permisije: ['CREATE', 'EDIT'],
   },
   {
     id: 2,
@@ -27,9 +33,10 @@ const mockEmployees: Employee[] = [
     datumRodjenja: '1995-05-05',
     pol: 'Z',
     brojTelefona: '+381607654321',
+    role: 'EMPLOYEE',
     aktivan: false,
-    permisije: ['VIEW']
-  }
+    permisije: ['VIEW'],
+  },
 ];
 
 describe('EmployeeListComponent', () => {
@@ -37,28 +44,44 @@ describe('EmployeeListComponent', () => {
   let fixture: ComponentFixture<EmployeeListComponent>;
   let employeeService: jasmine.SpyObj<EmployeeService>;
   let authService: jasmine.SpyObj<AuthService>;
+  let toastService: jasmine.SpyObj<ToastService>;
 
   beforeEach(() => {
     const employeeSpy = jasmine.createSpyObj('EmployeeService', [
-      'getEmployees', 'deleteEmployee', 'updateEmployee'
+      'getEmployees',
+      'searchEmployees',
+      'deleteEmployee',
+      'updateEmployee',
     ]);
-    const authSpy = jasmine.createSpyObj('AuthService', ['logout']);
+    const authSpy = jasmine.createSpyObj('AuthService', ['logout', 'navigateToHome']);
+    const toastSpy = jasmine.createSpyObj('ToastService', ['success', 'error', 'info']);
 
-    employeeSpy.getEmployees.and.returnValue(of({ content: mockEmployees }));
+    employeeSpy.getEmployees.and.returnValue(
+      of({ content: mockEmployees, totalElements: 2, totalPages: 1 }),
+    );
+    employeeSpy.searchEmployees.and.returnValue(
+      of({ content: [mockEmployees[0]], totalElements: 1, totalPages: 1 }),
+    );
 
     TestBed.configureTestingModule({
       declarations: [EmployeeListComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule],
+      // PR_31 follow-up: template koristi [(ngModel)] za search input — treba FormsModule.
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
         { provide: EmployeeService, useValue: employeeSpy },
-        { provide: AuthService, useValue: authSpy }
-      ]
+        { provide: AuthService, useValue: authSpy },
+        { provide: ToastService, useValue: toastSpy },
+      ],
+      // Template uses <app-navbar /> which lives in a standalone import graph
+      // we don't bring in for this unit test — schema lets the renderer ignore it.
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     });
 
     fixture = TestBed.createComponent(EmployeeListComponent);
     component = fixture.componentInstance;
     employeeService = TestBed.inject(EmployeeService) as jasmine.SpyObj<EmployeeService>;
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    toastService = TestBed.inject(ToastService) as jasmine.SpyObj<ToastService>;
     fixture.detectChanges();
   });
 
@@ -66,69 +89,18 @@ describe('EmployeeListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // ─── loadEmployees ──────────────────────────────────────────────────────────
-
   describe('loadEmployees', () => {
     it('should load employees on init', () => {
       expect(component.employees.length).toBe(2);
-      expect(component.filteredEmployees.length).toBe(2);
-    });
-
-    it('should handle flat array response', () => {
-      employeeService.getEmployees.and.returnValue(of(mockEmployees));
-      component.loadEmployees();
-      expect(component.employees.length).toBe(2);
+      expect(component.totalElements).toBe(2);
     });
 
     it('should log error if loading fails', () => {
-      spyOn(console, 'error');
       employeeService.getEmployees.and.returnValue(throwError(() => new Error('Network error')));
       component.loadEmployees();
-      expect(console.error).toHaveBeenCalled();
+      expect(toastService.error).toHaveBeenCalled();
     });
   });
-
-  // ─── applyFilters ───────────────────────────────────────────────────────────
-
-  describe('applyFilters', () => {
-    it('should filter by search term', () => {
-      component.currentSearchTerm = 'petar';
-      component.applyFilters();
-      expect(component.filteredEmployees.length).toBe(1);
-      expect(component.filteredEmployees[0].ime).toBe('Petar');
-    });
-
-    it('should filter by active status', () => {
-      component.currentStatusFilter = 'Active';
-      component.applyFilters();
-      expect(component.filteredEmployees.length).toBe(1);
-      expect(component.filteredEmployees[0].aktivan).toBeTrue();
-    });
-
-    it('should filter by inactive status', () => {
-      component.currentStatusFilter = 'Inactive';
-      component.applyFilters();
-      expect(component.filteredEmployees.length).toBe(1);
-      expect(component.filteredEmployees[0].aktivan).toBeFalse();
-    });
-
-    it('should filter by permission', () => {
-      component.currentPermissionFilter = 'VIEW';
-      component.applyFilters();
-      expect(component.filteredEmployees.length).toBe(1);
-      expect(component.filteredEmployees[0].ime).toBe('Ana');
-    });
-
-    it('should show all when filters are default', () => {
-      component.currentSearchTerm = '';
-      component.currentStatusFilter = 'All';
-      component.currentPermissionFilter = 'All';
-      component.applyFilters();
-      expect(component.filteredEmployees.length).toBe(2);
-    });
-  });
-
-  // ─── deleteEmployee ─────────────────────────────────────────────────────────
 
   describe('deleteEmployee', () => {
     it('should not delete if id is undefined', () => {
@@ -136,11 +108,13 @@ describe('EmployeeListComponent', () => {
       expect(employeeService.deleteEmployee).not.toHaveBeenCalled();
     });
 
-    it('should delete employee and update list', () => {
+    it('should delete employee and reload when confirmed', () => {
       spyOn(window, 'confirm').and.returnValue(true);
       employeeService.deleteEmployee.and.returnValue(of(void 0));
+      const loadSpy = spyOn(component, 'loadEmployees');
       component.deleteEmployee(1);
-      expect(component.employees.find(e => e.id === 1)).toBeUndefined();
+      expect(employeeService.deleteEmployee).toHaveBeenCalledWith(1);
+      expect(loadSpy).toHaveBeenCalled();
     });
 
     it('should not delete if user cancels confirm', () => {
@@ -149,8 +123,6 @@ describe('EmployeeListComponent', () => {
       expect(employeeService.deleteEmployee).not.toHaveBeenCalled();
     });
   });
-
-  // ─── editEmployee ───────────────────────────────────────────────────────────
 
   describe('editEmployee', () => {
     it('should open edit modal with correct employee', () => {
@@ -165,8 +137,6 @@ describe('EmployeeListComponent', () => {
     });
   });
 
-  // ─── closeEditModal ─────────────────────────────────────────────────────────
-
   describe('closeEditModal', () => {
     it('should close modal and clear selected employee', () => {
       component.isEditModalOpen = true;
@@ -176,8 +146,6 @@ describe('EmployeeListComponent', () => {
       expect(component.selectedEmployeeForEdit).toBeNull();
     });
   });
-
-  // ─── onLogout ───────────────────────────────────────────────────────────────
 
   describe('onLogout', () => {
     it('should call authService logout', () => {

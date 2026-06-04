@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  Router,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { portfolioAccessGuard } from './portfolio-access.guard';
 import { AuthService } from '../services/auth.service';
@@ -7,6 +11,9 @@ import { AuthService } from '../services/auth.service';
 describe('portfolioAccessGuard', () => {
   let router: Router;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+
+  const routeStub = {} as ActivatedRouteSnapshot;
+  const stateStub = { url: '/portfolio' } as RouterStateSnapshot;
 
   beforeEach(() => {
     authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['canAccessPortfolio']);
@@ -29,7 +36,9 @@ describe('portfolioAccessGuard', () => {
     authServiceSpy.canAccessPortfolio.and.returnValue(true);
     const navigateSpy = spyOn(router, 'navigate');
 
-    const result = TestBed.runInInjectionContext(() => portfolioAccessGuard());
+    const result = TestBed.runInInjectionContext(() =>
+      portfolioAccessGuard(routeStub, stateStub),
+    );
 
     expect(result).toBeTrue();
     expect(navigateSpy).not.toHaveBeenCalled();
@@ -39,7 +48,9 @@ describe('portfolioAccessGuard', () => {
     authServiceSpy.canAccessPortfolio.and.returnValue(false);
     const navigateSpy = spyOn(router, 'navigate');
 
-    const result = TestBed.runInInjectionContext(() => portfolioAccessGuard());
+    const result = TestBed.runInInjectionContext(() =>
+      portfolioAccessGuard(routeStub, stateStub),
+    );
 
     expect(result).toBeFalse();
     expect(navigateSpy).toHaveBeenCalledWith(['/403']);

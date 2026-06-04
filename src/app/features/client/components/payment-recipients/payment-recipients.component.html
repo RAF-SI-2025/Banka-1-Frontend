@@ -1,12 +1,9 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <h1 class="text-2xl font-bold text-foreground mb-6">PRIMAOCI PLAĆANJA</h1>
 
-    <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-      <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-    </div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Učitavanje šablona..."></app-state>
 
     <div *ngIf="!isLoading" class="space-y-4">
       <!-- Toolbar -->
@@ -46,10 +43,10 @@
         </div>
       </div>
 
-      <!-- Empty -->
-      <div *ngIf="filteredRecipients.length === 0 && !formMode" class="text-center p-12 text-muted-foreground text-sm">
-        <p>Nema primaoca plaćanja.</p>
-      </div>
+      <!-- PR_31 T11: shared StateComponent zameni inline empty markup. -->
+      <app-state *ngIf="filteredRecipients.length === 0 && !formMode"
+                 mode="empty" title="Nema primaoca plaćanja"
+                 text="Dodajte šablon klikom na 'Dodaj +' iznad."></app-state>
 
       <!-- Table -->
       <div class="z-card overflow-hidden" *ngIf="filteredRecipients.length > 0">

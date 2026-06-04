@@ -142,7 +142,8 @@ export class AccountCardsPlaceholderComponent implements OnInit {
   }
 
   getCardOwnerFullName(card: Card): string {
-    return `${card.ownerFirstName} ${card.ownerLastName}`.trim();
+    const fromCard = `${card.ownerFirstName ?? ''} ${card.ownerLastName ?? ''}`.trim();
+    return fromCard || this.ownerName || '—';
   }
 
   // Card gradient colors

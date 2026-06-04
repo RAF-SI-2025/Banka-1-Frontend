@@ -5,7 +5,6 @@ import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AccountService } from '../../services/account.service';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { type ClientDto, ClientService } from '../../services/client.service';
 import { exactDigitsValidator } from '../../../../shared/utils/validators';
 /**
@@ -92,7 +91,7 @@ interface CreateClientNavigationState {
   templateUrl: './account-create.component.html',
   styleUrls: ['./account-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent]
+  imports: [CommonModule, ReactiveFormsModule, RouterModule]
 })
 export class AccountCreateComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
@@ -123,52 +122,8 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
     { value: AccountOwnerType.BUSINESS, label: 'Poslovni' }
   ];
 
-  public readonly activityCodes: SelectOption<string>[] = [
-    { value: '1.11', label: '1.11 - Uzgoj žitarica i mahunarki' },
-    { value: '1.13', label: '1.13 - Uzgoj povrća' },
-    { value: '13.1', label: '13.1 - Priprema i predenje tekstilnih vlakana' },
-    { value: '24.1', label: '24.1 - Proizvodnja gvožđa i čelika' },
-    { value: '24.2', label: '24.2 - Proizvodnja čeličnih cevi' },
-    { value: '41.1', label: '41.1 - Razvoj građevinskih projekata' },
-    { value: '41.2', label: '41.2 - Izgradnja stambenih i nestambenih zgrada' },
-    { value: '42.11', label: '42.11 - Izgradnja puteva i autoputeva' },
-    { value: '42.12', label: '42.12 - Izgradnja železničkih i podzemnih pruga' },
-    { value: '42.13', label: '42.13 - Izgradnja mostova i tunela' },
-    { value: '42.21', label: '42.21 - Izgradnja vodovodnih projekata' },
-    { value: '42.22', label: '42.22 - Izgradnja elektroenergetskih mreža' },
-    { value: '5.1', label: '5.1 - Vađenje uglja' },
-    { value: '7.1', label: '7.1 - Vađenje gvozdenih ruda' },
-    { value: '8.11', label: '8.11 - Eksploatacija kamena' },
-    { value: '47.11', label: '47.11 - Trgovina na malo' },
-    { value: '56.1', label: '56.1 - Restorani i ugostiteljstvo' },
-    { value: '62.01', label: '62.01 - Računarsko programiranje' },
-    { value: '62.09', label: '62.09 - Ostale IT usluge' },
-    { value: '63.11', label: '63.11 - Obrada podataka i hosting' },
-    { value: '64.19', label: '64.19 - Ostale finansijske delatnosti' },
-    { value: '64.91', label: '64.91 - Finansijski lizing' },
-    { value: '65.11', label: '65.11 - Životno osiguranje' },
-    { value: '65.12', label: '65.12 - Neživotno osiguranje' },
-    { value: '66.21', label: '66.21 - Procena rizika i štete' },
-    { value: '68.1', label: '68.1 - Poslovanje nekretninama' },
-    { value: '53.1', label: '53.1 - Poštanske aktivnosti' },
-    { value: '53.2', label: '53.2 - Kurirske aktivnosti' },
-    { value: '85.1', label: '85.1 - Predškolsko obrazovanje' },
-    { value: '85.2', label: '85.2 - Osnovno obrazovanje' },
-    { value: '86.1', label: '86.1 - Bolničke aktivnosti' },
-    { value: '86.21', label: '86.21 - Opšta medicinska praksa' },
-    { value: '86.22', label: '86.22 - Specijalistička medicinska praksa' },
-    { value: '86.9', label: '86.9 - Ostale zdravstvene aktivnosti' },
-    { value: '84.12', label: '84.12 - Regulisanje delatnosti privrede' },
-    { value: '90.01', label: '90.01 - Delatnost pozorišta' },
-    { value: '90.02', label: '90.02 - Delatnost muzeja' },
-    { value: '90.04', label: '90.04 - Botanički i zoološki vrtovi' },
-    { value: '93.11', label: '93.11 - Sportski objekti' },
-    { value: '93.13', label: '93.13 - Delatnost teretana' },
-    { value: '93.19', label: '93.19 - Ostale sportske aktivnosti' },
-    { value: '26.11', label: '26.11 - Proizvodnja elektronskih komponenti' },
-    { value: '27.12', label: '27.12 - Proizvodnja električnih panela' },
-    { value: '29.1', label: '29.1 - Proizvodnja motornih vozila' }
-  ];
+  public activityCodes: SelectOption<string>[] = [];
+  public isLoadingActivityCodes = false;
 
   public clients: ClientOption[] = [];
 
@@ -203,6 +158,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
 
     this.setupDynamicValidation();
     this.loadClients();
+    this.loadActivityCodes();
     this.patchCreatedClientFromState();
   }
 
@@ -272,59 +228,6 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  /**
-   * Obrađuje submit forme.
-   * Trenutno samo formira i ispisuje payload.
-   */
-    //----------------------------------------------------------------------
-    // SIFRE DELATNOSTI, OBAVEZNO
-    //----------------------------------------------------------------------
-    // 1.11 - Uzgoj žitarica i mahunarki
-    // 1.13 - Uzgoj povrća
-    // 13.1 - Priprema i predenje tekstilnih vlakana
-    // 24.1 - Proizvodnja gvožđa i čelika
-    // 24.2 - Proizvodnja čeličnih cevi
-    // 41.1 - Razvoj građevinskih projekata
-    // 41.2 - Izgradnja stambenih i nestambenih zgrada
-    // 42.11 - Izgradnja puteva i autoputeva
-    // 42.12 - Izgradnja železničkih i podzemnih pruga
-    // 42.13 - Izgradnja mostova i tunela
-    // 42.21 - Izgradnja vodovodnih projekata
-    // 42.22 - Izgradnja elektroenergetskih mreža
-    // 5.1 - Vađenje uglja
-    // 7.1 - Vađenje gvozdenih ruda
-    // 8.11 - Eksploatacija kamena
-    // 47.11 - Trgovina na malo
-    // 56.1 - Restorani i ugostiteljstvo
-    // 62.01 - Računarsko programiranje
-    // 62.09 - Ostale IT usluge
-    // 63.11 - Obrada podataka i hosting
-    // 64.19 - Ostale finansijske delatnosti
-    // 64.91 - Finansijski lizing
-    // 65.11 - Životno osiguranje
-    // 65.12 - Neživotno osiguranje
-    // 66.21 - Procena rizika i štete
-    // 68.1 - Poslovanje nekretninama
-    // 53.1 - Poštanske aktivnosti
-    // 53.2 - Kurirske aktivnosti
-    // 85.1 - Predškolsko obrazovanje
-    // 85.2 - Osnovno obrazovanje
-    // 86.1 - Bolničke aktivnosti
-    // 86.21 - Opšta medicinska praksa
-    // 86.22 - Specijalistička medicinska praksa
-    // 86.9 - Ostale zdravstvene aktivnosti
-    // 84.12 - Regulisanje delatnosti privrede
-    // 90.01 - Delatnost pozorišta
-    // 90.02 - Delatnost muzeja
-    // 90.04 - Botanički i zoološki vrtovi
-    // 93.11 - Sportski objekti
-    // 93.13 - Delatnost teretana
-    // 93.19 - Ostale sportske aktivnosti
-    // 26.11 - Proizvodnja elektronskih komponenti
-    // 27.12 - Proizvodnja električnih panela
-    // 29.1 - Proizvodnja motornih vozila
-
-
   public submit(): void {
     this.submitted = true;
 
@@ -363,7 +266,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
       }
 
       this.accountService.createFxAccount(payload).subscribe({
-        next: () => this.router.navigate(['/employees']),
+        next: () => this.router.navigate(['/account-management']),
         error: (err: unknown) => {
           console.error('Failed to create FX account', err);
         }
@@ -394,7 +297,7 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
       }
 
       this.accountService.createCheckingAccount(payload).subscribe({
-        next: () => this.router.navigate(['/employees']),
+        next: () => this.router.navigate(['/account-management']),
         error: (err: unknown) => {
           console.error('Failed to create checking account', err);
         }
@@ -567,10 +470,24 @@ export class AccountCreateComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Učitava mock klijente za prikaz u dropdown-u.
-   * Dok mentor ne potvrdi API tok, koristi se lokalni prikaz.
-   */
+  private loadActivityCodes(): void {
+    this.isLoadingActivityCodes = true;
+    this.accountService.getSifreDelatnosti()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (items) => {
+          this.activityCodes = items.map((item) => ({
+            value: item.sifra,
+            label: `${item.sifra} - ${item.grana}`
+          }));
+          this.isLoadingActivityCodes = false;
+        },
+        error: () => {
+          this.isLoadingActivityCodes = false;
+        }
+      });
+  }
+
   private loadClients(): void {
     // Load clients from backend via ClientService. Map DTO to displayable ClientOption.
     this.clientService

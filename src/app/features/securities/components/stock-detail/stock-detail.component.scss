@@ -1,31 +1,12 @@
 // Stock detail component styles
+// PR_31 Phase 7 T23: Canvas chart uklonjen — ApexCharts (z-card host) sad rentuje.
+// ITM/OTM/ATM stilovi prelaze na z-option-* tokene (vidi styles.scss).
 
 :host {
   display: block;
 }
 
-.chart-container {
-  position: relative;
-  width: 100%;
-  height: 300px;
-
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-}
-
-// Change colors
-.text-green-600 {
-  color: #16a34a;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-// Grid divider
+// Grid divider helper (Tailwind divide-x utility prati ovo)
 .divide-x > :not([hidden]) ~ :not([hidden]) {
   border-left-width: 1px;
   border-left-style: solid;
@@ -35,7 +16,7 @@
   border-color: hsl(var(--border));
 }
 
-// Options table
+// Options table — strukturni stilovi (heat-map boje su sada u z-option-* tokenima)
 .options-table-container {
   overflow-x: auto;
 }
@@ -62,15 +43,15 @@
       }
 
       .calls-header {
-        background-color: rgba(22, 163, 74, 0.1);
-        color: #16a34a;
-        border-bottom: 2px solid #16a34a;
+        background-color: rgba(34, 197, 94, 0.10);
+        color: hsl(var(--success));
+        border-bottom: 2px solid hsl(var(--success));
       }
 
       .puts-header {
-        background-color: rgba(220, 38, 38, 0.1);
-        color: #dc2626;
-        border-bottom: 2px solid #dc2626;
+        background-color: rgba(220, 38, 38, 0.10);
+        color: hsl(var(--destructive));
+        border-bottom: 2px solid hsl(var(--destructive));
       }
 
       .strike-header {
@@ -95,27 +76,6 @@
       &:hover {
         background-color: hsl(var(--muted) / 0.5);
       }
-    }
-
-    td {
-      font-variant-numeric: tabular-nums;
-
-      &.in-the-money {
-        background-color: rgba(22, 163, 74, 0.08);
-        color: #15803d;
-      }
-
-      &.out-of-money {
-        background-color: rgba(220, 38, 38, 0.05);
-        color: #b91c1c;
-      }
-    }
-
-    .strike-cell {
-      font-weight: 600;
-      background-color: hsl(var(--muted));
-      border-left: 2px solid hsl(var(--border));
-      border-right: 2px solid hsl(var(--border));
     }
   }
 }

@@ -1,0 +1,118 @@
+<div class="z-stagger space-y-4">
+  <header class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Upravljanje karticama</h1>
+      <p class="text-sm text-muted-foreground mt-1">
+        Pregled, blokiranje, odblokiranje i deaktiviranje svih kartica u banci.
+      </p>
+    </div>
+  </header>
+
+  <div class="z-card p-4 flex flex-wrap items-center gap-3">
+    <input
+      type="text"
+      class="z-input max-w-md flex-1 min-w-[240px]"
+      placeholder="Pretraga po broju kartice, racunu ili brendu..."
+      [(ngModel)]="searchQuery"
+      (keyup.enter)="onSearch()"
+    />
+    <select
+      class="z-select max-w-[200px]"
+      [(ngModel)]="statusFilter"
+      (change)="onStatusFilter(statusFilter)"
+    >
+      <option value="">Svi statusi</option>
+      <option value="ACTIVE">Aktivne</option>
+      <option value="BLOCKED">Blokirane</option>
+      <option value="DEACTIVATED">Deaktivirane</option>
+    </select>
+    <button type="button" class="z-btn-primary" (click)="onSearch()">Filtriraj</button>
+  </div>
+
+  <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje kartica..."></app-state>
+  <app-state
+    *ngIf="!isLoading && error"
+    mode="error"
+    title="Greska"
+    [text]="error || ''"
+  ></app-state>
+  <app-state
+    *ngIf="!isLoading && !error && cards.length === 0"
+    mode="empty"
+    icon="creditcard"
+    title="Nema kartica"
+    text="Trenutno nema kartica koje odgovaraju kriterijumima."
+  ></app-state>
+
+  <div *ngIf="!isLoading && !error && cards.length > 0" class="z-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="z-table w-full">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Racun</th>
+            <th>Broj kartice</th>
+            <th>Brend</th>
+            <th class="text-right">Limit</th>
+            <th>Status</th>
+            <th class="text-right">Akcije</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of cards; trackBy: trackByCard">
+            <td class="font-mono text-xs">{{ c.id }}</td>
+            <td class="font-mono text-xs">{{ c.accountNumber }}</td>
+            <td class="font-mono">{{ c.cardNumber }}</td>
+            <td>{{ c.brand || '—' }}</td>
+            <td class="text-right font-mono tabular-nums">
+              {{ c.cardLimit | number: '1.2-2' }}
+            </td>
+            <td>
+              <span [class]="statusBadgeClass(c.status)">{{ statusLabel(c.status) }}</span>
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <button
+                *ngIf="c.status === 'ACTIVE'"
+                type="button"
+                class="z-btn-icon hover:!text-warning"
+                title="Blokiraj"
+                (click)="block(c)"
+              >
+                <lucide-icon name="shieldcheck" [size]="14"></lucide-icon>
+              </button>
+              <button
+                *ngIf="c.status === 'BLOCKED'"
+                type="button"
+                class="z-btn-icon hover:!text-success"
+                title="Odblokiraj"
+                (click)="unblock(c)"
+              >
+                <lucide-icon name="shieldcheck" [size]="14"></lucide-icon>
+              </button>
+              <button
+                *ngIf="c.status !== 'DEACTIVATED'"
+                type="button"
+                class="z-btn-icon hover:!text-destructive"
+                title="Deaktiviraj"
+                (click)="deactivate(c)"
+              >
+                <lucide-icon name="x" [size]="14"></lucide-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-4 py-3 border-t border-border flex items-center justify-between flex-wrap gap-3">
+      <span class="text-sm text-muted-foreground">
+        {{ totalElements }} kartica ukupno
+      </span>
+      <app-pagination
+        [total]="totalElements"
+        [pageSize]="pageSize"
+        [page]="currentPage + 1"
+        (pageChange)="onPageChange($event - 1)"
+      ></app-pagination>
+    </div>
+  </div>
+</div>

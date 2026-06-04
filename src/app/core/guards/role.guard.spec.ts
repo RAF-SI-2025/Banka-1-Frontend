@@ -88,7 +88,11 @@ describe('roleGuard', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/403']);
   });
 
-  it('should use ROLE_PERMISSIONS fallback if permissions array is missing', () => {
+  // PR_28 C28.x je uklonio ROLE_PERMISSIONS frontend fallback (duplicirao backend, magic mapping).
+  // Sada kada permissions iz localStorage-a nedostaje, guard mora da odbije pristup
+  // (sigurnost: nikad ne pretpostavljati permisije bez backend potvrde).
+  it('should redirect to /403 if permissions array is missing (no frontend fallback after PR_28)', () => {
+    const navigateSpy = spyOn(router, 'navigate');
     localStorage.setItem('loggedUser', JSON.stringify({
       email: 'test@test.com',
       role: 'EmployeeAdmin',
@@ -99,7 +103,8 @@ describe('roleGuard', () => {
       roleGuard(buildRoute('EMPLOYEE_MANAGE_ALL'), dummyState)
     );
 
-    expect(result).toBeTrue();
+    expect(result).toBeFalse();
+    expect(navigateSpy).toHaveBeenCalledWith(['/403']);
   });
 
   it('should redirect to /403 if allowedRoles is set and user role does not match', () => {

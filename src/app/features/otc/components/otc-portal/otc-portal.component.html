@@ -1,0 +1,68 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-foreground">OTC Portal</h1>
+    <p class="text-sm text-muted-foreground mt-1">
+      Vanberzanska trgovina opcijama na akcije.
+    </p>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="flex border-b border-border mb-6 gap-1 overflow-x-auto">
+    <button type="button"
+            class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+            [class.border-b-2]="activeTab === 'available-stocks'"
+            [class.border-primary]="activeTab === 'available-stocks'"
+            [class.text-foreground]="activeTab === 'available-stocks'"
+            [class.text-muted-foreground]="activeTab !== 'available-stocks'"
+            [class.hover:text-foreground]="activeTab !== 'available-stocks'"
+            (click)="setTab('available-stocks')">
+      Dostupne akcije
+    </button>
+    <button type="button"
+            class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+            [class.border-b-2]="activeTab === 'positions'"
+            [class.border-primary]="activeTab === 'positions'"
+            [class.text-foreground]="activeTab === 'positions'"
+            [class.text-muted-foreground]="activeTab !== 'positions'"
+            (click)="setTab('positions')">
+      Moje OTC pozicije
+    </button>
+    <button type="button"
+            class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+            [class.border-b-2]="activeTab === 'negotiations'"
+            [class.border-primary]="activeTab === 'negotiations'"
+            [class.text-foreground]="activeTab === 'negotiations'"
+            [class.text-muted-foreground]="activeTab !== 'negotiations'"
+            (click)="setTab('negotiations')">
+      Aktivni pregovori
+    </button>
+    <button type="button"
+            class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+            [class.border-b-2]="activeTab === 'contracts'"
+            [class.border-primary]="activeTab === 'contracts'"
+            [class.text-foreground]="activeTab === 'contracts'"
+            [class.text-muted-foreground]="activeTab !== 'contracts'"
+            (click)="setTab('contracts')">
+      Izvršeni ugovori
+    </button>
+    <button type="button"
+                class="px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+                [class.border-b-2]="activeTab === 'history'"
+                [class.border-primary]="activeTab === 'history'"
+                [class.text-foreground]="activeTab === 'history'"
+                [class.text-muted-foreground]="activeTab !== 'history'"
+                (click)="setTab('history')">
+          Istorija pregovora
+    </button>
+    
+  </div>
+
+  <!-- Tab panels -->
+  <ng-container [ngSwitch]="activeTab">
+    <app-otc-available-stocks *ngSwitchCase="'available-stocks'"></app-otc-available-stocks>
+    <app-otc-positions        *ngSwitchCase="'positions'"></app-otc-positions>
+    <app-otc-offers           *ngSwitchCase="'negotiations'"></app-otc-offers>
+    <app-otc-contracts        *ngSwitchCase="'contracts'"></app-otc-contracts>
+    <app-otc-history          *ngSwitchCase="'history'"></app-otc-history>
+  </ng-container>
+</div>

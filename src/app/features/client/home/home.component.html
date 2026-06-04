@@ -1,182 +1,134 @@
-<app-navbar></app-navbar>
+<!--
+  PR_31 Task 14: Home dense-grid B redesign (Bloomberg-style).
+  3 stat tiles + 2 mid cards (recent tx, brzo placanje) + kursna lista ribbon.
+  Sve sekcije koriste z-* design tokene; tema (light/dark) prolazi automatski.
+-->
+<div class="z-stagger space-y-4">
 
-<div class="page-layout">
-  <div class="page-content">
-    <h1 class="text-xl font-bold text-foreground mb-5">Početna</h1>
+  <!-- Header -->
+  <header class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <p class="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">Pocetna</p>
+      <h1 class="text-2xl font-bold tracking-tight text-foreground">
+        Dobrodosli<span *ngIf="userName">, {{ userName }}</span>
+      </h1>
+    </div>
+    <button type="button" class="z-btn-primary inline-flex items-center gap-2" routerLink="/accounts/payment/new">
+      <lucide-icon name="send" [size]="16"></lucide-icon>
+      Novo placanje
+    </button>
+  </header>
 
-      <div class="grid grid-cols-[1fr_1fr_300px] gap-4">
-
-        <!-- Balance card -->
-        <div class="z-card p-5 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Raspoloživo stanje</span>
-            <span class="material-icons text-muted-foreground/60 text-xl cursor-pointer">more_horiz</span>
-          </div>
-
-          <ng-container *ngIf="loading">
-            <div class="z-skeleton h-8 w-48 mb-3"></div>
-            <div class="z-skeleton h-20 w-full"></div>
-          </ng-container>
-
-          <ng-container *ngIf="!loading && !error">
-            <div class="flex items-baseline gap-3 mb-3">
-              <span class="text-2xl font-bold text-foreground">{{ formatAmount(totalAvailableBalance) }}</span>
-              <span class="z-badge-green">+10.2%</span>
-            </div>
-            <svg class="w-full h-20 block" viewBox="0 0 300 80" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#22c55e" stop-opacity="0.25"/>
-                  <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L30,50 L60,55 L90,35 L120,40 L150,28 L180,42 L210,18 L240,22 L270,10 L300,4"
-                    fill="none" stroke="#22c55e" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M0,60 L30,50 L60,55 L90,35 L120,40 L150,28 L180,42 L210,18 L240,22 L270,10 L300,4 L300,80 L0,80Z"
-                    fill="url(#g)"/>
-            </svg>
-          </ng-container>
-
-          <ng-container *ngIf="!loading && error">
-            <p class="text-sm text-red-500 py-3">Greška pri učitavanju računa.</p>
-          </ng-container>
-        </div>
-
-        <!-- New payment card -->
-        <div class="z-card p-5 flex flex-col items-center justify-center gap-3 cursor-pointer min-h-[130px] hover:shadow-md transition-shadow group"
-             routerLink="/accounts/payment/new">
-          <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
-            <span class="material-icons text-white text-2xl">swap_horiz</span>
-          </div>
-          <span class="text-sm font-semibold text-foreground">Novo plaćanje</span>
-        </div>
-
-        <!-- Accounts card -->
-        <div class="z-card p-5 row-span-2 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Računi</span>
-            <a routerLink="/accounts" class="text-xs text-primary hover:underline font-medium">Svi računi</a>
-          </div>
-
-          <ng-container *ngIf="loading">
-            <div *ngFor="let i of [1,2]" class="py-3 border-b border-border last:border-0">
-              <div class="z-skeleton h-3.5 w-full mb-1.5"></div>
-              <div class="z-skeleton h-3.5 w-1/2"></div>
-            </div>
-          </ng-container>
-
-          <p *ngIf="!loading && accounts.length === 0" class="text-sm text-muted-foreground text-center py-5 italic">
-            Nema aktivnih računa.
-          </p>
-
-          <div *ngFor="let acc of accounts"
-               class="py-3 border-b border-muted last:border-0 cursor-pointer rounded-lg px-2 -mx-2 transition-colors"
-               [class.bg-secondary]="isSelected(acc)"
-               (click)="selectAccount(acc)">
-            <div class="flex justify-between mb-0.5">
-              <span class="text-xs text-muted-foreground font-medium">{{ acc.name }}</span>
-              <span class="text-[11px] text-muted-foreground/70 font-mono">{{ acc.accountNumber }}</span>
-            </div>
-            <div class="text-lg font-bold text-foreground mb-1.5">
-              {{ formatAmount(acc.availableBalance, acc.currency) }}
-            </div>
-            <div class="h-1 bg-muted rounded-full overflow-hidden">
-              <div class="h-full bg-primary rounded-full transition-all duration-500" [style.width.%]="getBalancePercent(acc)"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Transactions card -->
-        <div class="z-card p-5 col-span-2 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Pregled transakcija</span>
-            <div class="flex items-center gap-3">
-              <span *ngIf="selectedAccount" class="text-xs text-muted-foreground font-medium">
-                {{ selectedAccount.name }}
-              </span>
-              <a routerLink="/payments" class="text-xs text-primary hover:underline font-medium">Sve transakcije</a>
-            </div>
-          </div>
-
-          <ng-container *ngIf="transactionsLoading">
-            <div *ngFor="let i of [1,2,3,4,5]" class="py-2.5 border-b border-border last:border-0">
-              <div class="z-skeleton h-3.5 w-full mb-1"></div>
-              <div class="z-skeleton h-3.5 w-1/2"></div>
-            </div>
-          </ng-container>
-
-          <p *ngIf="!transactionsLoading && transactionsError" class="text-sm text-red-500 py-3">
-            Greška pri učitavanju transakcija.
-          </p>
-
-          <p *ngIf="!transactionsLoading && !transactionsError && transactions.length === 0"
-             class="text-sm text-muted-foreground text-center py-5 italic">
-            Nema transakcija za ovaj račun.
-          </p>
-
-          <table *ngIf="!transactionsLoading && !transactionsError && transactions.length > 0" class="z-table">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Primalac</th>
-                <th>Tip</th>
-                <th>Iznos</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let tx of transactions">
-                <td class="text-muted-foreground whitespace-nowrap">{{ formatDate(tx.createdAt) }}</td>
-                <td class="font-medium">{{ tx.recipientName }}</td>
-                <td>
-                  <span class="z-badge" [ngClass]="{
-                    'z-badge-blue': tx.type === 'TRANSFER',
-                    'z-badge-gray': tx.type === 'PAYMENT',
-                    'z-badge-green': tx.type === 'DEPOSIT',
-                    'z-badge-yellow': tx.type === 'WITHDRAWAL'
-                  }">{{ getTypeLabel(tx.type) }}</span>
-                </td>
-                <td class="font-semibold whitespace-nowrap">{{ formatAmount(tx.amount, tx.currency) }}</td>
-                <td>
-                  <span class="z-badge" [ngClass]="{
-                    'z-badge-green': tx.status === 'COMPLETED',
-                    'z-badge-gray': tx.status === 'PENDING',
-                    'z-badge-red': tx.status === 'FAILED',
-                    'z-badge-yellow': tx.status === 'CANCELLED'
-                  }">{{ getStatusLabel(tx.status) }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Exchange placeholder -->
-        <div class="z-card p-5 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Menjačnica</span>
-          </div>
-          <div class="text-center py-4">
-            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-secondary flex items-center justify-center">
-              <span class="material-icons text-primary text-xl">currency_exchange</span>
-            </div>
-            <p class="text-sm text-muted-foreground italic">Kalkulator menjačnice — dostupno uskoro.</p>
-          </div>
-        </div>
-
-        <!-- Quick payment placeholder -->
-        <div class="z-card p-5 col-span-2 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Brzo plaćanje</span>
-          </div>
-          <div class="text-center py-4">
-            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-secondary flex items-center justify-center">
-              <span class="material-icons text-primary text-xl">bolt</span>
-            </div>
-            <p class="text-sm text-muted-foreground italic">Brzo plaćanje — dostupno uskoro.</p>
-          </div>
-        </div>
-
-      </div>
+  <!-- 3 stat tiles -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3" *ngIf="!loading && accounts.length > 0">
+    <div *ngFor="let a of accounts | slice:0:3" class="z-stat-card">
+      <span class="z-stat-label">{{ getAccountSubtitle(a) }}</span>
+      <span class="z-stat-value-mono">
+        {{ a.availableBalance | number:'1.2-2' }}
+        <small class="text-xs text-muted-foreground font-normal">{{ a.currency }}</small>
+      </span>
+      <span class="z-stat-hint font-mono">{{ a.accountNumber }}</span>
     </div>
   </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje racuna..."></app-state>
+  <app-state *ngIf="!loading && error" mode="error" title="Greska" text="Nije moguce dohvatiti racune."></app-state>
+  <app-state *ngIf="!loading && !error && accounts.length === 0"
+             mode="empty"
+             title="Nema racuna"
+             text="Posetite najblizu filijalu da otvorite racun."></app-state>
+
+  <!-- 2 mid cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+    <!-- Recent transactions -->
+    <div class="z-card p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-semibold">
+          Poslednjih 5 transakcija
+        </h2>
+        <a routerLink="/payments" class="text-xs text-primary font-semibold hover:underline">Vidi sve &rarr;</a>
+      </div>
+
+      <app-state *ngIf="transactionsLoading" mode="loading" text="Ucitavanje..."></app-state>
+      <app-state *ngIf="!transactionsLoading && transactionsError"
+                 mode="error"
+                 title="Greska"
+                 text="Nije moguce dohvatiti transakcije."></app-state>
+
+      <ul *ngIf="!transactionsLoading && !transactionsError && transactions.length > 0"
+          class="divide-y divide-border">
+        <li *ngFor="let t of transactions | slice:0:5"
+            class="flex justify-between items-center py-2.5 text-sm gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-foreground font-medium truncate">{{ getTxRecipient(t) }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ getTxDate(t) | date:'shortDate' }} &middot; {{ getTxLabel(t) }}
+            </p>
+          </div>
+          <span class="font-mono tabular-nums text-sm flex-shrink-0"
+                [class.text-success]="getTxAmount(t) > 0"
+                [class.text-destructive]="getTxAmount(t) < 0">
+            {{ getTxAmount(t) | number:'1.2-2' }} {{ getTxCurrency(t) }}
+          </span>
+        </li>
+      </ul>
+
+      <app-state *ngIf="!transactionsLoading && !transactionsError && transactions.length === 0"
+                 mode="empty"
+                 title="Nema transakcija"
+                 text="Kada nastane prva transakcija, pojavice se ovde."></app-state>
+    </div>
+
+    <!-- Quick pay -->
+    <div class="z-card p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-semibold">
+          Brzo placanje
+        </h2>
+        <a routerLink="/payments/recipients" class="text-xs text-primary font-semibold hover:underline">
+          Upravljaj &rarr;
+        </a>
+      </div>
+
+      <app-state *ngIf="recipientsLoading" mode="loading" text="Ucitavanje..."></app-state>
+
+      <div *ngIf="!recipientsLoading && paymentRecipients.length > 0" class="flex flex-wrap gap-2">
+        <button *ngFor="let r of paymentRecipients | slice:0:5"
+                type="button"
+                (click)="payRecipient(r)"
+                class="px-3 py-1.5 rounded-md bg-accent text-accent-foreground text-xs font-semibold hover:opacity-80 cursor-pointer border-0">
+          {{ getRecipientName(r) }}
+        </button>
+        <a routerLink="/payments/recipients"
+           class="home-add-recipient px-3 py-1.5 rounded-md text-xs font-bold border inline-flex items-center">
+          + Dodaj
+        </a>
+      </div>
+
+      <app-state *ngIf="!recipientsLoading && paymentRecipients.length === 0"
+                 mode="empty"
+                 title="Nema sacuvanih primaoca"
+                 text="Sacuvajte primaoca tokom novog placanja."></app-state>
+    </div>
+  </div>
+
+  <!-- Kursna lista ribbon -->
+  <div *ngIf="exchangeRates.length > 0"
+       class="z-card p-3 flex items-center gap-4 overflow-x-auto">
+    <span class="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-semibold whitespace-nowrap flex-shrink-0">
+      Kursna lista
+    </span>
+    <div class="flex items-center gap-4 font-mono tabular-nums text-xs">
+      <span *ngFor="let r of exchangeRates | slice:0:6" class="whitespace-nowrap">
+        {{ getRateFrom(r) }}/{{ getRateTo(r) }}
+        <span class="ml-1 text-foreground font-semibold">{{ getRateValue(r) | number:'1.4-4' }}</span>
+      </span>
+    </div>
+    <a routerLink="/exchange"
+       class="ml-auto text-xs text-primary font-semibold whitespace-nowrap flex-shrink-0 hover:underline">
+      Kalkulator &rarr;
+    </a>
+  </div>
+
+</div>

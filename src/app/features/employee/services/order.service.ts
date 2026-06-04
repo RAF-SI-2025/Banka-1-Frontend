@@ -86,7 +86,10 @@ export class OrderService {
   }
 
   cancelOrder(id: number, quantity?: number): Observable<unknown> {
-    const body = quantity ? { quantity } : {};
-    return this.http.put(`${this.apiUrl}/${id}/cancel`, body);
+    if (quantity === undefined) {
+      return this.http.post(`${this.apiUrl}/${id}/cancel`, {});
+    }
+
+    return this.http.put(`${this.apiUrl}/${id}/cancelPartial`, { quantity });
   }
 }

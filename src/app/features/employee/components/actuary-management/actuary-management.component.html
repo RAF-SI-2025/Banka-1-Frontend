@@ -1,7 +1,5 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <!-- Page header -->
     <div class="flex justify-between items-start mb-6">
       <div>
@@ -99,8 +97,8 @@
             <!-- Used Limit column -->
             <td class="text-right">
               <span class="font-medium" [ngClass]="{
-                'text-red-600': agent.usedLimit > agent.limit * 0.8,
-                'text-amber-600': agent.usedLimit > agent.limit * 0.5 && agent.usedLimit <= agent.limit * 0.8
+                'text-destructive': agent.usedLimit > agent.limit * 0.8,
+                'text-warning': agent.usedLimit > agent.limit * 0.5 && agent.usedLimit <= agent.limit * 0.8
               }">
                 {{ formatCurrency(agent.usedLimit) }}
               </span>
@@ -143,7 +141,7 @@
                 <ng-container *ngIf="editingAgentId !== agent.employeeId">
                   <button (click)="startEditLimit(agent)" title="Izmeni limit"
                           [disabled]="editingAgentId !== null"
-                          class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-secondary hover:text-primary hover:border-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="z-btn-icon disabled:opacity-50 disabled:cursor-not-allowed"
                           data-cy="edit-limit-btn">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -152,7 +150,7 @@
                   </button>
                   <button (click)="promptResetLimit(agent)" title="Resetuj iskorišćeni limit"
                           [disabled]="editingAgentId !== null"
-                          class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="z-btn-icon disabled:opacity-50 disabled:cursor-not-allowed hover:!text-warning"
                           data-cy="reset-limit-btn">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="1 4 1 10 7 10"></polyline>
@@ -181,20 +179,12 @@
             {{ currentPage * pageSize + 1 }}–{{ getLastItem() }} od {{ totalElements }}
           </span>
         </div>
-        <div class="flex gap-1">
-          <button [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)"
-                  class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <button [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)"
-                  class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
+        <app-pagination
+          [total]="totalElements"
+          [pageSize]="pageSize"
+          [page]="currentPage + 1"
+          (pageChange)="goToPage($event - 1)">
+        </app-pagination>
       </div>
     </div>
   </div>
@@ -205,8 +195,7 @@
   <div class="z-modal max-w-sm">
     <div class="z-modal-header">
       <h3 class="text-lg font-semibold text-foreground">Resetuj iskorišćeni limit</h3>
-      <button (click)="cancelResetLimit()"
-              class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+      <button (click)="cancelResetLimit()" class="z-btn-icon">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -214,15 +203,13 @@
       </button>
     </div>
     <div class="z-modal-body">
-      <div class="flex items-start gap-3">
-        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </div>
-        <p class="text-sm text-foreground">
+      <div class="z-callout-warning">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <p class="text-sm">
           Da li ste sigurni da želite da resetujete iskorišćeni limit ovog agenta na 0? Ova akcija se ne može poništiti.
         </p>
       </div>

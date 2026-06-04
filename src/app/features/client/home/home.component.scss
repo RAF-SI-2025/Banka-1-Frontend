@@ -1,1 +1,13 @@
-﻿:host { display: block; }
+:host { display: block; }
+
+/* PR_31 Task 14: "Dodaj primaoca" gold chip — koristi gold paletu kroz CSS
+ * varijable da prati i light i dark temu bez tailwind hex overrides. */
+.home-add-recipient {
+  background: var(--gold-100);
+  color: var(--gold-700);
+  border-color: var(--gold-300);
+
+  &:hover {
+    opacity: 0.85;
+  }
+}

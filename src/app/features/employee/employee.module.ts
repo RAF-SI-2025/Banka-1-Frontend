@@ -12,8 +12,14 @@ import { AccountManagementComponent } from './account-management/account-managem
 import { AccountCardsPlaceholderComponent } from './account-cards-placeholder/account-cards-placeholder.component';
 import { LoanRequestManagementComponent } from './components/loan-request-management/loan-request-management.component';
 import { LoanManagementComponent } from './components/loan-management/loan-management.component';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { OrdersOverviewComponent } from './components/orders-overview/orders-overview.component';
+
+// PR_31 T10: shared AppPaginationComponent (standalone) — koriste je
+// employee-list, actuary-management, loan-management, loan-request-management.
+import { AppPaginationComponent } from '../../shared/components/pagination/pagination.component';
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../shared/components/state/state.component';
+import { AuditLogComponent } from './components/audit-log/audit-log.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +31,7 @@ import { OrdersOverviewComponent } from './components/orders-overview/orders-ove
     LoanRequestManagementComponent,
     LoanManagementComponent,
     OrdersOverviewComponent,
-  ],
+    AuditLogComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -33,7 +39,7 @@ import { OrdersOverviewComponent } from './components/orders-overview/orders-ove
     RouterModule,
     AccountManagementComponent,
     ExchangeListComponent,
-    NavbarComponent,
-  ],
+    AppPaginationComponent,
+    StateComponent],
 })
 export class EmployeeModule {}

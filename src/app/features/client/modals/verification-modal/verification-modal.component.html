@@ -1,40 +1,71 @@
 <div class="z-overlay" (click)="onClose()">
-  <div class="z-modal w-full max-w-sm" (click)="$event.stopPropagation()">
+  <div class="z-modal w-full max-w-md" (click)="$event.stopPropagation()">
     <div class="z-modal-header">
-      <h4 class="text-lg font-semibold">Verifikacija transakcije</h4>
-      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none" (click)="onClose()">&times;</button>
+      <div class="flex items-center gap-3">
+        <div class="verification-modal-icon w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-lg font-bold text-foreground">Verifikacija transakcije</h4>
+          <p class="text-xs text-muted-foreground mt-0.5">Sigurnosni korak pre nego sto se sredstva pokrenu.</p>
+        </div>
+      </div>
+      <button type="button"
+              class="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-1"
+              (click)="onClose()"
+              aria-label="Zatvori dijalog"
+              title="Zatvori">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="z-modal-body space-y-4">
       <p class="text-sm text-muted-foreground">
-        Verifikacioni kod je poslat na vaš email.
+        Verifikacioni kod je poslat na vas email. Validan je 5 minuta.
       </p>
 
-      <div *ngIf="isSendingCode" class="flex justify-center py-4">
-        <svg class="w-6 h-6 animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div *ngIf="isSendingCode" class="flex flex-col items-center justify-center py-6 gap-2">
+        <svg class="w-7 h-7 animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
         </svg>
+        <p class="text-xs text-muted-foreground">Slanje koda...</p>
       </div>
 
       <div *ngIf="!isSendingCode">
-        <label for="code" class="z-label">Unesite kod</label>
-        <input type="text" id="code" class="z-input text-center tracking-[0.5em] text-lg font-semibold"
+        <label for="code" class="z-label">Unesite 6-cifren kod</label>
+        <input type="text" id="code" inputmode="numeric"
+               class="z-input text-center tracking-[0.5em] text-xl font-bold font-mono"
                [(ngModel)]="verificationCode" placeholder="000000" maxlength="6"
                (keyup.enter)="verificationCode.length === 6 && onConfirm()" />
       </div>
 
-      <div *ngIf="attempts > 0">
-        <span class="z-badge z-badge-yellow text-xs">Pokušaji: {{ attempts }} / {{ maxAttempts }}</span>
+      <div class="flex items-center justify-between">
+        <span *ngIf="attempts > 0" class="z-badge z-badge-yellow text-xs">
+          Pokusaji: {{ attempts }} / {{ maxAttempts }}
+        </span>
+        <span *ngIf="attempts === 0"></span>
+        <button type="button"
+                class="text-xs font-semibold text-primary hover:underline disabled:opacity-50 disabled:no-underline bg-transparent border-0 cursor-pointer"
+                (click)="sendVerificationCode()"
+                [disabled]="isSendingCode">
+          Posalji ponovo
+        </button>
       </div>
-
-      <button type="button" class="text-xs text-primary hover:underline" (click)="sendVerificationCode()" [disabled]="isSendingCode">
-        Pošalji ponovo
-      </button>
     </div>
 
     <div class="z-modal-footer">
       <button type="button" class="z-btn-outline" (click)="onClose()">Odustani</button>
-      <button type="button" class="z-btn-primary" (click)="onConfirm()" [disabled]="verificationCode.length < 6 || isSendingCode || sessionId === null">Potvrdi</button>
+      <button type="button" class="z-btn-primary"
+              (click)="onConfirm()"
+              [disabled]="verificationCode.length < 6 || isSendingCode || sessionId === null">
+        Potvrdi
+      </button>
     </div>
   </div>
 </div>

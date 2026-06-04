@@ -78,6 +78,14 @@
      * @returns Observable sa ponovljenim HTTP zahtevom
      */
     private handle401(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+      // Klijenti trenutno ne dobijaju refresh token na login (Banka1 client login
+      // vraca samo JWT). Bez refresh tokena nema sta da rotiramo — preskoci refresh
+      // pokusaj inace bi 404 → logout izbacio korisnika na obicnom 401 zahtevu.
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        this.authService.logout();
+        return throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }));
+      }
       if (!this.isRefreshing) {
         this.isRefreshing = true;
         this.refreshTokenSubject.next(null);
@@ -91,7 +99,6 @@
           catchError(err => {
             this.isRefreshing = false;
             this.refreshTokenSubject.next('');
-
             this.authService.logout();
             return throwError(() => err);
           })

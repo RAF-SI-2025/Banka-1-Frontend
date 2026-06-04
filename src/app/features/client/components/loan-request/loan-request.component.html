@@ -1,33 +1,31 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content max-w-3xl">
+<div>
+  <div class="max-w-3xl">
     <!-- Success Message -->
-    <div *ngIf="successMessage && loanResponse" class="z-card p-6 bg-green-50 border border-green-200 mb-6">
+    <div *ngIf="successMessage && loanResponse" class="z-alert-success mb-6">
       <div class="flex items-start gap-4">
-        <svg class="w-6 h-6 text-green-600 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-6 h-6 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
         <div class="flex-1">
-          <h3 class="font-semibold text-green-900">Uspešno podnesen zahtev!</h3>
-          <p class="text-sm text-green-800 mt-1">{{ successMessage }}</p>
-          <p class="text-xs text-green-700 mt-2">Bićete preusmeren na listu kredita za par sekundi...</p>
+          <h3 class="font-semibold">Uspešno podnesen zahtev!</h3>
+          <p class="text-sm mt-1">{{ successMessage }}</p>
+          <p class="text-xs mt-2 opacity-80">Bićete preusmeren na listu kredita za par sekundi...</p>
         </div>
       </div>
     </div>
 
     <!-- Error Message -->
-    <div *ngIf="errorMessage && !successMessage" class="z-card p-6 bg-red-50 border border-red-200 mb-6">
+    <div *ngIf="errorMessage && !successMessage" class="z-alert-error mb-6">
       <div class="flex items-start gap-4">
-        <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-6 h-6 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
         <div class="flex-1">
-          <h3 class="font-semibold text-red-900">Greška pri podnošenju</h3>
-          <p class="text-sm text-red-800 mt-1">{{ errorMessage }}</p>
+          <h3 class="font-semibold">Greška pri podnošenju</h3>
+          <p class="text-sm mt-1">{{ errorMessage }}</p>
         </div>
       </div>
     </div>

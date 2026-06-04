@@ -1,0 +1,142 @@
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Investicioni fondovi</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Otkrij fondove banke, pregledaj performanse i zapocni investiciju.
+        </p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- PR_31 T28: supervisor-only CTA za kreiranje novog fonda. -->
+        <a *ngIf="canCreateFund" routerLink="/funds/create" class="z-btn-gold" data-testid="create-fund-cta">
+          <span aria-hidden="true">＋</span>
+          Kreiraj fond
+        </a>
+        <a routerLink="/funds/my-funds" class="z-btn-outline">
+          Moji fondovi
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter / sort bar -->
+    <div class="flex flex-wrap items-center gap-3 mb-5">
+      <input [(ngModel)]="search" (ngModelChange)="apply()"
+             class="z-input flex-1 min-w-[200px]" placeholder="Pretrazi po nazivu ili opisu..." />
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-muted-foreground">Sortiraj:</span>
+        <button class="z-btn-outline-sm" (click)="setSort('naziv')">
+          Naziv <span *ngIf="sortField === 'naziv'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('totalValue')">
+          Vrednost <span *ngIf="sortField === 'totalValue'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('profit')">
+          Profit <span *ngIf="sortField === 'profit'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('minimumContribution')">
+          Min. ulog <span *ngIf="sortField === 'minimumContribution'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('annualYield')">
+          God. prinos <span *ngIf="sortField === 'annualYield'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('rewardToVariabilityRatio')">
+          R/V Ratio <span *ngIf="sortField === 'rewardToVariabilityRatio'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('maxDrawdown')">
+          Max Drawdown <span *ngIf="sortField === 'maxDrawdown'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+        <button class="z-btn-outline-sm" (click)="setSort('volatility')">
+          Volatilnost <span *ngIf="sortField === 'volatility'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <app-state *ngIf="loading" mode="loading" text="Ucitavanje fondova..."></app-state>
+    <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+    <ng-container *ngIf="!loading && !error">
+      <app-state *ngIf="funds.length === 0"
+                 mode="empty" title="Nema fondova"
+                 text="Banka jos uvek nema otvorene investicione fondove."></app-state>
+
+      <div *ngIf="funds.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <a *ngFor="let f of funds"
+           [routerLink]="['/funds', f.id]"
+           class="z-card p-5 block group hover:no-underline">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <h2 class="text-lg font-bold text-foreground leading-snug">{{ f.naziv }}</h2>
+            <span class="z-badge"
+                  [ngClass]="f.profit >= 0 ? 'z-badge-green' : 'z-badge-red'">
+              {{ f.profit >= 0 ? '+' : '' }}{{ f.profit | number:'1.0-2' }}
+            </span>
+          </div>
+          <p class="text-sm text-muted-foreground line-clamp-3 min-h-[3.6em] mb-4">{{ f.opis || 'Bez opisa.' }}</p>
+
+          <dl class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm border-t border-border pt-4">
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Min. ulog</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">{{ f.minimumContribution | number:'1.0-2' }} RSD</dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Likvidno</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">{{ f.likvidnaSredstva | number:'1.0-2' }} RSD</dd>
+            </div>
+
+            <!-- Godišnji prinos -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">God. prinos</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.annualYield !== null && f.annualYield !== undefined; else noData">
+                  {{ f.annualYield | number:'1.0-2' }}%
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- Volatilnost -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Volatilnost</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.volatility !== null && f.volatility !== undefined; else noData">
+                  {{ f.volatility | number:'1.0-2' }}
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- R/V Ratio -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">R/V Ratio</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.rewardToVariabilityRatio !== null && f.rewardToVariabilityRatio !== undefined; else noData">
+                  {{ f.rewardToVariabilityRatio | number:'1.0-2' }}
+                </ng-container>
+              </dd>
+            </div>
+
+            <!-- Max Drawdown -->
+            <div>
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Max Drawdown</dt>
+              <dd class="font-mono font-semibold text-foreground mt-0.5">
+                <ng-container *ngIf="f.maxDrawdown !== null && f.maxDrawdown !== undefined; else noData">
+                  {{ f.maxDrawdown | number:'1.0-2' }}%
+                </ng-container>
+              </dd>
+            </div>
+
+            <div class="col-span-2">
+              <dt class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Ukupna vrednost</dt>
+              <dd class="font-mono font-bold text-lg text-foreground mt-0.5">{{ f.totalValue | number:'1.0-2' }} RSD</dd>
+            </div>
+          </dl>
+
+          <div class="flex items-center justify-end mt-4 pt-3 border-t border-border text-sm font-semibold text-primary group-hover:underline">
+            Detalji i investicija <span aria-hidden="true" class="ml-1">→</span>
+          </div>
+        </a>
+      </div>
+    </ng-container> 
+    <ng-template #noData>
+      <span class="text-[11px] italic text-muted-foreground font-sans">Nedovoljno podataka</span>
+    </ng-template>
+  </div>
+</div>

@@ -1,1 +1,5 @@
-﻿:host { display: block; }
+:host { display: block; }
+
+.verification-modal-icon {
+  background: linear-gradient(135deg, var(--emerald-50) 0%, var(--emerald-100) 100%);
+}

@@ -6,10 +6,12 @@ describe('TransactionDetailModalComponent', () => {
   let component: TransactionDetailModalComponent;
   let fixture: ComponentFixture<TransactionDetailModalComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [TransactionDetailModalComponent]
-    });
+  beforeEach(async () => {
+    // PR_31 follow-up: TransactionDetailModalComponent je standalone — mora ici u imports.
+    await TestBed.configureTestingModule({
+      imports: [TransactionDetailModalComponent]
+    }).compileComponents();
+
     fixture = TestBed.createComponent(TransactionDetailModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

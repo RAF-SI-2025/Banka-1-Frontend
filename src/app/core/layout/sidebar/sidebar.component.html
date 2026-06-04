@@ -1,0 +1,31 @@
+<aside class="h-full overflow-y-auto bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
+  <!-- PR_31 hotfix: header visina 56px (h-14) sinhronizovana sa topbar-om
+       (.z-topbar po-y-3 = ~56px ukupno) tako da separator u sidebaru pada
+       tacno na istu visinu gde se topbar zavrsava. -->
+  <div class="h-14 px-4 flex items-center gap-3 border-b border-sidebar-border/40 flex-shrink-0">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+         style="background: var(--gradient-gold); box-shadow: var(--shadow-gold);">
+      <img src="assets/images/logo.png" alt="" aria-hidden="true" class="w-5 h-5 object-contain" />
+    </div>
+    <span class="z-wordmark text-xl text-white">
+      <span class="z-wordmark-banka">Banka</span><span class="z-wordmark-num">1</span>
+    </span>
+  </div>
+
+  <nav class="flex-1 px-3 py-3 space-y-5">
+    <div *ngFor="let group of groups">
+      <div class="px-2 mb-1.5 text-[10px] uppercase tracking-[0.14em] font-semibold text-sidebar-foreground/50">
+        {{ group.label }}
+      </div>
+      <div class="space-y-0.5">
+        <a *ngFor="let item of group.items"
+           [routerLink]="item.route"
+           class="z-sidebar-item"
+           [class.z-sidebar-item-active]="isActive(item.route)">
+          <lucide-icon [name]="item.icon" [size]="16"></lucide-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+</aside>

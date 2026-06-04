@@ -1,7 +1,5 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <div class="flex justify-between items-start mb-6 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-foreground">Upravljanje kreditima</h1>
@@ -59,23 +57,11 @@
     </div>
 
     <div class="z-card overflow-hidden">
-      <div *ngIf="isLoading" class="flex justify-center items-center p-12">
-        <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-        </svg>
-      </div>
-
-      <div *ngIf="!isLoading && loans.length === 0" class="text-center p-12 text-muted-foreground text-sm">
-        <svg class="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
-        <p>Nema pronađenih kredita.</p>
-      </div>
+      <!-- PR_31 T11: shared StateComponent zameni inline loading/empty markup. -->
+      <app-state *ngIf="isLoading" mode="loading" text="Učitavanje kredita..."></app-state>
+      <app-state *ngIf="!isLoading && loans.length === 0"
+                 mode="empty" title="Nema kredita"
+                 text="Nema pronađenih kredita za zadate filtere."></app-state>
 
       <div *ngIf="!isLoading && loans.length > 0" class="overflow-x-auto">
         <table class="z-table min-w-[1400px]">
@@ -128,23 +114,12 @@
           </span>
         </div>
 
-        <div class="flex gap-1">
-          <button [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)"
-            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-
-          <button [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)"
-            class="w-8 h-8 inline-flex items-center justify-center border border-border bg-card rounded-lg cursor-pointer text-muted-foreground hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
+        <app-pagination
+          [total]="totalElements"
+          [pageSize]="pageSize"
+          [page]="currentPage + 1"
+          (pageChange)="goToPage($event - 1)">
+        </app-pagination>
       </div>
     </div>
   </div>
@@ -164,7 +139,9 @@
       </div>
 
       <button (click)="closeDetail()"
-        class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer border-0 bg-transparent">
+        aria-label="Zatvori dijalog"
+        title="Zatvori"
+        class="z-btn-icon">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>

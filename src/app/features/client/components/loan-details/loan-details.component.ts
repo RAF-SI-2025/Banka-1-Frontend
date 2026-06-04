@@ -4,12 +4,12 @@ import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { Loan, Installment, LoanTypeLabels, InstallmentStatus, InstallmentStatusLabels } from '../../models/loan.model';
 import { LoanService } from '../../services/loan.service';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
-
+// PR_31 T11: shared StateComponent za loading/empty/error markup.
+import { StateComponent } from '../../../../shared/components/state/state.component';
 @Component({
   selector: 'app-loan-details',
   standalone: true,
-  imports: [CommonModule, NavbarComponent],
+  imports: [CommonModule, StateComponent],
   templateUrl: './loan-details.component.html',
   styleUrls: ['./loan-details.component.scss']
 })

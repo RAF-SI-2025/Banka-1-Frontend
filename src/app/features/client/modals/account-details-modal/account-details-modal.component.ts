@@ -5,6 +5,7 @@ import { Account } from '../../models/account.model';
 import { RenameAccountComponent } from '../../components/rename-account/rename-account.component';
 import { ChangeLimitModalComponent } from '../change-limit-modal/change-limit-modal.component';
 import { AccountService } from '../../services/account.service';
+import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-account-details-modal',
   templateUrl: './account-details-modal.component.html',
@@ -25,7 +26,30 @@ export class AccountDetailsModalComponent implements OnInit {
     return ['DOO', 'AD', 'FOUNDATION', 'FOREIGN_BUSINESS'].includes(this.account.subtype);
   }
 
-  constructor(private router: Router, private readonly accountService: AccountService) {}
+  constructor(
+    private router: Router,
+    private readonly accountService: AccountService,
+    private readonly authService: AuthService,
+  ) {}
+
+  /**
+   * Spec Celina 2: "Promenu limita moze uraditi samo vlasnik racuna." Za poslovne
+   * racune, OvlascenoLice nije vlasnik pa ne sme videti dugme.
+   */
+  public get isOwner(): boolean {
+    const currentUserId = this.authService.getUserIdFromToken();
+    return !!this.account && currentUserId !== null && this.account.ownerId === currentUserId;
+  }
+
+  public statusLabel(): string {
+    if (!this.account) return '';
+    const raw = (this.account as any).status ?? (this.account as any).accountStatus ?? '';
+    if (typeof raw !== 'string') return '';
+    const upper = raw.toUpperCase();
+    if (upper === 'ACTIVE' || upper === 'AKTIVAN' || upper === 'AKTIVNA') return 'Aktivan';
+    if (upper === 'INACTIVE' || upper === 'NEAKTIVAN' || upper === 'NEAKTIVNA' || upper === 'BLOCKED' || upper === 'BLOKIRAN') return 'Neaktivan';
+    return raw;
+  }
 
   public ngOnInit(): void {
     if (this.account?.accountNumber) {

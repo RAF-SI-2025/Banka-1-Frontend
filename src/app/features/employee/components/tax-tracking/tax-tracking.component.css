@@ -188,7 +188,7 @@
 
 .font-medium {
   font-weight: 500;
-  color: #111827;
+  color: var(--foreground);
 }
 
 .font-semibold {

@@ -4,17 +4,18 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { Account } from '../../models/account.model';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
 import { PaymentRecipient } from '../../models/account.model';
 import { ClientService, NewPaymentDto } from '../../services/client.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
+import { NotificationType } from '../../../../shared/models/notification.model';
 
 @Component({
   selector: 'app-new-payment',
   templateUrl: './new-payment.component.html',
   styleUrls: ['./new-payment.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
+  imports: [CommonModule, ReactiveFormsModule, VerificationModalComponent] // Uvozimo Navbar da bi stranica bila ista kao lista
 })
 export class NewPaymentComponent implements OnInit {
   public paymentForm!: FormGroup;
@@ -22,14 +23,38 @@ export class NewPaymentComponent implements OnInit {
   public isLoading = true;
   public showVerificationModal = false;
   public transactionSuccess = false;
+  public transactionError = '';
   public isNewRecipient = false;
-  public recipientSaved = false;    
-  public isSavingRecipient = false; 
+  public recipientSaved = false;
+  public isSavingRecipient = false;
+  public showLimitInfo = false;
+
+  public get selectedAccount(): Account | null {
+    const acctNum = this.paymentForm?.value?.senderAccount;
+    return this.myAccounts.find((a) => a.accountNumber === acctNum) ?? null;
+  }
+
+  public get remainingDailyLimit(): number {
+    const a = this.selectedAccount;
+    if (!a) return 0;
+    return Math.max(0, (a.dailyLimit ?? 0) - (a.dailySpending ?? 0));
+  }
+
+  public get remainingMonthlyLimit(): number {
+    const a = this.selectedAccount;
+    if (!a) return 0;
+    return Math.max(0, (a.monthlyLimit ?? 0) - (a.monthlySpending ?? 0));
+  }
+
+  public toggleLimitInfo(): void {
+    this.showLimitInfo = !this.showLimitInfo;
+  }
 
   constructor(
     private fb: FormBuilder,
     private accountService: AccountService,
     private clientService: ClientService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -100,6 +125,7 @@ export class NewPaymentComponent implements OnInit {
   }
 
   private executeTransaction(verificationSessionId: number): void {
+    this.transactionError = '';
     const form = this.paymentForm.value;
 
     const dto: NewPaymentDto = {
@@ -115,11 +141,32 @@ export class NewPaymentComponent implements OnInit {
 
     this.clientService.createPayment(dto).subscribe({
       next: () => {
+        this.notificationService.addNotification({
+          type: NotificationType.PAYMENT,
+          title: 'Plaćanje izvršeno',
+          message: `Plaćanje od ${this.formatAmount(dto.amount)} sa računa ${dto.fromAccountNumber} primacu ${dto.recipientName} je uspešno izvršeno.`,
+          data: { paymentDto: dto }
+        });
+        this.refreshAccountsSilently();
         this.checkIfNewRecipient(form.senderAccount, form.receiverAccount);
       },
-      error: () => {
-        this.checkIfNewRecipient(form.senderAccount, form.receiverAccount);
+      error: (err: any) => {
+        const e = err?.error;
+        if (e?.errorTitle && e?.errorDesc) {
+          this.transactionError = `${e.errorTitle}: ${e.errorDesc}`;
+        } else {
+          this.transactionError = e?.message || e?.error || 'Plaćanje nije uspelo. Pokušajte ponovo.';
+        }
       }
+    });
+  }
+
+  private refreshAccountsSilently(): void {
+    this.accountService.getMyAccounts().subscribe({
+      next: (accounts) => {
+        this.myAccounts = accounts.filter(acc => acc.status === 'ACTIVE');
+      },
+      error: () => {}
     });
   }
 
@@ -139,11 +186,25 @@ export class NewPaymentComponent implements OnInit {
 
   
   public saveToRecipients(): void {
+    if (this.isSavingRecipient || this.recipientSaved) {
+      return;
+    }
+    const name = (this.paymentForm.value.receiverName ?? '').toString().trim();
+    const accountNumber = (this.paymentForm.value.receiverAccount ?? '').toString().trim();
+    if (!name || !accountNumber) {
+      return;
+    }
     this.isSavingRecipient = true;
-    // TODO: dodati backend endpoint za cuvanje primaoca placanja
-    this.isSavingRecipient = false;
-    this.recipientSaved = true;
-    this.isNewRecipient = false;
+    this.clientService.createRecipient(name, accountNumber).subscribe({
+      next: () => {
+        this.isSavingRecipient = false;
+        this.recipientSaved = true;
+        this.isNewRecipient = false;
+      },
+      error: () => {
+        this.isSavingRecipient = false;
+      },
+    });
   }
 /**
    * Pokreće se klikom na dugme "Odustani" ili "Nazad na listu".

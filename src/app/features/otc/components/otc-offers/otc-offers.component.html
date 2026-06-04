@@ -1,0 +1,180 @@
+<div>
+  <!-- Bank filter -->
+  <div class="z-card p-4 mb-6">
+    <div class="flex items-center gap-4 flex-wrap">
+      <label class="z-label mb-0 whitespace-nowrap" for="otcFilterMode">Filter banke</label>
+      <select id="otcFilterMode"
+              class="z-select max-w-[220px]"
+              aria-label="Filter pregovora po banci"
+              data-testid="bank-filter"
+              [ngModel]="filterMode"
+              (ngModelChange)="setFilterMode($event)">
+        <option value="all">Svi pregovori</option>
+        <option value="local">Naša banka</option>
+        <option value="banka2">Banka 2</option>
+      </select>
+      <span class="text-xs text-muted-foreground">
+        Prikazano {{ visibleOffers.length }} od {{ offers.length }}
+      </span>
+    </div>
+  </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje pregovora..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <app-state *ngIf="visibleOffers.length === 0"
+               mode="empty" title="Nema aktivnih pregovora"
+               text="Ovde ce se pojaviti OTC pregovori u kojima ucestujete."></app-state>
+
+    <div *ngIf="visibleOffers.length > 0" class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Aktivni pregovori</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Prihvatanjem se kreira opcioni ugovor i naplacuje premium.</p>
+        </div>
+        <span class="z-badge z-badge-blue">{{ visibleOffers.length }} pregovora</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[1020px]">
+          <thead>
+            <tr>
+              <th>Akcija</th>
+              <th>Banka</th>
+              <th>Uloga</th>
+              <th class="text-right">Količina</th>
+              <th class="text-right">Cena/akciji</th>
+              <th class="text-right">Market</th>
+              <th class="text-right">Odstupanje</th>
+              <th class="text-right">Premium</th>
+              <th>Settlement</th>
+              <th>Status</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of visibleOffers"
+                [attr.data-testid]="o.interbank ? 'offer-row-interbank' : 'offer-row-local'">
+              <td class="font-semibold">{{ o.stockTicker }}</td>
+              <td>
+                <span *ngIf="o.interbank" class="z-badge z-badge-gold" data-testid="bank-badge-interbank">
+                  {{ o.counterpartyBankName || 'Banka 2' }}
+                </span>
+                <span *ngIf="!o.interbank" class="z-badge z-badge-gray" data-testid="bank-badge-local">
+                  Naša
+                </span>
+              </td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="myRoleIn(o) === 'Prodavac' ? 'z-badge-gold' : 'z-badge-blue'">
+                  {{ myRoleIn(o) }}
+                </span>
+              </td>
+              <td class="text-right font-mono">{{ o.amount | number }}</td>
+              <td class="text-right font-mono">{{ o.pricePerStock | number:'1.2-2' }}</td>
+              <td class="text-right font-mono">
+                {{ marketPriceFor(o.stockTicker) ? (marketPriceFor(o.stockTicker) | number:'1.2-2') : '—' }}
+              </td>
+              <td class="text-right font-mono font-semibold" [ngClass]="deviationClass(o)">
+                {{ deviationText(o) }}
+              </td>
+              <td class="text-right font-mono">{{ o.premium | number:'1.2-2' }}</td>
+              <td class="whitespace-nowrap">{{ formatSettlementDate(o.settlementDate) }}</td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="{
+                        'z-badge-green': o.status === 'ACCEPTED',
+                        'z-badge-yellow': o.status === 'PENDING_BUYER' || o.status === 'PENDING_SELLER',
+                        'z-badge-red': o.status === 'REJECTED' || o.status === 'EXPIRED'
+                      }">
+                  {{ canWithdraw(o) && !o.interbank ? 'Čekamo drugu stranu' : o.status }}
+                </span>
+              </td>
+              <td>
+                <div class="flex items-center justify-end gap-2 whitespace-nowrap">
+                  <!-- Respond actions (it's my turn) -->
+                  <ng-container *ngIf="canRespond(o) || o.interbank">
+                    <button *ngIf="canAccept(o)" type="button" class="z-btn-primary z-btn-sm" (click)="accept(o)">
+                      Prihvati
+                    </button>
+                    <button *ngIf="canCounter(o)" type="button" class="z-btn-secondary z-btn-sm" (click)="openCounterOffer(o)">
+                      Protivponuda
+                    </button>
+                    <button *ngIf="canReject(o)" type="button" class="z-btn-outline z-btn-sm" (click)="reject(o)">
+                      Odbij
+                    </button>
+                  </ng-container>
+
+                  <!-- Withdraw (waiting for other side) -->
+                  <button *ngIf="canWithdraw(o)" type="button" class="z-btn-outline z-btn-sm" (click)="withdraw(o)">
+                    Povuci
+                  </button>
+
+                  <span *ngIf="!canAccept(o) && !canCounter(o) && !canReject(o) && !canWithdraw(o)"
+                        class="text-xs text-muted-foreground italic">
+                    —
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Counter-offer modal -->
+<div *ngIf="counterOfferTarget" class="z-overlay" (click)="closeCounterOffer()">
+  <div class="z-modal w-full max-w-md" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div>
+        <h2 class="text-lg font-semibold">Protivponuda — {{ counterOfferTarget.stockTicker }}</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          <ng-container *ngIf="counterOfferTarget.interbank">
+            Cross-bank pregovor sa {{ counterOfferTarget.counterpartyBankName || 'Banka 2' }}.
+          </ng-container>
+          <ng-container *ngIf="!counterOfferTarget.interbank">
+            Modifikujte uslove i pošaljite protivponudu.
+          </ng-container>
+        </p>
+      </div>
+      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none"
+              (click)="closeCounterOffer()" aria-label="Zatvori">
+        <span>&times;</span>
+      </button>
+    </div>
+    <div class="z-modal-body space-y-4">
+      <div>
+        <label for="counterAmount" class="z-label">Količina akcija</label>
+        <input id="counterAmount" name="counterAmount" class="z-input" type="number" min="1"
+               placeholder="Broj akcija" [(ngModel)]="counterDraft.amount" />
+      </div>
+      <div>
+        <label for="counterPrice" class="z-label">Cena po akciji</label>
+        <input id="counterPrice" name="counterPrice" class="z-input" type="number" min="0.01" step="0.01"
+               placeholder="Cena po jednoj akciji" [(ngModel)]="counterDraft.pricePerStock" />
+      </div>
+      <div>
+        <label for="counterPremium" class="z-label">Premium</label>
+        <input id="counterPremium" name="counterPremium" class="z-input" type="number" min="0" step="0.01"
+               placeholder="Iznos premije" [(ngModel)]="counterDraft.premium" />
+      </div>
+      <div>
+        <label for="counterDate" class="z-label">Datum poravnanja</label>
+        <input id="counterDate" name="counterDate" class="z-input" type="date"
+               [(ngModel)]="counterDraft.settlementDate" />
+      </div>
+      <p *ngIf="counterError" class="z-error">{{ counterError }}</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="z-btn-outline" (click)="closeCounterOffer()" [disabled]="counterSubmitting">
+          Odustani
+        </button>
+        <button type="button" class="z-btn-primary" (click)="submitCounterOffer()" [disabled]="counterSubmitting">
+          {{ counterSubmitting ? 'Slanje...' : 'Pošalji protivponudu' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

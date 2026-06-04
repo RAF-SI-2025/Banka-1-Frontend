@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+
+  &__sidebar {
+    grid-column: 1;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  &__main {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__topbar {
+    flex-shrink: 0;
+  }
+
+  /* PR_31 hotfix: vise horizontalnog prostora po ekranu (1400 -> 1720) +
+     malo veci horizontalni padding (24 -> 32) za breathing room uz rubove.
+     Margine ostaju, samo se elementi prostiru sirim. */
+  &__content {
+    flex: 1;
+    padding: 24px 32px;
+    max-width: 1720px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+
+    &__sidebar {
+      display: none; /* off-canvas drawer trigger u topbar-u za <768px breakpoint */
+    }
+  }
+}

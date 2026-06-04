@@ -8,7 +8,11 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = `${environment.apiUrl}/employees/employees`;
+  // PR_19 C19.X: posle konsolidacije user-service-a, CrudController je na
+  // /employees (ne /employees/employees). Stari frontend je oslanjao na nginx
+  // strip /employees/ pa je dodavao jos jedan /employees prefix; sada je
+  // route flat.
+  private apiUrl = `${environment.apiUrl}/employees`;
 
   constructor(private http: HttpClient) {}
 

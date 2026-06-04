@@ -1,7 +1,5 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -21,13 +19,8 @@
       </button>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
-      <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-      <p class="mt-3 text-sm">Učitavanje kredita...</p>
-    </div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje kredita..."></app-state>
 
     <!-- Error State -->
     <div *ngIf="error && !isLoading" class="z-card p-8 text-center text-red-500 text-sm">

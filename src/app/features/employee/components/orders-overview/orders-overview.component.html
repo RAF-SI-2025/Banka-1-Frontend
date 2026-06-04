@@ -1,201 +1,175 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
-    <div class="orders-page">
-      <div class="page-header">
-        <div class="header-content">
-          <h1 class="page-title">Orders Overview</h1>
-          <p class="page-subtitle">
-            Review, approve, decline and cancel trading orders.
-          </p>
-        </div>
+<div>
+  <div>
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-foreground">Pregled ordera</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pregled, odobravanje, odbijanje i otkazivanje trading naloga.
+        </p>
       </div>
+    </div>
 
-      <div class="filters-card">
-        <button
-          *ngFor="let opt of filterOptions"
-          type="button"
-          class="filter-btn"
-          [class.active]="selectedFilter === opt.value"
-          (click)="setFilter(opt.value)"
-        >
+    <div class="z-card p-3 mb-6">
+      <div class="flex items-center gap-2 flex-wrap">
+        <button *ngFor="let opt of filterOptions"
+                type="button"
+                (click)="setFilter(opt.value)"
+                [class.z-btn-primary]="selectedFilter === opt.value"
+                [class.z-btn-ghost]="selectedFilter !== opt.value"
+                class="z-btn-sm">
           {{ opt.label }}
         </button>
       </div>
+    </div>
 
-      <div class="table-card">
-        <div *ngIf="isLoading" class="loading">Loading orders...</div>
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje naloga..."></app-state>
 
-        <div *ngIf="!isLoading" class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Order type</th>
-                <th>Asset type</th>
-                <th>Quantity</th>
-                <th>Contract size</th>
-                <th>Price per unit</th>
-                <th>Direction</th>
-                <th>Remaining portions</th>
-                <th>Status</th>
-                <th class="actions-header">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr *ngFor="let order of filteredOrders; trackBy: trackById">
-                <td class="agent-cell">{{ order.agent }}</td>
-                <td>{{ order.orderType }}</td>
-                <td>{{ order.assetType }}</td>
-                <td>{{ order.quantity }}</td>
-                <td>{{ order.contractSize }}</td>
-                <td>{{ order.pricePerUnit | number: "1.2-2" }}</td>
-                <td>
-                  <span
-                    class="direction"
-                    [class.buy]="order.direction === 'BUY'"
-                    [class.sell]="order.direction === 'SELL'"
-                  >
-                    {{ order.direction }}
-                  </span>
-                </td>
-                <td>{{ order.remainingPortions }}</td>
-                <td>
-                  <span class="status" [ngClass]="order.status.toLowerCase()">
-                    {{ statusLabel(order.status) }}
-                  </span>
-                </td>
-                <td class="actions">
-                  <button
-                    *ngIf="canApprove(order)"
-                    type="button"
-                    class="action-btn approve"
-                    (click)="approveOrder(order)"
-                  >
+    <section *ngIf="!isLoading" class="z-card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[980px]">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Order type</th>
+              <th>Asset type</th>
+              <th class="text-right">Quantity</th>
+              <th class="text-right">Contract size</th>
+              <th class="text-right">Price/unit</th>
+              <th>Direction</th>
+              <th class="text-right">Remaining</th>
+              <th>Status</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of filteredOrders; trackBy: trackById">
+              <td class="font-medium">{{ order.agent }}</td>
+              <td>{{ order.orderType }}</td>
+              <td>{{ order.assetType }}</td>
+              <td class="text-right font-mono">{{ order.quantity }}</td>
+              <td class="text-right font-mono">{{ order.contractSize }}</td>
+              <td class="text-right font-mono">{{ order.pricePerUnit | number:'1.2-2' }}</td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="order.direction === 'BUY' ? 'z-badge-green' : 'z-badge-blue'">
+                  {{ order.direction }}
+                </span>
+              </td>
+              <td class="text-right font-mono">{{ order.remainingPortions }}</td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="{
+                        'z-badge-yellow': order.status === 'PENDING',
+                        'z-badge-green': order.status === 'APPROVED' || order.status === 'DONE',
+                        'z-badge-red': order.status === 'DECLINED',
+                        'z-badge-gray': order.status === 'CANCELLED'
+                      }">
+                  {{ statusLabel(order.status) }}
+                </span>
+              </td>
+              <td>
+                <div *ngIf="canApprove(order) || canDecline(order) || canCancel(order); else noAct"
+                     class="flex items-center justify-end gap-2">
+                  <button *ngIf="canApprove(order)" type="button" class="z-btn-primary z-btn-sm"
+                          (click)="approveOrder(order)">
                     Approve
                   </button>
-
-                  <button
-                    *ngIf="canDecline(order)"
-                    type="button"
-                    class="action-btn decline"
-                    (click)="declineOrder(order)"
-                  >
+                  <button *ngIf="canDecline(order)" type="button" class="z-btn-destructive z-btn-sm"
+                          (click)="declineOrder(order)">
                     Decline
                   </button>
-
-                  <button
-                    *ngIf="canCancel(order)"
-                    type="button"
-                    class="action-btn cancel"
-                    data-cy="cancel-order-btn"
-                    (click)="openCancelDialog(order)"
-                  >
+                  <button *ngIf="canCancel(order)" type="button" class="z-btn-outline z-btn-sm"
+                          data-cy="cancel-order-btn"
+                          (click)="openCancelDialog(order)">
                     Cancel
                   </button>
+                </div>
+                <ng-template #noAct>
+                  <span class="text-xs text-muted-foreground block text-right">—</span>
+                </ng-template>
+              </td>
+            </tr>
+            <tr *ngIf="filteredOrders.length === 0">
+              <td colspan="10" class="text-center py-10 text-sm text-muted-foreground">
+                Nema naloga za izabrani filter.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-                  <span
-                    *ngIf="
-                      !canApprove(order) && !canDecline(order) && !canCancel(order)
-                    "
-                    class="no-action"
-                  >
-                    —
-                  </span>
-                </td>
-              </tr>
-
-              <tr *ngIf="filteredOrders.length === 0">
-                <td colspan="10" class="empty">
-                  No orders found for selected filter.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div
-            *ngIf="!isLoading && totalElements > 0"
-            class="pagination-bar"
-            role="navigation"
-            aria-label="Order list pagination"
-          >
-            <span class="pagination-info">
-              Showing
-              {{ currentPage * pageSize + 1 }}–{{
-                (currentPage + 1) * pageSize > totalElements
-                  ? totalElements
-                  : (currentPage + 1) * pageSize
-              }}
-              of {{ totalElements }}
-            </span>
-            <div class="pagination-actions">
-              <button
-                type="button"
-                class="pagination-btn"
-                [disabled]="currentPage <= 0"
-                (click)="goToPage(currentPage - 1)"
-              >
-                Previous
-              </button>
-              <span class="pagination-page"
-                >Page {{ currentPage + 1 }} / {{ totalPages || 1 }}</span
-              >
-              <button
-                type="button"
-                class="pagination-btn"
-                [disabled]="totalPages <= 0 || currentPage >= totalPages - 1"
-                (click)="goToPage(currentPage + 1)"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+      <div *ngIf="!isLoading && totalElements > 0"
+           class="flex items-center justify-between px-5 py-4 border-t border-border gap-3 flex-wrap"
+           role="navigation"
+           aria-label="Order list pagination">
+        <span class="text-sm text-muted-foreground">
+          Prikazano {{ currentPage * pageSize + 1 }}–{{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }}
+          od {{ totalElements }}
+        </span>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  class="z-btn-outline z-btn-sm"
+                  [disabled]="currentPage <= 0"
+                  (click)="goToPage(currentPage - 1)">
+            ‹ Prethodna
+          </button>
+          <span class="text-sm text-foreground font-medium px-2">
+            {{ currentPage + 1 }} / {{ totalPages || 1 }}
+          </span>
+          <button type="button"
+                  class="z-btn-outline z-btn-sm"
+                  [disabled]="totalPages <= 0 || currentPage >= totalPages - 1"
+                  (click)="goToPage(currentPage + 1)">
+            Sledeca ›
+          </button>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </div>
 
-<div
-  *ngIf="cancelTarget"
-  class="cancel-dialog-overlay"
-  role="presentation"
-  (click)="closeCancelDialog()"
->
-  <div
-    class="cancel-dialog"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="cancel-dialog-title"
-    (click)="$event.stopPropagation()"
-  >
-    <h2 id="cancel-dialog-title" class="cancel-dialog-title">Cancel order</h2>
-    <p class="cancel-dialog-text">
-      Remaining portions: <strong>{{ cancelTarget.remainingPortions }}</strong>.
-      Leave empty to cancel the entire remaining amount, or enter how many
-      portions to cancel.
-    </p>
-    <label class="cancel-dialog-label" for="cancel-qty-input"
-      >Portions to cancel (optional)</label
-    >
-    <input
-      id="cancel-qty-input"
-      type="number"
-      class="cancel-dialog-input"
-      min="1"
-      [max]="cancelTarget.remainingPortions"
-      [(ngModel)]="cancelQuantityInput"
-      [attr.placeholder]="'1 – ' + cancelTarget.remainingPortions"
-    />
-    <div class="cancel-dialog-actions">
-      <button type="button" class="btn-secondary" (click)="closeCancelDialog()">
-        Close
+<div *ngIf="cancelTarget"
+     class="z-overlay"
+     role="presentation"
+     (click)="closeCancelDialog()">
+  <div class="z-modal"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="cancel-dialog-title"
+       (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <h2 id="cancel-dialog-title" class="text-lg font-bold text-foreground">Otkazivanje naloga</h2>
+      <button type="button"
+              class="z-btn-icon"
+              aria-label="Zatvori dijalog"
+              title="Zatvori"
+              (click)="closeCancelDialog()">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
-      <button type="button" class="btn-primary" (click)="confirmCancel()">
-        Confirm cancel
-      </button>
+    </div>
+    <div class="z-modal-body space-y-4">
+      <p class="text-sm text-muted-foreground">
+        Preostalo delova: <strong class="text-foreground font-mono">{{ cancelTarget.remainingPortions }}</strong>.
+        Ostavi prazno za otkazivanje cele kolicine, ili unesi koliko delova otkazati.
+      </p>
+      <div>
+        <label for="cancel-qty-input" class="z-label">Broj delova za otkazivanje (opciono)</label>
+        <input id="cancel-qty-input"
+               type="number"
+               class="z-input font-mono"
+               min="1"
+               [max]="cancelTarget.remainingPortions"
+               [(ngModel)]="cancelQuantityInput"
+               [attr.placeholder]="'1 – ' + cancelTarget.remainingPortions" />
+      </div>
+    </div>
+    <div class="z-modal-footer">
+      <button type="button" class="z-btn-outline" (click)="closeCancelDialog()">Zatvori</button>
+      <button type="button" class="z-btn-destructive" (click)="confirmCancel()">Potvrdi otkazivanje</button>
     </div>
   </div>
 </div>

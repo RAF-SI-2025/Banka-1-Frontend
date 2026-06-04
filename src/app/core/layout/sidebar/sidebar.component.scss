@@ -1,0 +1,15 @@
+:host { display: block; height: 100%; }
+
+/* PR_31 hotfix: sakrij scrollbar u sidebar-u — ne uklapa se sa dark glass paletom.
+   Scroll-funkcionalnost ostaje, samo se ne crta default browser scrollbar.
+   Pattern radi u Chrome/Edge/Safari (WebKit), Firefox i legacy Edge/IE. */
+aside {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+aside::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

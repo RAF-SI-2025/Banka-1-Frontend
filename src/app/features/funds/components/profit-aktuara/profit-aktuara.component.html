@@ -1,0 +1,42 @@
+<div>
+<div>
+  <h1 class="text-2xl font-bold text-foreground mb-2">Profit aktuara</h1>
+  <p class="text-sm text-muted-foreground mb-5">
+    Suma komisija sa izvrsenih transakcija po aktuaru. Vise prometa = vise zarade za banku.
+  </p>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje profit metrika..."></app-state>
+  <app-state *ngIf="error" mode="error" [text]="error"></app-state>
+
+  <div *ngIf="!loading && !error && rows.length > 0" class="z-card overflow-hidden">
+    <table class="z-table">
+      <thead>
+        <tr>
+          <th class="text-left">Aktuar</th>
+          <th class="text-left">Pozicija</th>
+          <th class="text-right">Broj transakcija</th>
+          <th class="text-right">Total komisija (RSD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows">
+          <td class="font-medium">{{ r.displayName }}</td>
+          <td>
+            <span *ngIf="r.pozicija" class="z-badge z-badge-gray">{{ r.pozicija }}</span>
+            <span *ngIf="!r.pozicija" class="text-muted-foreground">—</span>
+          </td>
+          <td class="text-right font-mono">{{ r.transactionCount }}</td>
+          <td class="text-right font-mono text-success font-semibold">
+            {{ r.totalCommission | number:'1.2-2' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <app-state *ngIf="!loading && !error && rows.length === 0"
+             mode="empty" icon="gauge" title="Nema podataka"
+             text="Nema izvrsenih transakcija u zadatom intervalu.">
+  </app-state>
+</div>
+</div>

@@ -2,8 +2,8 @@
   <div class="z-modal w-full max-w-xl" (click)="$event.stopPropagation()">
     <div class="z-modal-header">
       <h2 class="text-lg font-semibold">Izmeni zaposlenog</h2>
-      <button type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none" (click)="onCancel()" aria-label="Close modal">
-        <span>&times;</span>
+      <button type="button" class="z-btn-icon" (click)="onCancel()" aria-label="Close modal">
+        <span class="text-xl leading-none">&times;</span>
       </button>
     </div>
 
@@ -11,14 +11,14 @@
       <div class="z-modal-body space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="z-label">Ime <span class="text-red-500">*</span></label>
+            <label class="z-label">Ime <span class="text-destructive">*</span></label>
             <input type="text" class="z-input" formControlName="ime" placeholder="Ime" />
             <p class="z-error" *ngIf="editForm.get('ime')?.invalid && editForm.get('ime')?.touched">
               Obavezno (min 2 karaktera).
             </p>
           </div>
           <div>
-            <label class="z-label">Prezime <span class="text-red-500">*</span></label>
+            <label class="z-label">Prezime <span class="text-destructive">*</span></label>
             <input type="text" class="z-input" formControlName="prezime" placeholder="Prezime" />
             <p class="z-error" *ngIf="editForm.get('prezime')?.invalid && editForm.get('prezime')?.touched">
               Obavezno (min 2 karaktera).
@@ -28,7 +28,7 @@
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="z-label">Broj telefona <span class="text-red-500">*</span></label>
+            <label class="z-label">Broj telefona <span class="text-destructive">*</span></label>
             <input type="text" class="z-input" formControlName="brojTelefona" placeholder="+381..." />
             <p class="z-error" *ngIf="editForm.get('brojTelefona')?.invalid && editForm.get('brojTelefona')?.touched">
               Broj telefona je obavezan.

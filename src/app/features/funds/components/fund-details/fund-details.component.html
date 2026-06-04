@@ -1,0 +1,340 @@
+<div>
+  <div>
+    <div class="mb-6">
+      <a (click)="router.navigate(['/funds'])"
+         class="inline-flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer">
+        <span aria-hidden="true">←</span> Nazad na sve fondove
+      </a>
+    </div>
+
+    <app-state *ngIf="loading" mode="loading" text="Ucitavanje fonda..."></app-state>
+    <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+    <ng-container *ngIf="fund && !loading">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-foreground">{{ fund.naziv }}</h1>
+        <p class="text-sm text-muted-foreground mt-2 max-w-3xl">{{ fund.opis || 'Bez opisa.' }}</p>
+      </header>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="z-stat-card">
+          <span class="z-stat-label">Likvidna sredstva</span>
+          <span class="z-stat-value">{{ fund.likvidnaSredstva | number:'1.0-2' }}</span>
+          <p class="z-stat-hint">RSD spreman za isplatu</p>
+        </div>
+        <div class="z-stat-card">
+          <span class="z-stat-label">Ukupna vrednost</span>
+          <span class="z-stat-value">{{ fund.totalValue | number:'1.0-2' }}</span>
+          <p class="z-stat-hint">RSD (hartije + likvidno)</p>
+        </div>
+        <div class="z-stat-card">
+          <span class="z-stat-label">Profit</span>
+          <span class="z-stat-value"
+                [class.text-success]="fund.profit > 0"
+                [class.text-destructive]="fund.profit < 0">
+            {{ fund.profit >= 0 ? '+' : '' }}{{ fund.profit | number:'1.0-2' }}
+          </span>
+          <p class="z-stat-hint">RSD od kreiranja</p>
+        </div>
+      </section>
+
+      <section class="z-card p-5 mb-6">
+        <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+          <h2 class="text-lg font-semibold text-foreground">Performanse fonda</h2>
+          <div class="flex items-center gap-1 bg-muted p-1 rounded-md">
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '1M'" 
+                    [class.shadow-sm]="selectedPeriod === '1M'" 
+                    (click)="setPeriod('1M')">1M</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '3M'" 
+                    [class.shadow-sm]="selectedPeriod === '3M'" 
+                    (click)="setPeriod('3M')">3M</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === '1Y'" 
+                    [class.shadow-sm]="selectedPeriod === '1Y'" 
+                    (click)="setPeriod('1Y')">1Y</button>
+            <button class="px-3 py-1 text-xs font-medium rounded-sm transition-colors" 
+                    [class.bg-background]="selectedPeriod === 'ALL'" 
+                    [class.shadow-sm]="selectedPeriod === 'ALL'" 
+                    (click)="setPeriod('ALL')">ALL</button>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-white uppercase mb-2">Istorijska vrednost</p>
+            <div #historyChart></div>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-white uppercase mb-2">Uporedni prinos</p>
+            <div #comparisonChart></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="z-card p-5 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Detalji i metrike fonda</p>
+        <dl class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-sm">
+          <div>
+            <dt class="text-muted-foreground">Min. ulog</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ fund.minimumContribution | number:'1.0-2' }} RSD</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Datum kreiranja</dt>
+            <dd class="font-medium text-foreground mt-0.5">{{ fund.datumKreiranja }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Menadzer</dt>
+            <dd class="font-medium text-foreground mt-0.5">
+              {{ (fund.managerIme || '') + ' ' + (fund.managerPrezime || '') || ('ID #' + fund.managerId) }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Broj racuna</dt>
+            <dd class="font-mono text-xs text-foreground mt-0.5">{{ fund.accountNumber }}</dd>
+          </div>
+
+          <div>
+            <dt class="text-muted-foreground">God. prinos</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.annualYield !== null && fund.annualYield !== undefined; else noData">
+                {{ fund.annualYield | number:'1.0-2' }}%
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Volatilnost</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.volatility !== null && fund.volatility !== undefined; else noData">
+                {{ fund.volatility | number:'1.0-2' }}
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">R/V Ratio</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.rewardToVariabilityRatio !== null && fund.rewardToVariabilityRatio !== undefined; else noData">
+                {{ fund.rewardToVariabilityRatio | number:'1.0-2' }}
+              </ng-container>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Max Drawdown</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">
+              <ng-container *ngIf="fund.maxDrawdown !== null && fund.maxDrawdown !== undefined; else noData">
+                {{ fund.maxDrawdown | number:'1.0-2' }}%
+              </ng-container>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section *ngIf="isClient && myPosition" class="z-card p-5 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3">Moja pozicija</p>
+        <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <dt class="text-muted-foreground">Ulozeno</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ myPosition.totalInvested | number:'1.2-2' }} RSD</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Tren. vrednost</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ myPosition.currentPositionValue | number:'1.2-2' }} RSD</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Moj profit</dt>
+            <dd class="font-mono font-semibold mt-0.5"
+                [class.text-success]="myPosition.clientProfit > 0"
+                [class.text-destructive]="myPosition.clientProfit < 0">
+              {{ myPosition.clientProfit >= 0 ? '+' : '' }}{{ myPosition.clientProfit | number:'1.2-2' }} RSD
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">% udeo</dt>
+            <dd class="mt-0.5"><span class="z-badge z-badge-blue">{{ (myPosition.percentageOfFund * 100) | number:'1.2-2' }}%</span></dd>
+          </div>
+        </dl>
+      </section>
+
+      <div *ngIf="isClient" class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+        <section class="z-card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-green">Uplata</span>
+            <h2 class="text-lg font-bold text-foreground">Investiraj u fond</h2>
+          </div>
+          <form [formGroup]="investForm" (ngSubmit)="onInvest()" class="space-y-4">
+            <div>
+              <label for="invest-amount" class="z-label">Iznos (RSD)</label>
+              <input id="invest-amount" type="number" step="0.01"
+                     formControlName="amount" class="z-input font-mono" placeholder="0.00" />
+              <p class="text-xs text-muted-foreground mt-1.5">
+                Min. ulog: {{ fund.minimumContribution | number:'1.0-2' }} RSD
+              </p>
+            </div>
+            <div>
+              <label for="invest-account" class="z-label">Sa tekuceg racuna</label>
+              <select id="invest-account" formControlName="fromAccountNumber" class="z-select">
+                <option value="" disabled>Izaberite racun</option>
+                <option *ngFor="let a of clientAccounts" [value]="a.accountNumber">
+                  {{ a.name || a.accountNumber }} — {{ a.availableBalance | number:'1.2-2' }} RSD
+                </option>
+              </select>
+            </div>
+            <button type="submit" class="z-btn-primary w-full" [disabled]="investForm.invalid">
+              Investiraj
+            </button>
+          </form>
+        </section>
+
+        <section class="z-card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="z-badge z-badge-yellow">Isplata</span>
+            <h2 class="text-lg font-bold text-foreground">Povuci sredstva</h2>
+          </div>
+          <form [formGroup]="redeemForm" (ngSubmit)="onRedeem()" class="space-y-4">
+            <div>
+              <label for="redeem-amount" class="z-label">Iznos (RSD)</label>
+              <input id="redeem-amount" type="number" step="0.01"
+                     formControlName="amount" class="z-input font-mono" placeholder="0.00" />
+              <p *ngIf="myPosition" class="text-xs text-muted-foreground mt-1.5">
+                Max: {{ myPosition.currentPositionValue | number:'1.2-2' }} RSD
+              </p>
+            </div>
+            <div>
+              <label for="redeem-account" class="z-label">Na tekuci racun</label>
+              <select id="redeem-account" formControlName="toAccountNumber" class="z-select">
+                <option value="" disabled>Izaberite racun</option>
+                <option *ngFor="let a of clientAccounts" [value]="a.accountNumber">
+                  {{ a.name || a.accountNumber }} — {{ a.availableBalance | number:'1.2-2' }} {{ a.currency }}
+                </option>
+              </select>
+            </div>
+            <button type="submit" class="z-btn-secondary w-full" [disabled]="redeemForm.invalid">
+              Povuci sredstva
+            </button>
+            <p class="text-xs text-muted-foreground mt-1">
+              Ako fond nema dovoljno likvidnih sredstava, hartije ce biti automatski likvidirane i isplata ce stici u kratkom roku.
+            </p>
+            <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+              Napomena: Isplate na racune u stranoj valuti podlezu konverziji iz RSD i bice naplacena provizija za konverziju.
+            </p>
+          </form>
+        </section>
+      </div>
+
+      <section class="z-card overflow-hidden mb-6">
+        <div class="p-4 border-b border-border">
+          <h2 class="text-base font-semibold text-foreground">Hartije fonda</h2>
+        </div>
+        <div *ngIf="securities.length > 0; else noSecurities">
+          <table class="z-table">
+            <thead>
+              <tr>
+                <th class="text-left">Ticker</th>
+                <th class="text-right">Kolicina</th>
+                <th class="text-right">Pros. cena</th>
+                <th class="text-right">Cena</th>
+                <th class="text-right">Promena</th>
+                <th class="text-right">Volumen</th>
+                <th class="text-right">Init. margin</th>
+                <th class="text-left">Datum nabavke</th>
+                <th *ngIf="isSupervisor"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of securities">
+                <td class="font-mono font-semibold">{{ h.ticker }}</td>
+                <td class="text-right font-mono">{{ h.quantity }}</td>
+                <td class="text-right font-mono">{{ h.avgUnitPrice | number:'1.2-4' }}</td>
+                <td class="text-right font-mono">{{ h.price != null ? (h.price | number:'1.2-4') : '—' }}</td>
+                <td class="text-right font-mono"
+                    [class.text-success]="h.change != null && h.change > 0"
+                    [class.text-destructive]="h.change != null && h.change < 0">
+                  {{ h.change != null ? ((h.change >= 0 ? '+' : '') + (h.change | number:'1.2-2') + '%') : '—' }}
+                </td>
+                <td class="text-right font-mono">{{ h.volume != null ? (h.volume | number:'1.0-0') : '—' }}</td>
+                <td class="text-right font-mono">{{ h.initialMarginCost | number:'1.0-2' }}</td>
+                <td class="text-muted-foreground text-sm">{{ h.acquisitionDate | date:'shortDate' }}</td>
+                <td *ngIf="isSupervisor" class="text-right">
+                  <button class="z-btn-danger-sm" (click)="openSell(h)">Prodaj</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noSecurities>
+          <div class="p-6 text-sm text-muted-foreground text-center">
+            Fond jos uvek nema hartija od vrednosti.
+          </div>
+        </ng-template>
+      </section>
+
+      <div *ngIf="sellTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="z-card p-6 w-full max-w-sm space-y-4">
+          <h3 class="text-lg font-bold text-foreground">Prodaj hartiju — {{ sellTarget.ticker }}</h3>
+          <p class="text-sm text-muted-foreground">
+            Dostupna kolicina: <strong>{{ sellTarget.quantity }}</strong>
+          </p>
+          <div>
+            <label class="z-label">Kolicina za prodaju</label>
+            <input type="number" min="1" [max]="sellTarget.quantity" [(ngModel)]="sellQuantity"
+                   class="z-input font-mono" />
+          </div>
+          <p *ngIf="sellError" class="text-sm text-destructive">{{ sellError }}</p>
+          <div class="flex gap-3 justify-end">
+            <button class="z-btn-outline" (click)="closeSell()">Otkazi</button>
+            <button class="z-btn-danger" (click)="confirmSell()"
+                    [disabled]="!sellQuantity || sellQuantity < 1 || sellQuantity > sellTarget.quantity">
+              Potvrdi prodaju
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section *ngIf="isSupervisor" class="z-card overflow-hidden mb-6">
+        <div class="p-4 border-b border-border">
+          <h2 class="text-base font-semibold text-foreground">Sve pozicije investitora</h2>
+        </div>
+        <div *ngIf="positions.length > 0">
+          <table class="z-table">
+            <thead>
+              <tr>
+                <th class="text-left">Investitor</th>
+                <th class="text-right">Ulozeno</th>
+                <th class="text-right">Tren. vrednost</th>
+                <th class="text-right">Profit</th>
+                <th class="text-right">% udeo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of positions">
+                <td class="font-medium">
+                  <span *ngIf="p.clientId === -1" class="z-badge z-badge-blue">BANKA</span>
+                  <span *ngIf="p.clientId !== -1">Klijent #{{ p.clientId }}</span>
+                </td>
+                <td class="text-right font-mono">{{ p.totalInvested | number:'1.2-2' }} RSD</td>
+                <td class="text-right font-mono">{{ p.currentPositionValue | number:'1.2-2' }} RSD</td>
+                <td class="text-right font-mono"
+                    [class.text-success]="p.clientProfit > 0"
+                    [class.text-destructive]="p.clientProfit < 0">
+                  {{ p.clientProfit >= 0 ? '+' : '' }}{{ p.clientProfit | number:'1.2-2' }} RSD
+                </td>
+                <td class="text-right">
+                  <span class="z-badge z-badge-blue">{{ (p.percentageOfFund * 100) | number:'1.2-2' }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="positions.length === 0" class="p-6 text-sm text-muted-foreground text-center">
+          Nema investitora u ovom fondu.
+        </div>
+      </section>
+    </ng-container>
+
+    <ng-template #noData>
+      <span class="text-[11px] italic text-muted-foreground font-sans">Nedovoljno podataka</span>
+    </ng-template>
+
+  </div>
+</div>

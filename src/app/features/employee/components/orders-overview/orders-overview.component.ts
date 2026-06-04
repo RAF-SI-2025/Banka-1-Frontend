@@ -8,6 +8,8 @@ import {
   resolveOrderExpiryDate,
 } from '../../services/order.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
+import { NotificationType } from '../../../../shared/models/notification.model';
 
 interface TradingOrder {
   id: number;
@@ -31,6 +33,7 @@ interface TradingOrder {
 })
 export class OrdersOverviewComponent implements OnInit {
   orders: TradingOrder[] = [];
+  previousOrders: Map<number, TradingOrder> = new Map();
   selectedFilter: OrderFilter = 'PENDING';
   readonly filterOptions: { value: OrderFilter; label: string }[] = [
     { value: 'ALL', label: 'All' },
@@ -54,6 +57,7 @@ export class OrdersOverviewComponent implements OnInit {
   constructor(
     private orderService: OrderService,
     private toastService: ToastService,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +84,8 @@ export class OrdersOverviewComponent implements OnInit {
           }
           this.totalElements = response.totalElements ?? 0;
           this.totalPages = pages;
-          this.orders = (response.content ?? []).map((order) => ({
+          
+          const newOrders = (response.content ?? []).map((order) => ({
             id: order.orderId,
             agent: order.agentName,
             orderType: order.orderType,
@@ -94,6 +99,27 @@ export class OrdersOverviewComponent implements OnInit {
             isDone: order.status === 'DONE',
             settlementDate: resolveOrderExpiryDate(order),
           }));
+          
+          // Detect status changes and send notifications
+          newOrders.forEach(newOrder => {
+            const oldOrder = this.previousOrders.get(newOrder.id);
+            
+            // Order completed notification
+            if (oldOrder && !oldOrder.isDone && newOrder.isDone) {
+              this.notificationService.addNotification({
+                type: NotificationType.ORDER_COMPLETED,
+                title: 'Order u potpunosti izvršen',
+                message: `Order ID ${newOrder.id} za ${newOrder.quantity} ${newOrder.assetType} je u potpunosti izvršen.`,
+                data: { order: newOrder }
+              });
+            }
+          });
+          
+          // Update previous orders map for next comparison
+          this.previousOrders.clear();
+          newOrders.forEach(order => this.previousOrders.set(order.id, order));
+          
+          this.orders = newOrders;
         },
         error: () => {
           this.orders = [];
@@ -138,6 +164,14 @@ export class OrdersOverviewComponent implements OnInit {
       .pipe(finalize(() => (this.actionOrderId = null)))
       .subscribe({
         next: () => {
+          // Add notification
+          this.notificationService.addNotification({
+            type: NotificationType.ORDER_APPROVED,
+            title: 'Order odobren',
+            message: `Order ID ${order.id} za ${order.quantity} ${order.assetType} ${order.direction === 'BUY' ? 'kupovni' : 'prodajni'} je odobren.`,
+            data: { order: order }
+          });
+          
           this.toastService.success(`Order ${order.id} approved successfully.`);
           this.loadOrders();
         },
@@ -152,6 +186,14 @@ export class OrdersOverviewComponent implements OnInit {
       .pipe(finalize(() => (this.actionOrderId = null)))
       .subscribe({
         next: () => {
+          // Add notification
+          this.notificationService.addNotification({
+            type: NotificationType.ORDER_REJECTED,
+            title: 'Order odbijen',
+            message: `Order ID ${order.id} za ${order.quantity} ${order.assetType} je odbijen.`,
+            data: { order: order }
+          });
+          
           this.toastService.success(`Order ${order.id} declined successfully.`);
           this.loadOrders();
         },
@@ -174,7 +216,7 @@ export class OrdersOverviewComponent implements OnInit {
       return;
     }
     const order = this.cancelTarget;
-    const raw = this.cancelQuantityInput.trim();
+    const raw = String(this.cancelQuantityInput ?? '').trim();
     let quantity: number | undefined;
 
     if (raw !== '') {
@@ -194,6 +236,23 @@ export class OrdersOverviewComponent implements OnInit {
       .pipe(finalize(() => (this.actionOrderId = null)))
       .subscribe({
         next: () => {
+          // Determine if it's a partial fill or full cancellation
+          const isPartialFill = quantity && quantity < order.remainingPortions;
+          const notificationType = isPartialFill ? NotificationType.ORDER_PARTIAL_FILL : NotificationType.ORDER_CANCELLED;
+          
+          const title = isPartialFill ? 'Order delimično izvršen' : 'Order otkazan';
+          const message = isPartialFill 
+            ? `Order ID ${order.id} je delimično izvršen. Izvršeno je ${quantity} jedinica od ukupno ${order.remainingPortions}.`
+            : `Order ID ${order.id} je uspešno otkazan.`;
+          
+          // Add notification
+          this.notificationService.addNotification({
+            type: notificationType,
+            title: title,
+            message: message,
+            data: { order: order, cancelledQuantity: quantity }
+          });
+          
           this.closeCancelDialog();
           this.toastService.success(`Order ${order.id} canceled successfully.`);
           this.loadOrders();

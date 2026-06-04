@@ -43,6 +43,7 @@ export interface Stock extends Security {
   outstandingShares?: number;
   contractSize?: number;
   priceHistory?: PricePoint[];
+  optionGroups?: any[];
 }
 
 /**

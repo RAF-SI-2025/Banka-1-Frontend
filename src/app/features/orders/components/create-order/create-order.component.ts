@@ -2,20 +2,24 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { SecuritiesService } from '../../../securities/services/securities.service';
 import { Security } from '../../../securities/models/security.model';
 import { Account } from '../../../client/models/account.model';
 import { AccountService } from '../../../client/services/account.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
+import { NotificationType } from '../../../../shared/models/notification.model';
 import { OrderService } from '../../services/order.service';
-import { OrderDirection, OrderResponse, OrderType } from '../../models/order.model';
+import { OrderDirection, OrderResponse, OrderType, PurchaseFor } from '../../models/order.model';
+import { PortfolioService } from '../../../client/services/portfolio.service';
+import { FundService } from '../../../funds/services/fund.service';
+import { InvestmentFund } from '../../../funds/models/fund.model';
 
 @Component({
   selector: 'app-create-order',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './create-order.component.html',
   styleUrls: ['./create-order.component.scss'],
 })
@@ -39,6 +43,16 @@ export class CreateOrderComponent implements OnInit {
   draftOrder: OrderResponse | null = null;
   showConfirmation = false;
 
+  /** Spec Sc 37: korisnik ne moze prodati vise nego sto poseduje. 0 = ucitavanje. */
+  public maxSellQuantity = 0;
+
+  isSupervisor = false;
+  purchaseFor: PurchaseFor = 'BANK';
+  supervisedFunds: InvestmentFund[] = [];
+  selectedFundId: number | null = null;
+  isResolvingFundAccount = false;
+  fundAccountError: string | null = null;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -47,13 +61,137 @@ export class CreateOrderComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly orderService: OrderService,
     private readonly toastService: ToastService,
+    private readonly portfolioService: PortfolioService,
+    private readonly fundService: FundService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   ngOnInit(): void {
     this.direction = this.route.snapshot.paramMap.get('direction') as OrderDirection;
     this.listingId = Number(this.route.snapshot.paramMap.get('listingId'));
+    this.isSupervisor = this.authService.hasPermission('FUND_AGENT_MANAGE');
 
     this.loadSecurity();
+
+    if (this.direction === 'SELL') {
+      this.loadSellableQuantity();
+    }
+    if (this.isSupervisor && this.direction === 'BUY') {
+      this.loadSupervisedFunds();
+    }
+  }
+
+  private loadSupervisedFunds(): void {
+    this.fundService.supervised().subscribe({
+      next: funds => { this.supervisedFunds = funds; },
+      error: () => {},
+    });
+  }
+
+  onPurchaseForChange(): void {
+    this.selectedFundId = null;
+    this.selectedAccountId = null;
+    this.fundAccountError = null;
+    this.isResolvingFundAccount = false;
+    if (this.purchaseFor === 'BANK') {
+      this.accounts = [];
+      this.loadBankAccount();
+    } else {
+      this.allOrNone = true;
+    }
+  }
+
+  onFundChange(): void {
+    const fund = this.supervisedFunds.find(f => f.id === this.selectedFundId);
+    this.selectedAccountId = null;
+    this.fundAccountError = null;
+
+    if (!fund) return;
+
+    const accountId = this.validAccountId(fund.accountId);
+    if (accountId) {
+      this.selectedAccountId = accountId;
+      return;
+    }
+
+    this.isResolvingFundAccount = true;
+    this.fundService.details(fund.id).subscribe({
+      next: detailedFund => {
+        Object.assign(fund, detailedFund);
+        const detailedAccountId = this.validAccountId(detailedFund.accountId);
+        if (detailedAccountId) {
+          this.selectedAccountId = detailedAccountId;
+          fund.accountId = detailedAccountId;
+          this.isResolvingFundAccount = false;
+          return;
+        }
+        this.resolveFundAccountFromNumber(fund);
+      },
+      error: () => {
+        this.resolveFundAccountFromNumber(fund);
+      },
+    });
+  }
+
+  private resolveFundAccountFromNumber(fund: InvestmentFund): void {
+    if (!fund.accountNumber) {
+      this.fundAccountError = 'Fond nema povezan RSD račun.';
+      this.isResolvingFundAccount = false;
+      return;
+    }
+
+    this.accountService.getEmployeeAccountByNumber(fund.accountNumber).subscribe({
+      next: account => {
+        const accountId = this.validAccountId(account.id);
+        if (!accountId) {
+          this.selectedAccountId = null;
+          this.fundAccountError = 'Račun fonda je pronađen, ali backend nije vratio accountId.';
+          this.isResolvingFundAccount = false;
+          return;
+        }
+        this.selectedAccountId = accountId;
+        fund.accountId = accountId;
+        this.isResolvingFundAccount = false;
+      },
+      error: () => {
+        this.selectedAccountId = null;
+        this.fundAccountError = 'Nije moguće pronaći accountId za račun fonda.';
+        this.isResolvingFundAccount = false;
+      },
+    });
+  }
+
+  private validAccountId(value: unknown): number | null {
+    const id = Number(value);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  }
+
+  get selectedFund(): InvestmentFund | null {
+    return this.supervisedFunds.find(f => f.id === this.selectedFundId) ?? null;
+  }
+
+  /**
+   * Spec Sc 37: za SELL ucitavamo koliko korisnik ima u portfoliju za ovaj listing
+   * i postavljamo to kao [max] na quantity input. Sprecava klijent-side over-sell.
+   */
+  private loadSellableQuantity(): void {
+    this.portfolioService.getPortfolio().subscribe({
+      next: summary => {
+        const entry = summary.holdings?.find(h => h.listingId === this.listingId);
+        this.maxSellQuantity = entry?.quantity ?? 0;
+      },
+      error: () => {
+        this.maxSellQuantity = 0;
+      },
+    });
+  }
+
+  /**
+   * Spec Sc 63: margin order zahteva permisiju MARGIN_TRADE; klijent sa odobrenim
+   * kreditom dobija ovu permisiju automatski. Aktuari je takodje moraju imati.
+   */
+  public get canUseMargin(): boolean {
+    return this.authService.hasPermission('MARGIN_TRADE');
   }
 
   private loadSecurity(): void {
@@ -89,6 +227,17 @@ export class CreateOrderComponent implements OnInit {
       return;
     }
 
+    // Supervisor doing a fund BUY — account is resolved later via onFundChange()
+    if (this.isSupervisor && this.direction === 'BUY' && this.purchaseFor === 'INVESTMENT_FUND') {
+      this.isLoading = false;
+      return;
+    }
+
+    this.loadBankAccount();
+  }
+
+  private loadBankAccount(): void {
+    if (!this.security) return;
     this.accountService.getBankAccountByCurrency(this.security.currency).subscribe({
       next: account => {
         this.accounts = Array.isArray(account) ? account : (account ? [account] : []);
@@ -152,10 +301,22 @@ export class CreateOrderComponent implements OnInit {
   }
 
   get canSubmit(): boolean {
-    return !!this.security
-      && this.quantity > 0
-      && !!this.selectedAccountId
-      && this.pricePerUnit > 0;
+    if (!this.security || this.quantity <= 0 || !this.selectedAccountId || this.pricePerUnit <= 0) {
+      return false;
+    }
+    if (this.isResolvingFundAccount) {
+      return false;
+    }
+    if (this.margin && !this.canUseMargin) {
+      return false;
+    }
+    if (this.direction === 'SELL' && this.maxSellQuantity > 0 && this.quantity > this.maxSellQuantity) {
+      return false;
+    }
+    if (this.isSupervisor && this.direction === 'BUY' && this.purchaseFor === 'INVESTMENT_FUND' && !this.selectedFundId) {
+      return false;
+    }
+    return true;
   }
 
   createDraftOrder(): void {
@@ -163,15 +324,29 @@ export class CreateOrderComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    const payload = {
-      listingId: this.listingId,
-      quantity: this.quantity,
-      limitValue: this.limitValue || null,
-      stopValue: this.stopValue || null,
-      allOrNone: this.allOrNone,
-      margin: this.margin,
-      accountId: this.selectedAccountId!,
-    };
+    const isFundBuy = this.isSupervisor && this.direction === 'BUY' && this.purchaseFor === 'INVESTMENT_FUND';
+    const payload: any = isFundBuy
+      ? {
+          listingId: this.listingId,
+          quantity: this.quantity,
+          accountId: this.selectedAccountId!,
+          purchaseFor: 'INVESTMENT_FUND',
+          fundId: this.selectedFundId!,
+          allOrNone: this.allOrNone,
+        }
+      : {
+          listingId: this.listingId,
+          quantity: this.quantity,
+          limitValue: this.limitValue || null,
+          stopValue: this.stopValue || null,
+          allOrNone: this.allOrNone,
+          margin: this.margin,
+          accountId: this.selectedAccountId!,
+        };
+
+    if (this.isSupervisor && this.direction === 'BUY' && !isFundBuy) {
+      payload['purchaseFor'] = this.purchaseFor;
+    }
 
     const request$ = this.direction === 'BUY'
       ? this.orderService.createBuyOrder(payload)
@@ -179,6 +354,14 @@ export class CreateOrderComponent implements OnInit {
 
     request$.subscribe({
       next: order => {
+        // Add notification
+        this.notificationService.addNotification({
+          type: NotificationType.ORDER_PENDING,
+          title: 'Order poslat na odobrenje',
+          message: `Vaš ${this.direction === 'BUY' ? 'kupovni' : 'prodajni'} order za ${order.quantity} $(order.quantity > 1 ? 'hartija' : 'hartije') po ceni od ${this.formatMoney(order.pricePerUnit)} je poslat na odobrenje.`,
+          data: { order: order }
+        });
+        
         this.draftOrder = order;
         this.showConfirmation = true;
         this.isSubmitting = false;
@@ -197,6 +380,14 @@ export class CreateOrderComponent implements OnInit {
 
     this.orderService.confirmOrder(this.draftOrder.id).subscribe({
       next: order => {
+        // Add notification
+        this.notificationService.addNotification({
+          type: NotificationType.ORDER_COMPLETED,
+          title: 'Order potvrđen i obrađen',
+          message: `Vaš ${this.direction === 'BUY' ? 'kupovni' : 'prodajni'} order ID ${order.id} je potvrđen i u obradi.`,
+          data: { order: order }
+        });
+        
         this.isSubmitting = false;
         this.showConfirmation = false;
         this.toastService.success('Order je uspešno potvrđen.');
@@ -204,7 +395,9 @@ export class CreateOrderComponent implements OnInit {
         // as soon as the order finishes settling. The portfolio page re-fetches
         // on every navigation hit, so this is the simplest way to show that
         // a buy actually landed without forcing a manual refresh.
-        const target = this.direction === 'BUY' ? '/portfolio' : '/securities';
+        const target = this.direction === 'BUY'
+          ? (this.purchaseFor === 'INVESTMENT_FUND' && this.selectedFundId ? `/funds/${this.selectedFundId}` : '/portfolio')
+          : '/securities';
         this.router.navigate([target]);
       },
       error: err => {
@@ -220,8 +413,18 @@ export class CreateOrderComponent implements OnInit {
       return;
     }
 
+    const orderId = this.draftOrder.id;
+
     this.orderService.cancelOrder(this.draftOrder.id).subscribe({
       next: () => {
+        // Add notification
+        this.notificationService.addNotification({
+          type: NotificationType.ORDER_CANCELLED,
+          title: 'Order otkazan',
+          message: `Vaš order ID ${orderId} je uspešno otkazan.`,
+          data: { orderId: orderId }
+        });
+        
         this.showConfirmation = false;
         this.draftOrder = null;
       },

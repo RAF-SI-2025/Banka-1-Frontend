@@ -68,18 +68,25 @@ export enum Currency {
   EUR = 'EUR',
   USD = 'USD',
   GBP = 'GBP',
-  CHF = 'CHF'
+  CHF = 'CHF',
+  JPY = 'JPY',
+  CAD = 'CAD',
+  AUD = 'AUD'
 }
 
 /**
- * Labele za valute sa opisima
+ * Labele za valute sa opisima — pun spec Celina 2 set valuta:
+ * RSD, EUR, CHF, USD, GBP, JPY, CAD, AUD.
  */
 export const CurrencyLabels: Record<Currency, string> = {
   [Currency.RSD]: 'RSD - Srpski dinar',
   [Currency.EUR]: 'EUR - Evro',
   [Currency.USD]: 'USD - američki dolar',
   [Currency.GBP]: 'GBP - britanska funta',
-  [Currency.CHF]: 'CHF - švajcarski franak'
+  [Currency.CHF]: 'CHF - švajcarski franak',
+  [Currency.JPY]: 'JPY - japanski jen',
+  [Currency.CAD]: 'CAD - kanadski dolar',
+  [Currency.AUD]: 'AUD - australijski dolar'
 };
 
 /**

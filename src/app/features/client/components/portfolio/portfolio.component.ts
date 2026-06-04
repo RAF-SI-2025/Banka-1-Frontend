@@ -1,10 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavigationEnd, Router } from '@angular/router';
+import { RouterModule, NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { PortfolioService } from '../../services/portfolio.service';
 import {
   PortfolioHolding,
@@ -13,11 +12,14 @@ import {
 } from '../../models/portfolio.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { StateComponent } from '../../../../shared/components/state/state.component';
+import { FundService } from '../../../funds/services/fund.service';
+import { ClientFundPosition, InvestmentFund } from '../../../funds/models/fund.model';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, StateComponent],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.scss'],
 })
@@ -32,6 +34,14 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   savingPublicQuantity: Record<string, boolean> = {};
   exercisingOption: Record<string, boolean> = {};
 
+  activeTab: 'holdings' | 'funds' = 'holdings';
+  isSupervisor = false;
+  fundPositions: ClientFundPosition[] = [];
+  supervisedFunds: InvestmentFund[] = [];
+  fundsLoading = false;
+  fundsError: string | null = null;
+  fundsFetched = false;
+
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -39,10 +49,12 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly toastService: ToastService,
     private readonly router: Router,
+    private readonly fundService: FundService,
   ) {}
 
   ngOnInit(): void {
     this.isActuary = this.authService.isActuary();
+    this.isSupervisor = this.authService.hasPermission('FUND_AGENT_MANAGE');
     this.loadPortfolio();
 
     // The portfolio page is the natural landing spot after a buy/sell flow,
@@ -89,6 +101,36 @@ export class PortfolioComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
       });
+  }
+
+  setTab(tab: 'holdings' | 'funds'): void {
+    this.activeTab = tab;
+    if (tab === 'funds' && !this.fundsFetched) {
+      this.loadFunds();
+    }
+  }
+
+  loadFunds(): void {
+    this.fundsLoading = true;
+    this.fundsError = null;
+    const obs: any = this.isSupervisor
+      ? this.fundService.supervised()
+      : this.fundService.myPositions();
+    obs.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data: any) => {
+        if (this.isSupervisor) {
+          this.supervisedFunds = data as InvestmentFund[];
+        } else {
+          this.fundPositions = data as ClientFundPosition[];
+        }
+        this.fundsLoading = false;
+        this.fundsFetched = true;
+      },
+      error: (err: any) => {
+        this.fundsError = err?.error?.message || 'Greska pri ucitavanju fondova.';
+        this.fundsLoading = false;
+      },
+    });
   }
 
   getHoldingKey(holding: PortfolioHolding, index: number): string {
@@ -167,8 +209,12 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       });
   }
 
-  onSell(): void {
-    // TODO: Povezati F1 Sell modal / Create order flow kada ta implementacija bude dostupna.
+  onSell(holding: PortfolioHolding): void {
+    if (holding == null || holding.listingId == null) {
+      this.toastService.error('Nedostaje listingId za izabranu poziciju.');
+      return;
+    }
+    this.router.navigate(['/orders/create', 'SELL', holding.listingId]);
   }
 
   isStock(holding: PortfolioHolding): boolean {

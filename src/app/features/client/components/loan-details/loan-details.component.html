@@ -1,119 +1,120 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content">
-    <!-- Header -->
-    <h1 class="text-xl font-bold text-gray-900 mb-6">DETALJI KREDITA</h1>
-
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
-      Učitavanje...
+<div>
+  <div>
+    <div class="mb-6">
+      <button type="button"
+              (click)="goBack()"
+              class="inline-flex items-center gap-1 text-sm text-primary hover:underline bg-transparent border-0 cursor-pointer">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Nazad
+      </button>
     </div>
 
-    <!-- Error -->
-    <div *ngIf="!isLoading && hasError" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-      <p class="text-red-500 mb-4">{{ errorMessage }}</p>
-      <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90" (click)="goBack()">Nazad</button>
-    </div>
-
-    <!-- Content -->
-    <div *ngIf="!isLoading && !hasError && loan" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-      <!-- Loan Type Title -->
-      <h2 class="text-lg font-bold text-gray-900 mb-8">{{ getLoanTypeLabel(loan.type).toUpperCase() }}</h2>
-
-      <!-- Loan Info - Three Column Layout -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6 mb-10">
-        <!-- Column 1 -->
-        <div class="space-y-5">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Broj kredita:</p>
-            <p class="text-sm font-medium text-gray-900">{{ loan.number }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Vrsta kredita:</p>
-            <p class="text-sm font-medium text-gray-900">{{ getLoanTypeLabel(loan.type) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Ukupni iznos kredita:</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatCurrency(loan.amount, loan.currency) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Valuta:</p>
-            <p class="text-sm font-medium text-gray-900">{{ loan.currency }}</p>
-          </div>
-        </div>
-
-        <!-- Column 2 -->
-        <div class="space-y-5">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Period otplate:</p>
-            <p class="text-sm font-medium text-gray-900">{{ loan.repaymentPeriod }} meseci</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Nominalna kamatna stopa(početna):</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatPercent(loan.nominalInterestRate) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Efektivna kamatna stopa(trenutna):</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatPercent(loan.effectiveInterestRate) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Datum ugovaranja:</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(loan.contractDate) }}</p>
-          </div>
-        </div>
-
-        <!-- Column 3 -->
-        <div class="space-y-5">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Datum dospeća kredita:</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(loan.dueDate) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Iznos sledeće rate:</p>
-            <p class="text-sm font-medium text-primary">{{ formatCurrency(loan.nextInstallmentAmount, loan.currency) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Datum sledeće rate:</p>
-            <p class="text-sm font-medium text-primary">{{ formatDate(loan.nextInstallmentDate) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">Preostalo dugovanje:</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatCurrency(loan.remainingDebt, loan.currency) }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Installments History Table -->
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <h3 class="text-base font-bold text-gray-900 mb-6">Istorija rata</h3>
+        <h1 class="text-2xl font-bold text-foreground">Detalji kredita</h1>
+        <p class="text-sm text-muted-foreground mt-1" *ngIf="loan">
+          {{ getLoanTypeLabel(loan.type) }} · #{{ loan.number }}
+        </p>
+      </div>
+    </div>
 
-        <!-- Empty state -->
-        <div *ngIf="installments.length === 0" class="text-center py-12 text-gray-400">
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="isLoading" mode="loading" text="Ucitavanje..."></app-state>
+
+    <div *ngIf="!isLoading && hasError" class="z-card p-8 text-center">
+      <p class="text-sm text-red-600 font-medium mb-4">{{ errorMessage }}</p>
+      <button type="button" class="z-btn-primary" (click)="goBack()">Nazad</button>
+    </div>
+
+    <ng-container *ngIf="!isLoading && !hasError && loan">
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="z-card p-5">
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Sledeca rata</p>
+          <p class="text-2xl font-bold font-mono text-primary">{{ formatCurrency(loan.nextInstallmentAmount, loan.currency) }}</p>
+          <p class="text-xs text-muted-foreground mt-1">Datum: {{ formatDate(loan.nextInstallmentDate) }}</p>
+        </div>
+
+        <div class="z-card p-5">
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Preostalo dugovanje</p>
+          <p class="text-2xl font-bold font-mono text-foreground">{{ formatCurrency(loan.remainingDebt, loan.currency) }}</p>
+          <p class="text-xs text-muted-foreground mt-1">Period: {{ loan.repaymentPeriod }} meseci</p>
+        </div>
+
+        <div class="z-card p-5">
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-2">Ukupan iznos</p>
+          <p class="text-2xl font-bold font-mono text-foreground">{{ formatCurrency(loan.amount, loan.currency) }}</p>
+          <p class="text-xs text-muted-foreground mt-1">Valuta: {{ loan.currency }}</p>
+        </div>
+      </section>
+
+      <section class="z-card p-6 mb-6">
+        <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-4">Detalji kredita</p>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+          <div>
+            <dt class="text-muted-foreground">Broj kredita</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ loan.number }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Vrsta kredita</dt>
+            <dd class="font-medium text-foreground mt-0.5">{{ getLoanTypeLabel(loan.type) }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Period otplate</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ loan.repaymentPeriod }} meseci</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Nominalna kamata (početna)</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ formatPercent(loan.nominalInterestRate) }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Efektivna kamata (trenutna)</dt>
+            <dd class="font-mono font-semibold text-foreground mt-0.5">{{ formatPercent(loan.effectiveInterestRate) }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Datum ugovaranja</dt>
+            <dd class="font-medium text-foreground mt-0.5">{{ formatDate(loan.contractDate) }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">Datum dospeća</dt>
+            <dd class="font-medium text-foreground mt-0.5">{{ formatDate(loan.dueDate) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="z-card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Istorija rata</p>
+            <p class="text-sm text-muted-foreground mt-0.5">Pregled svih izvrsenih i ocekivanih rata.</p>
+          </div>
+          <span *ngIf="installments.length > 0" class="z-badge z-badge-blue">{{ installments.length }} rata</span>
+        </div>
+
+        <div *ngIf="installments.length === 0" class="py-10 text-center text-sm text-muted-foreground">
           Nema podataka o ratama.
         </div>
 
-        <!-- Table -->
         <div *ngIf="installments.length > 0" class="overflow-x-auto">
-          <table class="w-full">
+          <table class="z-table">
             <thead>
-              <tr class="border-b border-gray-200">
-                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Očekivani datum dospeća</th>
-                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Stvarni datum</th>
-                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Iznos rate</th>
-                <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Kamatna stopa</th>
-                <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider py-3">Status</th>
+              <tr>
+                <th>Ocekivani datum</th>
+                <th>Stvarni datum</th>
+                <th class="text-right">Iznos</th>
+                <th class="text-right">Kamata</th>
+                <th class="text-right">Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let installment of installments" class="border-b border-gray-100 last:border-0">
-                <td class="py-4 text-sm text-gray-900">{{ formatDate(installment.expectedDueDate) }}</td>
-                <td class="py-4 text-sm text-primary font-medium">{{ formatDate(installment.actualPaymentDate) }}</td>
-                <td class="py-4 text-sm text-primary font-medium">{{ formatCurrency(installment.amount, installment.currency) }}</td>
-                <td class="py-4 text-sm text-gray-900">{{ formatPercent(installment.interestRateAtPayment) }}</td>
-                <td class="py-4 text-right">
-                  <span class="inline-flex items-center px-3 py-1 rounded text-xs font-semibold"
-                        [ngClass]="getStatusBadgeClass(installment.status)">
+              <tr *ngFor="let installment of installments">
+                <td class="whitespace-nowrap">{{ formatDate(installment.expectedDueDate) }}</td>
+                <td class="text-primary font-medium whitespace-nowrap">{{ formatDate(installment.actualPaymentDate) }}</td>
+                <td class="text-right font-mono font-semibold">{{ formatCurrency(installment.amount, installment.currency) }}</td>
+                <td class="text-right font-mono">{{ formatPercent(installment.interestRateAtPayment) }}</td>
+                <td class="text-right">
+                  <span class="z-badge" [ngClass]="getStatusBadgeClass(installment.status)">
                     {{ getInstallmentStatusLabel(installment.status) }}
                   </span>
                 </td>
@@ -121,7 +122,7 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </section>
+    </ng-container>
   </div>
 </div>

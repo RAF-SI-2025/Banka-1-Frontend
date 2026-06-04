@@ -1,44 +1,61 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="warning-icon">
-          <span class="material-icons">warning_amber</span>
+<div class="z-overlay" (click)="onCancel()">
+  <div class="z-modal max-w-md w-full" (click)="$event.stopPropagation()">
+    <div class="z-modal-header">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
         </div>
-        <h2 class="modal-title">Blokiraj karticu?</h2>
+        <h2 class="text-lg font-bold text-foreground">Blokiraj karticu?</h2>
       </div>
 
-      <button type="button" class="close-btn" (click)="onCancel()">
-        <span class="material-icons">close</span>
+      <button type="button"
+              class="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-1"
+              (click)="onCancel()"
+              aria-label="Zatvori dijalog"
+              title="Zatvori">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
     </div>
 
-    <div class="modal-body">
-      <p class="modal-text">
-        Da li ste sigurni da želite da blokirate ovu karticu?
+    <div class="z-modal-body space-y-4">
+      <p class="text-sm text-foreground">
+        Da li ste sigurni da zelite da blokirate ovu karticu?
       </p>
 
-      <div class="card-preview">
-        <div class="card-preview-row">
-          <span class="card-preview-label">Vrsta</span>
-          <span class="card-preview-value">{{ cardTypeLabel }}</span>
+      <div class="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Vrsta</span>
+          <span class="text-sm font-semibold text-foreground">{{ cardTypeLabel }}</span>
         </div>
-
-        <div class="card-preview-row">
-          <span class="card-preview-label">Broj</span>
-          <span class="card-preview-value card-preview-value--mono">{{ maskedCardNumber }}</span>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Broj</span>
+          <span class="text-sm font-semibold text-foreground font-mono">{{ maskedCardNumber }}</span>
         </div>
       </div>
 
-      <p class="warning-note">
-        Nakon blokiranja kartica ne može samostalno da se odblokira.
-        Za odblokiranje je potrebno da kontaktirate zaposlenog u banci.
-      </p>
+      <div class="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>
+          Nakon blokiranja kartica ne moze samostalno da se odblokira.
+          Za odblokiranje je potrebno da kontaktirate zaposlenog u banci.
+        </span>
+      </div>
     </div>
 
-    <div class="modal-footer">
-      <button type="button" class="btn-cancel" (click)="onCancel()">Odustani</button>
-      <button type="button" class="btn-confirm" (click)="onConfirm()">Potvrdi blokiranje</button>
+    <div class="z-modal-footer">
+      <button type="button" class="z-btn-outline" (click)="onCancel()">Odustani</button>
+      <button type="button" class="z-btn-destructive" (click)="onConfirm()">Potvrdi blokiranje</button>
     </div>
   </div>
 </div>

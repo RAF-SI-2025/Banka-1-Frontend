@@ -149,6 +149,16 @@ export class ClientService {
   }
   //Primaoci placanja
 
+  // Backend (PaymentRecipientResponseDto) salje {id, naziv, brojRacuna}.
+  // Frontend interfejs koristi {id, name, accountNumber}.
+  private toRecipient(dto: any): PaymentRecipient {
+    return {
+      id: dto.id,
+      name: dto.naziv ?? dto.name,
+      accountNumber: dto.brojRacuna ?? dto.accountNumber,
+    };
+  }
+
   getAllRecipients(
     accountNumber: string,
     page = 0,
@@ -159,13 +169,11 @@ export class ClientService {
       .set('size', size.toString());
 
     return this.http
-      .get<any>(`${environment.apiUrl}/transfers/accounts/${accountNumber}`, {
-        params,
-      })
+      .get<any>(`${environment.apiUrl}/payment-recipients`, { params })
       .pipe(
         map((res) => {
-          if (!res.content) return res;
-          return res.content;
+          const list = Array.isArray(res) ? res : res?.content ?? [];
+          return list.map((r: any) => this.toRecipient(r));
         }),
       );
   }
@@ -181,26 +189,29 @@ export class ClientService {
     name: string,
     accountNumber: string,
   ): Observable<PaymentRecipient> {
-    return this.http.put<PaymentRecipient>(
-      `${environment.apiUrl}/transactions/api/payments/${id}`,
-      { name, accountNumber },
-    );
+    return this.http
+      .put<any>(`${environment.apiUrl}/payment-recipients/${id}`, {
+        naziv: name,
+        brojRacuna: accountNumber,
+      })
+      .pipe(map((dto) => this.toRecipient(dto)));
   }
 
   deleteRecipient(id: number): Observable<void> {
     return this.http.delete<void>(
-      `${environment.apiUrl}/transactions/api/payments/${id}`,
+      `${environment.apiUrl}/payment-recipients/${id}`,
     );
   }
 
   createRecipient(
-    id: number,
     name: string,
     accountNumber: string,
   ): Observable<PaymentRecipient> {
-    return this.http.post<PaymentRecipient>(
-      `${environment.apiUrl}/transactions/api/payments`,
-      { id, name, accountNumber },
-    );
+    return this.http
+      .post<any>(`${environment.apiUrl}/payment-recipients`, {
+        naziv: name,
+        brojRacuna: accountNumber,
+      })
+      .pipe(map((dto) => this.toRecipient(dto)));
   }
 }

@@ -1,18 +1,24 @@
-<app-navbar></app-navbar>
-
-<div class="page-layout">
-  <div class="page-content max-w-3xl">
-    <!-- Hero card -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-900 to-green-600 text-white p-8 mb-6">
-      <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5"></div>
-      <div class="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5"></div>
+<div>
+  <div class="max-w-3xl">
+    <div class="relative overflow-hidden rounded-2xl text-white p-8 mb-6"
+         style="background: var(--gradient-hero); box-shadow: var(--shadow-xl);">
+      <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full"
+           style="background: var(--gradient-gold); opacity: 0.18; filter: blur(8px);"></div>
+      <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5"></div>
       <div class="relative flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+             style="background: var(--gradient-gold); box-shadow: var(--shadow-gold);">
+          <svg class="w-7 h-7 text-emerald-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
         </div>
         <div>
-          <h2 class="text-xl font-bold">Transfer sredstava</h2>
-          <p class="text-sm text-green-100 mt-1">Prebacite novac između računa različitih valuta — sa prikazom kursa i provizije.</p>
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-200/90 mb-1">Razlicite valute</p>
+          <h2 class="text-2xl font-bold">Transfer sredstava</h2>
+          <p class="text-sm text-emerald-100/90 mt-1">Prebacite novac izmedju racuna razlicitih valuta — sa prikazom kursa i provizije.</p>
         </div>
       </div>
     </div>

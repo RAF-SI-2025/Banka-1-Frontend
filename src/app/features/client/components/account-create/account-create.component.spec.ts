@@ -1,26 +1,44 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 
 import { AccountCreateComponent } from './account-create.component';
 import { ClientService } from '../../services/client.service';
+import { AccountService } from '../../services/account.service';
 
 describe('AccountCreateComponent', () => {
   let component: AccountCreateComponent;
   let fixture: ComponentFixture<AccountCreateComponent>;
   let clientServiceSpy: jasmine.SpyObj<ClientService>;
-    
+  let accountServiceSpy: jasmine.SpyObj<AccountService>;
+
   beforeEach(async () => {
     clientServiceSpy = jasmine.createSpyObj('ClientService', ['getAllClients']);
     clientServiceSpy.getAllClients.and.returnValue(of([
-      { id: '1', firstName: 'Pera', lastName: 'Perić' }
+      { id: 1, ime: 'Pera', prezime: 'Perić' } as any
     ]));
 
+    accountServiceSpy = jasmine.createSpyObj('AccountService', [
+      'createCheckingAccount',
+      'createFxAccount'
+    ]);
+    accountServiceSpy.createCheckingAccount.and.returnValue(of({} as any));
+    accountServiceSpy.createFxAccount.and.returnValue(of({} as any));
+
     await TestBed.configureTestingModule({
-      declarations: [AccountCreateComponent],
-      imports: [ReactiveFormsModule, RouterTestingModule],
-      providers: [{ provide: ClientService, useValue: clientServiceSpy }]
+      // PR_31 follow-up: AccountCreateComponent je standalone — mora ici u imports, ne u declarations.
+      imports: [
+        AccountCreateComponent,
+        ReactiveFormsModule,
+        RouterTestingModule,
+        HttpClientTestingModule
+      ],
+      providers: [
+        { provide: ClientService, useValue: clientServiceSpy },
+        { provide: AccountService, useValue: accountServiceSpy }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AccountCreateComponent);
@@ -40,10 +58,11 @@ describe('AccountCreateComponent', () => {
     }
   });
 
-  it('should move to step 2 when step1 is valid', () => {
-    // set required fields for TEKUCI
-    component.form.get('kind')?.setValue('TEKUCI');
+  it('should move to step 2 when step1 is valid (CHECKING + standardni subtype)', () => {
+    // PR_31 follow-up: AccountKind enum vrednosti su 'CHECKING'/'FX' (ne 'TEKUCI'/'DEVIZNI').
+    component.form.get('kind')?.setValue('CHECKING');
     component.form.get('subtype')?.setValue('standardni');
+    fixture.detectChanges();
 
     component.next();
 
@@ -52,13 +71,12 @@ describe('AccountCreateComponent', () => {
     }
   });
 
-  it('should require company fields when owner is business (TEKUCI business subtype)', () => {
-    // Set TEKUCI + business subtype
-    component.form.get('kind')?.setValue('TEKUCI');
+  it('should require company fields when owner is business (CHECKING + DOO subtype)', () => {
+    component.form.get('kind')?.setValue('CHECKING');
     component.form.get('subtype')?.setValue('DOO');
     fixture.detectChanges();
 
-    // move to step 2
+    // Move to step 2
     component.next();
     if (component.step !== 2) {
       throw new Error('Should be on step 2');
@@ -67,7 +85,7 @@ describe('AccountCreateComponent', () => {
     const companyName = component.form.get('companyName');
     const companyNumber = component.form.get('companyNumber');
 
-    // empty values should be invalid (required)
+    // Empty values should be invalid (required) for business owner.
     companyName?.setValue('');
     companyName?.markAsTouched();
     companyNumber?.setValue('');
@@ -78,7 +96,7 @@ describe('AccountCreateComponent', () => {
       throw new Error('companyName should be invalid when empty for business owner');
     }
 
-    // fill one required field and check validity
+    // Fill required field and check validity.
     companyName?.setValue('ACME d.o.o.');
     fixture.detectChanges();
     if (companyName?.invalid) {
@@ -86,14 +104,13 @@ describe('AccountCreateComponent', () => {
     }
   });
 
-  it('should require company fields when owner is business (DEVIZNI with business owner)', () => {
-    // Set DEVIZNI and owner type business
-    component.form.get('kind')?.setValue('DEVIZNI');
+  it('should require company fields when owner is business (FX with BUSINESS owner type)', () => {
+    // PR_31 follow-up: FX (devizni) + AccountOwnerType.BUSINESS aktivira poslovne validatore.
+    component.form.get('kind')?.setValue('FX');
     component.form.get('currency')?.setValue('USD');
-    component.form.get('currencyOwnerType')?.setValue('business');
+    component.form.get('currencyOwnerType')?.setValue('BUSINESS');
     fixture.detectChanges();
 
-    // move to step 2 (owner selection required - set owner)
     component.form.get('ownerId')?.setValue('1');
     component.next();
     if (component.step !== 2) {

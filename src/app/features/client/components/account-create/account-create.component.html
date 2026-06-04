@@ -1,7 +1,5 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content max-w-2xl">
+<div>
+  <div class="max-w-2xl">
     <div class="z-card p-8">
       <div class="text-center mb-6">
         <h3 class="text-xl font-bold text-foreground">Kreiraj račun</h3>
@@ -121,8 +119,8 @@
 
             <div class="space-y-1.5">
               <label for="companyActivityCode" class="z-label">Šifra delatnosti</label>
-              <select id="companyActivityCode" formControlName="companyActivityCode" class="z-select" style="max-height: 300px; overflow-y: auto;">
-                <option [ngValue]="null">-- odaberi --</option>
+              <select id="companyActivityCode" formControlName="companyActivityCode" class="z-select" [disabled]="isLoadingActivityCodes">
+                <option [ngValue]="null">{{ isLoadingActivityCodes ? 'Učitavanje...' : '-- odaberi --' }}</option>
                 <option *ngFor="let code of activityCodes; trackBy: trackByOptionValue" [value]="code.value">{{ code.label }}</option>
               </select>
               <small *ngIf="isInvalid('companyActivityCode')" class="z-error">Šifra delatnosti je obavezna.</small>

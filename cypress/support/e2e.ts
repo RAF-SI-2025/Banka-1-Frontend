@@ -15,14 +15,3 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
-
-// Don't fail the test suite on Angular's benign ResizeObserver warning,
-// nor on uncaught HTTP errors that the app already surfaces in the UI -
-// we want assertion failures to come from explicit expect(), not from
-// a side-effect exception bubbling out of NgZone.
-Cypress.on('uncaught:exception', (err) => {
-  if (/ResizeObserver|Non-Error promise rejection/.test(err.message)) {
-    return false;
-  }
-  return true;
-});

@@ -1,0 +1,154 @@
+<section class="watchlist-page">
+    <div class="page-header">
+        <div>
+            <p class="eyebrow">Trading</p>
+            <h1>Watchliste</h1>
+            <p class="description">
+                Pratite cenu, dnevnu promenu i volumen za hartije koje su vam važne.
+            </p>
+        </div>
+    </div>
+
+    <div class="z-card controls-card">
+        <div class="controls-grid">
+            <div>
+              <label class="z-label">Izaberite watchlistu</label>
+              <select
+                class="z-select"
+                [(ngModel)]="selectedWatchlistId"
+                [disabled]="watchlists.length === 0"
+              >
+                <option value="" disabled>
+                  {{ watchlists.length === 0 ? 'Prvo kreirajte watchlistu' : 'Izaberite watchlistu' }}
+                </option>
+
+                <option *ngFor="let watchlist of watchlists" [ngValue]="watchlist.id">
+                  {{ watchlist.name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+                <label class="z-label">Filter po tipu hartije</label>
+                <select class="z-select" [(ngModel)]="selectedSecurityType">
+                    <option *ngFor="let option of securityTypeOptions" [ngValue]="option.value">
+                        {{ option.label }}
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label class="z-label">Nova watchlista</label>
+                <div class="create-row">
+                  <input
+                    class="z-input"
+                    type="text"
+                    placeholder="Unesite naziv watchliste"
+                    [(ngModel)]="newWatchlistName"
+                    (keyup.enter)="createWatchlist()"
+                  />
+
+                    <button
+                            type="button"
+                            class="z-btn-primary"
+                            (click)="createWatchlist()"
+                    >
+                        Kreiraj
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="z-card table-card">
+        <div class="table-header">
+            <div>
+                <p class="section-label">{{ selectedWatchlist?.name || 'Watchlista' }}</p>
+                <p class="description">
+                    Trenutna cena, dnevna promena i volumen po hartiji.
+                </p>
+            </div>
+
+            <span class="count-badge">
+        {{ filteredSecurities.length }} hartija
+      </span>
+        </div>
+
+      <div *ngIf="watchlists.length === 0" class="empty-state">
+        Nemate kreiranu watchlistu.
+        <br />
+        Unesite naziv iznad i kliknite “Kreiraj”.
+      </div>
+
+      <div *ngIf="watchlists.length > 0 && filteredSecurities.length === 0" class="empty-state">
+        Ova watchlista nema hartije za izabrani filter.
+        <br />
+        Hartije možete dodati iz Portala hartija klikom na “Dodaj na watchlist”.
+      </div>
+
+      <div *ngIf="watchlists.length > 0 && filteredSecurities.length > 0" class="table-wrapper">
+            <table class="z-table watchlist-table">
+                <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Naziv hartije</th>
+                    <th>Tip</th>
+                    <th>Berza</th>
+                    <th>Trenutna cena</th>
+                    <th>Dnevna promena</th>
+                    <th>Volumen</th>
+                    <th>Akcije</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr *ngFor="let security of filteredSecurities">
+                    <td>
+                        <span class="ticker">{{ security.ticker }}</span>
+                    </td>
+
+                    <td>{{ security.name }}</td>
+
+                    <td>
+              <span class="z-badge z-badge-gray">
+                {{ security.securityType || '-' }}
+              </span>
+                    </td>
+
+                    <td>{{ security.exchange || '-' }}</td>
+
+                    <td>{{ formatPrice(security) }}</td>
+
+                    <td>
+              <span [ngClass]="getChangeClass(security)">
+                {{ formatDailyChange(security) }}
+              </span>
+                    </td>
+
+                    <td>{{ formatVolume(security.volume) }}</td>
+
+                    <td>
+                        <div class="actions">
+                            <button
+                                    type="button"
+                                    class="z-btn-primary z-btn-sm"
+                                    (click)="createOrder(security)"
+                            >
+                                Kreiraj order
+                            </button>
+
+                            <button
+                                    type="button"
+                                    class="z-btn-outline z-btn-sm"
+                                    (click)="removeSecurity(security)"
+                            >
+                                Ukloni
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

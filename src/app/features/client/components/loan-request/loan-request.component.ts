@@ -4,9 +4,11 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { NavbarComponent } from 'src/app/shared/components/navbar/navbar.component';
 import { LoanService } from '../../services/loan.service';
 import { AccountService } from '../../services/account.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
+import { NotificationType } from '../../../../shared/models/notification.model';
+import { phoneValidator } from '../../../../shared/validators/custom-validators';
 import {
   LoanRequestDto,
   LoanRequestResponse,
@@ -30,7 +32,7 @@ interface SelectOption<T> {
 
 @Component({
   selector: 'app-loan-request',
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './loan-request.component.html',
   standalone: true,
   styleUrls: ['./loan-request.component.scss']
@@ -82,6 +84,7 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
     private readonly fb: FormBuilder,
     private readonly loanService: LoanService,
     private readonly accountService: AccountService,
+    private readonly notificationService: NotificationService,
     private readonly router: Router
   ) {
     this.initializeForm();
@@ -118,7 +121,7 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
 
       // Sekcija 3: Račun i kontakt
       accountNumber: ['', Validators.required],
-      contactPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]{7,15}$/)]]
+      contactPhone: ['', [Validators.required, phoneValidator()]]
     });
   }
 
@@ -213,6 +216,9 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
     if (field.errors['min']) {
       return `Minimalna vrednost je ${field.errors['min'].min}.`;
     }
+    if (field.errors['invalidPhoneFormat']) {
+      return 'Broj telefona može sadržavati samo cifre i opciono + na početku.';
+    }
     if (field.errors['pattern']) {
       return 'Format nije validan.';
     }
@@ -257,12 +263,21 @@ export class LoanRequestComponent implements OnInit, OnDestroy {
           this.isSubmitting = false;
           this.loanResponse = response;
           this.successMessage = `Zahtev je uspešno podnet! Broj zahteva: ${response.requestNumber}`;
+          
+          // Add notification
+          this.notificationService.addNotification({
+            type: NotificationType.LOAN_CREATED,
+            title: 'Zahtev za kredit podnet',
+            message: `Vaš zahtev za ${LoanTypeLabels[response.loanType]} u iznosu od ${response.amount} ${response.currency} je uspešno podnet. Broj zahteva: ${response.requestNumber}`,
+            data: { loanRequest: response }
+          });
+          
           this.form.reset({ currency: Currency.RSD });
           this.submitted = false;
 
-          // Preusmeri nakon 3 sekunde
+          /* PR_31 hotfix: ruta je `/loans` (LoanListComponent), ne `/home/loans` (404). */
           setTimeout(() => {
-            this.router.navigate(['/home/loans']);
+            this.router.navigate(['/loans']);
           }, 3000);
         },
         error: (err) => {

@@ -1,7 +1,5 @@
-<app-navbar />
-
-<div class="page-layout">
-  <div class="page-content">
+<div>
+  <div>
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-foreground">Moj portfolio</h1>
@@ -20,12 +18,33 @@
       </button>
     </div>
 
-    <div *ngIf="isLoading" class="z-card p-12 text-center text-muted-foreground">
-      <svg class="w-8 h-8 mx-auto animate-spin text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-      </svg>
-      <p class="mt-3 text-sm">Učitavanje portfolija...</p>
+    <!-- Tab bar -->
+    <div class="flex gap-1 border-b border-border mb-6">
+      <button type="button"
+              class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              [class.border-primary]="activeTab === 'holdings'"
+              [class.text-primary]="activeTab === 'holdings'"
+              [class.border-transparent]="activeTab !== 'holdings'"
+              [class.text-muted-foreground]="activeTab !== 'holdings'"
+              (click)="setTab('holdings')">
+        Hartije od vrednosti
+      </button>
+      <button type="button"
+              class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              [class.border-primary]="activeTab === 'funds'"
+              [class.text-primary]="activeTab === 'funds'"
+              [class.border-transparent]="activeTab !== 'funds'"
+              [class.text-muted-foreground]="activeTab !== 'funds'"
+              (click)="setTab('funds')">
+        Moji fondovi
+      </button>
     </div>
+
+    <!-- PR_31 T11: shared StateComponent zameni inline loading markup. -->
+    <app-state *ngIf="isLoading && activeTab === 'holdings'" mode="loading" text="Ucitavanje portfolija..."></app-state>
+
+    <!-- ── Holdings tab ── -->
+    <ng-container *ngIf="activeTab === 'holdings'">
 
     <div *ngIf="errorMessage && !isLoading" class="z-card p-8 text-center text-red-500 text-sm">
       <p>{{ errorMessage }}</p>
@@ -111,7 +130,7 @@
                 <td class="text-muted-foreground whitespace-nowrap">{{ formatDateTime(holding.lastModified) }}</td>
                 <td>
                   <div class="flex flex-col gap-3 items-start min-w-[260px]">
-                    <button type="button" class="z-btn-outline z-btn-sm" (click)="onSell()">
+                    <button type="button" class="z-btn-outline z-btn-sm" (click)="onSell(holding)">
                       Prodaj
                     </button>
 
@@ -172,5 +191,95 @@
         </div>
       </div>
     </ng-container>
+    </ng-container> <!-- end holdings tab -->
+
+    <!-- ── Funds tab ── -->
+    <ng-container *ngIf="activeTab === 'funds'">
+      <app-state *ngIf="fundsLoading" mode="loading" text="Ucitavanje fondova..."></app-state>
+      <app-state *ngIf="fundsError && !fundsLoading" mode="error" [text]="fundsError"></app-state>
+
+      <ng-container *ngIf="!fundsLoading && !fundsError">
+
+        <!-- Client: positions -->
+        <ng-container *ngIf="!isSupervisor">
+          <div *ngIf="fundPositions.length > 0" class="z-card overflow-hidden">
+            <table class="z-table">
+              <thead>
+                <tr>
+                  <th class="text-left">Fond</th>
+                  <th class="text-right">Vrednost fonda</th>
+                  <th class="text-right">Ulozeno</th>
+                  <th class="text-right">Tren. vrednost</th>
+                  <th class="text-right">Profit</th>
+                  <th class="text-right">% udeo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of fundPositions">
+                  <td>
+                    <a [routerLink]="['/funds', p.fundId]" class="text-primary hover:underline font-medium">
+                      {{ p.fundNaziv ?? ('Fond #' + p.fundId) }}
+                    </a>
+                    <p *ngIf="p.fundOpis" class="text-xs text-muted-foreground mt-0.5 line-clamp-2">{{ p.fundOpis }}</p>
+                  </td>
+                  <td class="text-right font-mono">{{ (p.fundTotalValue ?? 0) | number:'1.2-2' }} RSD</td>
+                  <td class="text-right font-mono">{{ p.totalInvested | number:'1.2-2' }} RSD</td>
+                  <td class="text-right font-mono">{{ p.currentPositionValue | number:'1.2-2' }} RSD</td>
+                  <td class="text-right font-mono"
+                      [class.text-green-600]="p.clientProfit > 0"
+                      [class.text-red-600]="p.clientProfit < 0">
+                    {{ p.clientProfit >= 0 ? '+' : '' }}{{ p.clientProfit | number:'1.2-2' }} RSD
+                  </td>
+                  <td class="text-right">
+                    <span class="z-badge z-badge-blue">{{ (p.percentageOfFund * 100) | number:'1.2-2' }}%</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <app-state *ngIf="fundPositions.length === 0" mode="empty" title="Nema pozicija"
+                     text="Niste investirali ni u jedan fond."></app-state>
+        </ng-container>
+
+        <!-- Supervisor: managed funds -->
+        <ng-container *ngIf="isSupervisor">
+          <div *ngIf="supervisedFunds.length > 0" class="z-card overflow-hidden">
+            <table class="z-table">
+              <thead>
+                <tr>
+                  <th class="text-left">Fond</th>
+                  <th class="text-right">Vrednost fonda</th>
+                  <th class="text-right">Likvidnost</th>
+                  <th class="text-right">Profit</th>
+                  <th class="text-left">Kreiran</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let f of supervisedFunds">
+                  <td>
+                    <a [routerLink]="['/funds', f.id]" class="text-primary hover:underline font-medium">
+                      {{ f.naziv }}
+                    </a>
+                    <p *ngIf="f.opis" class="text-xs text-muted-foreground mt-0.5 line-clamp-2">{{ f.opis }}</p>
+                  </td>
+                  <td class="text-right font-mono">{{ f.totalValue | number:'1.2-2' }} RSD</td>
+                  <td class="text-right font-mono">{{ f.likvidnaSredstva | number:'1.2-2' }} RSD</td>
+                  <td class="text-right font-mono"
+                      [class.text-green-600]="f.profit > 0"
+                      [class.text-red-600]="f.profit < 0">
+                    {{ f.profit >= 0 ? '+' : '' }}{{ f.profit | number:'1.2-2' }} RSD
+                  </td>
+                  <td>{{ f.datumKreiranja | date:'shortDate' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <app-state *ngIf="supervisedFunds.length === 0" mode="empty" title="Nema fondova"
+                     text="Ne upravljate nijednim fondom."></app-state>
+        </ng-container>
+
+      </ng-container>
+    </ng-container> <!-- end funds tab -->
+
   </div>
 </div>

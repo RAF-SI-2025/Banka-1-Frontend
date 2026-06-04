@@ -13,10 +13,13 @@ describe('PortfolioComponent', () => {
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let toastServiceSpy: jasmine.SpyObj<ToastService>;
 
-  const portfolioSummary: PortfolioSummary = {
+  // PR_31 follow-up: deklarisi kao funkciju koja vraca svez deep-clone, jer testovi mutiraju
+  // holding.publicQuantity na ovom objektu — bez clone-a tests dele state preko beforeEach.
+  const buildPortfolioSummary = (): PortfolioSummary => JSON.parse(JSON.stringify({
     holdings: [
       {
         id: 11,
+        listingId: 101,
         listingType: 'STOCK',
         ticker: 'AAPL',
         quantity: 10,
@@ -29,6 +32,7 @@ describe('PortfolioComponent', () => {
       },
       {
         id: 12,
+        listingId: 202,
         listingType: 'OPTION',
         ticker: 'MSFT220C',
         quantity: 1,
@@ -43,7 +47,7 @@ describe('PortfolioComponent', () => {
     totalProfit: 305,
     yearlyTaxPaid: 1200,
     monthlyTaxDue: 300,
-  };
+  }));
 
   beforeEach(() => {
     portfolioServiceSpy = jasmine.createSpyObj<PortfolioService>(
@@ -60,7 +64,7 @@ describe('PortfolioComponent', () => {
       'info',
     ]);
 
-    portfolioServiceSpy.getPortfolio.and.returnValue(of(portfolioSummary));
+    portfolioServiceSpy.getPortfolio.and.returnValue(of(buildPortfolioSummary()));
     authServiceSpy.isActuary.and.returnValue(true);
     authServiceSpy.getLoggedUser.and.returnValue({
       email: 'test@test.com',

@@ -33,17 +33,17 @@ import { TaxTrackingComponent } from './features/employee/components/tax-trackin
 import { CreateOrderComponent } from './features/orders/components/create-order/create-order.component';
 import { OrdersOverviewComponent } from './features/employee/components/orders-overview/orders-overview.component';
 import { PortfolioComponent } from './features/client/components/portfolio/portfolio.component';
+import { ProfileComponent } from './features/client/components/profile/profile.component';
 import { portfolioAccessGuard } from './core/guards/portfolio-access.guard';
+import { AuditLogComponent } from './features/employee/components/audit-log/audit-log.component';
+import { RecurringOrderComponent } from './features/orders/components/recurring-order/recurring-order.component';
+import { WatchlistComponent } from './features/watchlist/components/watchlist/watchlist.component';
+import { MyOrdersComponent } from './features/orders/components/my-orders/my-orders.component';
+import { PriceAlertsPageComponent } from './features/price-alerts/components/price-alerts/price-alerts.component';
 
 const routes: Routes = [
   {
     path: 'home',
-    loadChildren: () =>
-      import('./features/client/client.module').then((m) => m.ClientModule),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'client',
     loadChildren: () =>
       import('./features/client/client.module').then((m) => m.ClientModule),
     canActivate: [authGuard],
@@ -106,6 +106,16 @@ const routes: Routes = [
     data: { permission: 'CLIENT_MANAGE' },
   },
   {
+    // PR_32: bank-wide cards management portal za zaposlene (Celina 2 spec).
+    path: 'cards-management',
+    loadComponent: () =>
+      import('./features/employee/cards-management/cards-management.component').then(
+        (m) => m.CardsManagementComponent,
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: { permission: 'CLIENT_MANAGE' },
+  },
+  {
     path: 'actuary-management',
     component: ActuaryManagementComponent,
     canActivate: [authGuard, roleGuard],
@@ -122,10 +132,10 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-  path: 'stock-exchange',
-  component: ExchangeListComponent,
-  canActivate: [authGuard, roleGuard],
-  data: { roles: ['ADMIN', 'SUPERVISOR'] } 
+    path: 'stock-exchange',
+    component: ExchangeListComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN', 'SUPERVISOR'] },
   },
   {
     path: 'exchange',
@@ -141,6 +151,26 @@ const routes: Routes = [
   {
     path: '403',
     component: ForbiddenComponent,
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'watchlist',
+    component: WatchlistComponent,
+  },
+  {
+    path: 'my-orders',
+    component: MyOrdersComponent,
+    canActivate: [authGuard, portfolioAccessGuard],
+  },
+  {
+    path: 'price-alerts',
+    component: PriceAlertsPageComponent,
+    canActivate: [authGuard, portfolioAccessGuard],
+    data: { title: 'Price alerti' },
   },
   {
     path: '',
@@ -188,7 +218,9 @@ const routes: Routes = [
     path: 'tax-tracking',
     component: TaxTrackingComponent,
     canActivate: [authGuard, roleGuard],
-    data: { permission: 'SECURITIES_TRADE_UNLIMITED' }, 
+    // Spec Celina 3 (Sc 74-75): "Samo supervizor" pristupa portalu Porez tracking.
+    // SECURITIES_TRADE_UNLIMITED je preliberalno (i agenti ga mogu imati).
+    data: { anyRole: ['SUPERVISOR', 'ADMIN', 'EmployeeAdmin'] },
   },
 
   {
@@ -221,12 +253,53 @@ const routes: Routes = [
   {
     path: 'orders/create/:direction/:listingId',
     component: CreateOrderComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+  },
+  {
+    // PR_03 C3.8: portal za marzne racune (lazy-loaded).
+    path: 'margin',
+    loadChildren: () =>
+      import('./features/margin/margin.module').then((m) => m.MarginModule),
+    canActivate: [authGuard],
+  },
+  {
+    // PR_04 C4.14: OTC portal (lazy-loaded).
+    path: 'otc',
+    loadChildren: () =>
+      import('./features/otc/otc.module').then((m) => m.OtcModule),
+    canActivate: [authGuard, roleGuard],
+    data: {
+      anyPermission: ['OTC_TRADE', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED'],
+      anyRole: ['CLIENT_TRADING', 'SUPERVISOR', 'ADMIN'],
+    },
+  },
+  {
+    // PR_04 C4.15: investicioni fondovi (lazy-loaded).
+    path: 'funds',
+    loadChildren: () =>
+      import('./features/funds/funds.module').then((m) => m.FundsModule),
+    canActivate: [authGuard],
+  },
+  {
+  path: 'audit-log',
+  component: AuditLogComponent,
+  canActivate: [authGuard, roleGuard],
+  data: {
+    allowedRoles: ['Admin', 'Supervisor']
+  }
+  },
+  {
+  path: 'recurring-orders',
+  component: RecurringOrderComponent,
+  canActivate: [authGuard, roleGuard],
+  data: {
+    anyRole: ['CLIENT_TRADING', 'AGENT', 'SUPERVISOR', 'ADMIN']
+  }
   },
   {
     path: '**',
     component: NotFoundComponent,
-  }
+  },
 ];
 
 @NgModule({

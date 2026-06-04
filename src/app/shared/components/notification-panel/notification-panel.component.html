@@ -1,0 +1,73 @@
+<!-- Notification Panel Backdrop -->
+<div class="notification-backdrop" (click)="onClose()"></div>
+
+<!-- Notification Panel -->
+<div class="notification-panel">
+  <!-- Header -->
+  <div class="notification-panel-header">
+    <div>
+      <h2 class="notification-panel-title">Obaveštenja</h2>
+      <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }} novo</span>
+    </div>
+    <button class="notification-close-btn" (click)="onClose()" title="Zatvori">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <!-- Actions -->
+  <div class="notification-actions" *ngIf="notifications.length > 0">
+    <button 
+      *ngIf="unreadCount > 0"
+      class="notification-action-btn"
+      (click)="markAllAsRead()"
+      title="Označi sve kao pročitane">
+      <span class="material-icons">done_all</span>
+      <span>Označi sve kao pročitane</span>
+    </button>
+    <button 
+      class="notification-action-btn delete-btn"
+      (click)="deleteAll()"
+      title="Obriši sve">
+      <span class="material-icons">delete</span>
+      <span>Obriši sve</span>
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notification-list">
+    <div *ngIf="notifications.length === 0" class="notification-empty">
+      <span class="material-icons">notifications_off</span>
+      <p>Nema obaveštenja</p>
+    </div>
+
+    <div *ngFor="let notification of notifications"
+         class="notification-item"
+         [class.unread]="notification.status === NotificationStatus.UNREAD"
+         [class]="'notification-' + notification.type.toLowerCase()"
+         (click)="markAsRead(notification)">
+      
+      <!-- Icon -->
+      <div class="notification-icon" [class]="getNotificationColor(notification.type)">
+        <span class="material-icons">{{ getNotificationIcon(notification.type) }}</span>
+      </div>
+
+      <!-- Content -->
+      <div class="notification-content">
+        <h3 class="notification-item-title">{{ notification.title }}</h3>
+        <p class="notification-item-message">{{ notification.message }}</p>
+        <span class="notification-time">{{ getTimeAgo(notification.timestamp) }}</span>
+      </div>
+
+      <!-- Delete button -->
+      <button 
+        class="notification-delete-icon"
+        (click)="deleteNotification(notification, $event)"
+        title="Obriši">
+        <span class="material-icons">close</span>
+      </button>
+
+      <!-- Unread indicator -->
+      <div class="unread-dot" *ngIf="notification.status === NotificationStatus.UNREAD"></div>
+    </div>
+  </div>
+</div>

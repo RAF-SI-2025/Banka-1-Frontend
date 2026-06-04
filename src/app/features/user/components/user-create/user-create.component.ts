@@ -30,10 +30,102 @@ export class UserCreateComponent {
   public jmbg = '';
   public submitting = false;
 
+  // Validation error messages
+  public validationErrors: { [key: string]: string } = {};
+
   constructor(private router: Router, private route: ActivatedRoute, private userService: UserService) {}
+
+  /**
+   * Validira sve polja forme
+   */
+  private validateForm(): boolean {
+    this.validationErrors = {};
+    let isValid = true;
+
+    // Validira email
+    if (!this.email) {
+      this.validationErrors['email'] = 'Email je obavezan.';
+      isValid = false;
+    } else if (!this.isValidEmail(this.email)) {
+      this.validationErrors['email'] = 'Email mora biti validnog formata (npr. banka@primer.rs).';
+      isValid = false;
+    }
+
+    // Validira telefon
+    if (this.phone && !this.isValidPhone(this.phone)) {
+      this.validationErrors['phone'] = 'Broj telefona može sadržavati samo cifre i opciono + na početku.';
+      isValid = false;
+    }
+
+    // Validira datum rođenja
+    if (!this.dateOfBirth) {
+      this.validationErrors['dateOfBirth'] = 'Datum rođenja je obavezan.';
+      isValid = false;
+    } else if (!this.isValidDateOfBirth(this.dateOfBirth)) {
+      this.validationErrors['dateOfBirth'] = 'Datum rođenja ne sme biti u budućnosti.';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  /**
+   * Proverava da li je email validan
+   */
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * Proverava da li je telefon validan (samo cifre i opciono + na početku)
+   */
+  private isValidPhone(phone: string): boolean {
+    const phoneRegex = /^(\+)?[0-9\s\-\(\)]{6,20}$/;
+    if (!phoneRegex.test(phone)) {
+      return false;
+    }
+    // Proverava da li ima bar nekoliko cifara
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 6;
+  }
+
+  /**
+   * Proverava da li datum nije u budućnosti
+   */
+  private isValidDateOfBirth(date: string): boolean {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return selectedDate <= today;
+  }
+
+  /**
+   * Proverava da li je forma validna
+   */
+  public isFormValid(): boolean {
+    return !!this.firstName &&
+           !!this.lastName &&
+           !!this.dateOfBirth &&
+           !!this.gender &&
+           !!this.email &&
+           !!this.jmbg &&
+           this.jmbg.length === 13 &&
+           this.isValidEmail(this.email) &&
+           (!this.phone || this.isValidPhone(this.phone)) &&
+           this.isValidDateOfBirth(this.dateOfBirth);
+  }
 
   public submit(form: NgForm): void {
     this.submitting = true;
+
+    // Validira sve polje
+    if (!this.validateForm()) {
+      form.form.markAllAsTouched();
+      this.submitting = false;
+      return;
+    }
 
     // If form is invalid, do not proceed and show validation messages
     if (form.invalid) {

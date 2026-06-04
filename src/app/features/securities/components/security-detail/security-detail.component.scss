@@ -1,31 +1,11 @@
 // Security detail component styles
+// PR_31 Phase 7 T24: Canvas chart uklonjen — ApexCharts (app-price-chart) sad rentuje.
 
 :host {
   display: block;
 }
 
-.chart-container {
-  position: relative;
-  width: 100%;
-  height: 300px;
-
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-}
-
-// Change colors
-.text-green-600 {
-  color: #16a34a;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-// Grid divider
+// Grid divider helper (Tailwind divide-x utility prati ovo)
 .divide-x > :not([hidden]) ~ :not([hidden]) {
   border-left-width: 1px;
   border-left-style: solid;

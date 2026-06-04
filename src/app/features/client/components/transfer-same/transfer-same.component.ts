@@ -6,16 +6,17 @@ import { Account } from '../../models/account.model';
 import { AccountService } from '../../services/account.service';
 import { TransferService } from '../../services/transfer.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { NavbarComponent } from '../../../../shared/components/navbar/navbar.component';
 import { VerificationModalComponent } from '../../modals/verification-modal/verification-modal.component';
+import { NotificationType } from '../../../../shared/models/notification.model';
 
 type Step = 'form' | 'confirm' | 'success';
 
 @Component({
   selector: 'app-transfer-same',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, VerificationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, VerificationModalComponent],
   templateUrl: './transfer-same.component.html',
   styleUrls: ['./transfer-same.component.scss']
 })
@@ -38,6 +39,7 @@ export class TransferSameComponent implements OnInit {
     private accountService: AccountService,
     private transferService: TransferService,
     private toastService: ToastService,
+    private notificationService: NotificationService,
     private authService: AuthService,
     private router: Router
   ) {}
@@ -140,10 +142,18 @@ export class TransferSameComponent implements OnInit {
     };
 
     this.transferService.transfer(payload).subscribe({
-      next: () => {
+      next: (response) => {
         this.isSubmitting = false;
         this.step = 'success';
         this.toastService.success('Prenos je uspešno izvršen!');
+        
+        // Add notification
+        this.notificationService.addNotification({
+          type: NotificationType.TRANSFER,
+          title: 'Prenos izršen',
+          message: `Prenos od ${payload.amount} ${this.selectedFromAccount?.currency} sa računa ${payload.fromAccountNumber} na račun ${payload.toAccountNumber} je uspešno izvršen.`,
+          data: { transferResponse: response }
+        });
       },
       error: (err) => {
         this.isSubmitting = false;

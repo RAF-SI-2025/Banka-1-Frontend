@@ -72,11 +72,14 @@ export class AuthService {
         tap((res) => {
           localStorage.setItem(this.TOKEN_KEY, res.token);
 
-          // Izvuci ulogu iz JWT tokena
           let role = 'CLIENT';
+          let permissions: string[] = ['BANKING_BASIC'];
           try {
             const payload = JSON.parse(atob(res.token.split('.')[1]));
             role = payload.roles ?? 'CLIENT';
+            if (Array.isArray(payload.permissions)) {
+              permissions = payload.permissions.map((p: unknown) => String(p));
+            }
           } catch (_) {}
 
           localStorage.setItem(
@@ -84,7 +87,7 @@ export class AuthService {
             JSON.stringify({
               email,
               role,
-              permissions: ['BANKING_BASIC'],
+              permissions,
             }),
           );
         }),
@@ -313,9 +316,14 @@ export class AuthService {
    */
   refreshToken(): Observable<RefreshResponse> {
     const refreshToken = localStorage.getItem('refreshToken');
+    // Posle PR_020 konsolidacije routing je per-domain: /employees/auth/refresh za
+    // zaposlene, /clients/auth/refresh za klijente. Ranije se zvao zajednicki
+    // `/auth/refresh` koji ne postoji u API gateway-u, pa je svaki 401 vodio na
+    // 404 → logout (efekat: refresh stranice izloguje korisnika).
+    const prefix = this.isClient() ? '/clients' : '/employees';
 
     return this.http
-      .post<RefreshResponse>(`${environment.apiUrl}/auth/refresh`, {
+      .post<RefreshResponse>(`${environment.apiUrl}${prefix}/auth/refresh`, {
         refreshToken,
       })
       .pipe(
@@ -334,7 +342,13 @@ export class AuthService {
           );
         }),
         catchError((err) => {
-          this.logout();
+          // Ranije: bezuslovno logout kad refresh fail-uje. Posledica: 404 na
+          // /clients/auth/refresh (klijenti uopste nemaju refresh endpoint posle
+          // PR_020 konsolidacije) izlogavao je korisnika kod svakog 401-a, sto
+          // ukljucuje i obican refresh stranice. Sad samo prosledjujemo error;
+          // ako je access token zaista istekao, authGuard ce uhvatiti sledecu
+          // navigaciju a guarded komponenta dobije 401 koji UI prikazuje kao
+          // toast — ali sesija ostaje dok je access token jos validan.
           return throwError(() => err);
         }),
       );

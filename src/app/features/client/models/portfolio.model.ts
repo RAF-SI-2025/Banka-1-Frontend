@@ -2,6 +2,7 @@ export type PortfolioListingType = 'STOCK' | 'FUTURES' | 'FOREX' | 'OPTION';
 
 export interface PortfolioHolding {
   id?: number;
+  listingId: number;
   listingType: PortfolioListingType;
   ticker: string;
   quantity: number;
