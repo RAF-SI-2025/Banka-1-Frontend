@@ -34,7 +34,13 @@ jobs:
       - name: TypeScript type check
         run: npx tsc -p tsconfig.app.json --noEmit
 
-  # ── Cypress E2E Tests (parallelno po grupama) ─────────────────────────────
+  # ── Cypress E2E Tests ─────────────────────────────────────────────────────
+  # 4 paralelna runnera:
+  #   legacy-1/2/3 — po 11 starih spec fajlova, svaki podiže vlastiti backend
+  #   kt            — svi kt3/kt4/kt5/todo testovi, sve interceptovano, bez backenda
+  #
+  # Docker slike se kešuju nedeljno po runneru (actions/cache) da se
+  # izbegne pull od ~3 min pri svakom runu.
   cypress:
     name: Cypress (${{ matrix.group }})
     runs-on: ubuntu-latest
@@ -42,10 +48,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - group: legacy
-            spec: 'cypress/e2e/*.cy.ts'
+          - group: legacy-1
+            spec: "cypress/e2e/account-list.cy.ts,cypress/e2e/account-management.cy.ts,cypress/e2e/activate-account.cy.ts,cypress/e2e/actuary-and-exchange.cy.ts,cypress/e2e/actuary-management.cy.ts,cypress/e2e/auth.cy.ts,cypress/e2e/card-list.cy.ts,cypress/e2e/employee-account-create.cy.ts,cypress/e2e/employee-create.cy.ts,cypress/e2e/employee-edit.cy.ts,cypress/e2e/employee-list.cy.ts"
+            backend: true
+          - group: legacy-2
+            spec: "cypress/e2e/employee-management.cy.ts,cypress/e2e/exchange.cy.ts,cypress/e2e/forgot-password.cy.ts,cypress/e2e/funds-full-flow.cy.ts,cypress/e2e/home.cy.ts,cypress/e2e/home-transactions.cy.ts,cypress/e2e/issue-199-demo.cy.ts,cypress/e2e/loan-flow.cy.ts,cypress/e2e/margin-flow.cy.ts,cypress/e2e/margin-portal.cy.ts,cypress/e2e/my-funds.cy.ts"
+            backend: true
+          - group: legacy-3
+            spec: "cypress/e2e/orders-overview.cy.ts,cypress/e2e/otc-contracts.cy.ts,cypress/e2e/otc-full-negotiation.cy.ts,cypress/e2e/otc-funds-flow.cy.ts,cypress/e2e/otc-notifications.cy.ts,cypress/e2e/payment-recipients.cy.ts,cypress/e2e/reset-password.cy.ts,cypress/e2e/securities-and-portfolio.cy.ts,cypress/e2e/transfer-diff.cy.ts,cypress/e2e/transfer-payment.cy.ts,cypress/e2e/transfer-same.cy.ts"
+            backend: true
           - group: kt
-            spec: 'cypress/e2e/kt3/**/*.cy.ts,cypress/e2e/kt4/**/*.cy.ts,cypress/e2e/kt5/**/*.cy.ts,cypress/e2e/todo/**/*.cy.ts'
+            spec: "cypress/e2e/kt3/**/*.cy.ts,cypress/e2e/kt4/**/*.cy.ts,cypress/e2e/kt5/**/*.cy.ts,cypress/e2e/todo/**/*.cy.ts"
+            backend: false
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -59,7 +73,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ── Docker image cache (samo backend runneri) ─────────────────────────
+      - name: Get weekly cache key
+        if: matrix.backend
+        id: cache-date
+        run: echo "week=$(date +%Y-W%V)" >> $GITHUB_OUTPUT
+
+      - name: Cache Docker images
+        if: matrix.backend
+        id: docker-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-images.tar.gz
+          key: docker-${{ runner.os }}-${{ steps.cache-date.outputs.week }}-${{ hashFiles('.github/ci/docker-compose.backend.yml') }}
+
+      - name: Load cached Docker images
+        if: matrix.backend && steps.docker-cache.outputs.cache-hit == 'true'
+        run: docker load < /tmp/docker-images.tar.gz
+
       - name: Log in to GHCR
+        if: matrix.backend && steps.docker-cache.outputs.cache-hit != 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -67,6 +100,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull backend images
+        if: matrix.backend && steps.docker-cache.outputs.cache-hit != 'true'
         id: pull-images
         continue-on-error: true
         run: |
@@ -82,6 +116,23 @@ jobs:
           docker pull ghcr.io/raf-si-2025/banka-1-backend/stock-service:latest
           docker pull ghcr.io/raf-si-2025/banka-1-backend/order-service:latest
 
+      - name: Save Docker images to cache
+        if: matrix.backend && steps.docker-cache.outputs.cache-hit != 'true' && steps.pull-images.outcome == 'success'
+        run: |
+          docker save \
+            ghcr.io/raf-si-2025/banka-1-backend/employee-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/client-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/account-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/transfer-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/exchange-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/verification-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/transaction-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/card-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/credit-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/stock-service:latest \
+            ghcr.io/raf-si-2025/banka-1-backend/order-service:latest \
+            | gzip > /tmp/docker-images.tar.gz
+
       - name: Warn if backend images unavailable
         id: images-check
         if: steps.pull-images.outcome == 'failure'
@@ -92,7 +143,7 @@ jobs:
           echo "skip=true" >> $GITHUB_OUTPUT
 
       - name: Start backend stack
-        if: steps.images-check.outputs.skip != 'true'
+        if: matrix.backend && steps.images-check.outputs.skip != 'true'
         working-directory: .github/ci
         run: |
           JWT_SECRET="${{ secrets.JWT_SECRET }}" \
@@ -112,7 +163,7 @@ jobs:
           echo "Backend services started."
 
       - name: Wait for API gateway to be ready
-        if: steps.images-check.outputs.skip != 'true'
+        if: matrix.backend && steps.images-check.outputs.skip != 'true'
         run: |
           echo "Waiting for API gateway (this may take up to 5 minutes for JVM warm-up)..."
           for i in $(seq 1 60); do
@@ -153,7 +204,7 @@ jobs:
           retention-days: 7
 
       - name: Show backend logs on failure
-        if: failure() && steps.images-check.outputs.skip != 'true'
+        if: failure() && matrix.backend && steps.images-check.outputs.skip != 'true'
         run: |
           echo "=== API Gateway ==="
           docker logs banka_api_gateway 2>/dev/null || true
@@ -167,7 +218,7 @@ jobs:
           docker logs banka_stock_service --tail=30 2>/dev/null || true
 
       - name: Tear down backend
-        if: always() && steps.images-check.outputs.skip != 'true'
+        if: always() && matrix.backend && steps.images-check.outputs.skip != 'true'
         run: |
           docker compose -f .github/ci/docker-compose.backend.yml -p banka1-ci down -v \
             >/dev/null 2>&1 || true
