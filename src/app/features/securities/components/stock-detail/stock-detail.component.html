@@ -28,13 +28,36 @@
     <!-- Content -->
     <div *ngIf="!isLoading && !errorMessage && stock">
       <!-- Stock name + alert button -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h2 class="text-xl font-semibold text-foreground">
           {{ stock.ticker }} - {{ stock.name }}
         </h2>
-        <button type="button" class="z-btn-outline" (click)="openAlertModal()">
-          Postavi alert
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <select
+            class="z-select"
+            [(ngModel)]="selectedWatchlistId"
+            [disabled]="watchlists.length === 0"
+            aria-label="Izaberite watchlistu"
+          >
+            <option value="" disabled>
+              {{ watchlists.length === 0 ? 'Prvo kreirajte watchlistu' : 'Izaberite watchlistu' }}
+            </option>
+            <option *ngFor="let watchlist of watchlists" [value]="watchlist.id">
+              {{ watchlist.name }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="z-btn-outline"
+            [disabled]="watchlists.length === 0"
+            (click)="addStockToWatchlist()"
+          >
+            Dodaj na watchlist
+          </button>
+          <button type="button" class="z-btn-outline" (click)="openAlertModal()">
+            Postavi alert
+          </button>
+        </div>
       </div>
 
       <!-- Main info card with chart -->

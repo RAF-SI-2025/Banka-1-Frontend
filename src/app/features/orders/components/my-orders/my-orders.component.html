@@ -38,6 +38,15 @@
       </div>
 
       <div>
+        <label class="z-label">Tip ordera</label>
+        <select class="z-select" [(ngModel)]="selectedOrderType">
+          <option *ngFor="let option of orderTypeOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
         <label class="z-label">Tip hartije</label>
         <select class="z-select" [(ngModel)]="selectedSecurityType">
           <option *ngFor="let option of securityTypeOptions" [ngValue]="option.value">

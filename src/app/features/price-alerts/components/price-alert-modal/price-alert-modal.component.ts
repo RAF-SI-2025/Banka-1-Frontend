@@ -32,7 +32,6 @@ export class PriceAlertModalComponent {
   readonly notificationOptions: { value: PriceAlertNotificationType; label: string }[] = [
     { value: 'IN_APP', label: 'In-app notifikacija' },
     { value: 'EMAIL', label: 'Email' },
-    { value: 'SMS', label: 'SMS' },
   ];
 
   constructor(private readonly priceAlertService: PriceAlertService) {}
