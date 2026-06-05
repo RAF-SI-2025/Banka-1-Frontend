@@ -17,6 +17,9 @@ import { StateComponent } from '../../../../shared/components/state/state.compon
 import { PriceChartComponent, PriceSeriesPoint } from '../../../../shared/charts/price-chart/price-chart.component';
 import { PriceAlertModalComponent } from '../../../price-alerts/components/price-alert-modal/price-alert-modal.component';
 import { SecurityForAlert } from '../../../price-alerts/models/price-alert.model';
+import { Watchlist } from '../../../watchlist/models/watchlist.model';
+import { WatchlistService } from '../../../watchlist/services/watchlist.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 type Period = 'day' | 'week' | 'month' | 'year' | '5year' | 'all';
 
@@ -39,6 +42,8 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   stock: Stock | null = null;
 
   alertSecurity: SecurityForAlert | null = null;
+  watchlists: Watchlist[] = [];
+  selectedWatchlistId = '';
   priceHistory: PriceHistory | null = null;
   optionChain: OptionChain | null = null;
 
@@ -73,7 +78,9 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly securitiesService: SecuritiesService
+    private readonly securitiesService: SecuritiesService,
+    private readonly watchlistService: WatchlistService,
+    private readonly toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -86,6 +93,15 @@ export class StockDetailComponent implements OnInit, OnDestroy {
     interval(60000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.loadPriceHistory());
+
+    this.watchlistService.watchlists$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((watchlists) => {
+        this.watchlists = watchlists;
+        if (!this.selectedWatchlistId || !watchlists.some((w) => w.id === this.selectedWatchlistId)) {
+          this.selectedWatchlistId = watchlists[0]?.id ?? '';
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -341,6 +357,27 @@ export class StockDetailComponent implements OnInit, OnDestroy {
       changePercent: this.stock.changePercent,
       currency: this.stock.currency,
     };
+  }
+
+  addStockToWatchlist(): void {
+    if (!this.stock || !this.selectedWatchlistId) {
+      this.toastService.error('Prvo izaberite watchlistu.');
+      return;
+    }
+
+    this.watchlistService.addSecurityToWatchlist(this.selectedWatchlistId, {
+      id: this.stock.id,
+      ticker: this.stock.ticker,
+      name: this.stock.name,
+      securityType: 'STOCK',
+      exchange: this.stock.exchange,
+      price: Number(this.stock.price) || 0,
+      dailyChange: Number(this.stock.change) || 0,
+      dailyChangePercent: Number(this.stock.changePercent) || 0,
+      volume: Number(this.stock.volume) || 0,
+      currency: this.stock.currency,
+    });
+    this.toastService.success(`${this.stock.ticker} je dodat na watchlistu.`);
   }
 
   closeAlertModal(): void {

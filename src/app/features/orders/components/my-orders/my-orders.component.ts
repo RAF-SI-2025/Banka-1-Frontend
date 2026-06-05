@@ -11,6 +11,7 @@ import { OrderService } from '../../services/order.service';
 
 type SecurityTypeFilter = 'ALL' | 'STOCK' | 'FUTURE' | 'FOREX';
 type OrderStatusFilter = 'ALL' | OrderStatus;
+type OrderTypeFilter = 'ALL' | OrderType;
 
 interface MyOrderView {
   id: number;
@@ -39,6 +40,7 @@ export class MyOrdersComponent implements OnInit {
   errorMessage = '';
 
   selectedStatus: OrderStatusFilter = 'ALL';
+  selectedOrderType: OrderTypeFilter = 'ALL';
   selectedSecurityType: SecurityTypeFilter = 'ALL';
   dateFrom = '';
   dateTo = '';
@@ -59,6 +61,14 @@ export class MyOrdersComponent implements OnInit {
     { value: 'FOREX', label: 'Forex' },
   ];
 
+  readonly orderTypeOptions: { value: OrderTypeFilter; label: string }[] = [
+    { value: 'ALL', label: 'Svi tipovi' },
+    { value: 'MARKET', label: 'Market' },
+    { value: 'LIMIT', label: 'Limit' },
+    { value: 'STOP', label: 'Stop' },
+    { value: 'STOP_LIMIT', label: 'Stop-Limit' },
+  ];
+
   constructor(private readonly orderService: OrderService) {}
 
   ngOnInit(): void {
@@ -69,6 +79,10 @@ export class MyOrdersComponent implements OnInit {
     return this.orders.filter((order) => {
       const matchesStatus =
         this.selectedStatus === 'ALL' || order.status === this.selectedStatus;
+
+      const matchesOrderType =
+        this.selectedOrderType === 'ALL' ||
+        order.orderType === this.selectedOrderType;
 
       const matchesSecurityType =
         this.selectedSecurityType === 'ALL' ||
@@ -88,6 +102,7 @@ export class MyOrdersComponent implements OnInit {
 
       return (
         matchesStatus &&
+        matchesOrderType &&
         matchesSecurityType &&
         matchesDateFrom &&
         matchesDateTo
@@ -114,6 +129,7 @@ export class MyOrdersComponent implements OnInit {
 
   clearFilters(): void {
     this.selectedStatus = 'ALL';
+    this.selectedOrderType = 'ALL';
     this.selectedSecurityType = 'ALL';
     this.dateFrom = '';
     this.dateTo = '';

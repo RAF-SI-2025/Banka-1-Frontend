@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '@/shared/services/toast.service';
 import {
   CreatePriceAlertRequest,
@@ -7,43 +9,58 @@ import {
   SecurityForAlert,
 } from '../models/price-alert.model';
 
-const STORAGE_KEY = 'banka1_price_alerts';
-
 @Injectable({ providedIn: 'root' })
 export class PriceAlertService {
-  private readonly alertsSubject = new BehaviorSubject<PriceAlert[]>(this.loadInitialAlerts());
+  private readonly alertsSubject = new BehaviorSubject<PriceAlert[]>([]);
+  private readonly apiUrl = `${environment.apiUrl}/stock/price-alerts`;
 
   readonly alerts$ = this.alertsSubject.asObservable();
 
-  constructor(private readonly toastService: ToastService) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly toastService: ToastService,
+  ) {
+    this.refreshAlerts();
+  }
 
   get currentAlerts(): PriceAlert[] {
     return this.alertsSubject.value;
   }
 
-  createAlert(request: CreatePriceAlertRequest): void {
-    const alert: PriceAlert = {
-      id: crypto.randomUUID(),
-      securityId: request.security.id,
-      ticker: request.security.ticker,
-      securityName: request.security.name,
-      currentPriceAtCreation: Number(request.security.price) || 0,
-      condition: request.condition,
-      threshold: Number(request.threshold) || 0,
-      notificationType: request.notificationType,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
+  refreshAlerts(): void {
+    this.http.get<any[]>(this.apiUrl).subscribe({
+      next: (alerts) => this.alertsSubject.next(alerts.map((alert) => this.mapFromApi(alert))),
+      error: () => this.toastService.error('Greška pri učitavanju price alert-a.'),
+    });
+  }
 
-    this.updateAlerts([alert, ...this.currentAlerts]);
+  createAlert(request: CreatePriceAlertRequest): void {
+    this.http.post<any>(this.apiUrl, {
+      listingId: request.security.id,
+      condition: this.mapConditionToApi(request.condition),
+      threshold: request.threshold,
+      notificationType: request.notificationType === 'IN_APP' ? 'PUSH' : request.notificationType,
+    }).subscribe({
+      next: (alert) => {
+        const created = this.mapFromApi(alert, request.security);
+        this.alertsSubject.next([created, ...this.currentAlerts]);
+        this.toastService.success('Price alert je uspešno kreiran.');
+      },
+      error: () => this.toastService.error('Greška pri kreiranju price alert-a.'),
+    });
   }
 
   deactivateAlert(alertId: string): void {
-    const updated = this.currentAlerts.map((alert) =>
-      alert.id === alertId ? { ...alert, isActive: false } : alert,
-    );
-
-    this.updateAlerts(updated);
+    this.http.patch<any>(`${this.apiUrl}/${alertId}`, {}).subscribe({
+      next: (alert) => {
+        const updatedAlert = this.mapFromApi(alert);
+        const updated = this.currentAlerts.map((current) =>
+          current.id === alertId ? { ...current, ...updatedAlert } : current,
+        );
+        this.alertsSubject.next(updated);
+      },
+      error: () => this.toastService.error('Greška pri deaktiviranju price alert-a.'),
+    });
   }
 
   evaluateSecurities(securities: SecurityForAlert[]): void {
@@ -74,19 +91,14 @@ export class PriceAlertService {
       }
 
       changed = true;
-      const triggeredAlert: PriceAlert = {
-        ...alert,
-        isActive: false,
-        triggeredAt: new Date().toISOString(),
-      };
-
       this.toastService.success(this.buildNotificationMessage(alert, currentPrice, changePercent));
 
-      return triggeredAlert;
+      return alert;
     });
 
     if (changed) {
-      this.updateAlerts(updated);
+      this.alertsSubject.next(updated);
+      this.refreshAlerts();
     }
   }
 
@@ -122,23 +134,27 @@ export class PriceAlertService {
     }).format(value);
   }
 
-  private loadInitialAlerts(): PriceAlert[] {
-    const saved = localStorage.getItem(STORAGE_KEY);
-
-    if (!saved) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(saved) as PriceAlert[];
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return [];
-    }
+  private mapConditionToApi(condition: PriceAlert['condition']): string {
+    return condition === 'DAILY_DROP_PERCENT' ? 'PCT_DROP_INTRADAY' : condition;
   }
 
-  private updateAlerts(alerts: PriceAlert[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-    this.alertsSubject.next(alerts);
+  private mapConditionFromApi(condition: string): PriceAlert['condition'] {
+    return condition === 'PCT_DROP_INTRADAY' ? 'DAILY_DROP_PERCENT' : condition as PriceAlert['condition'];
+  }
+
+  private mapFromApi(alert: any, security?: CreatePriceAlertRequest['security']): PriceAlert {
+    return {
+      id: String(alert.id),
+      securityId: Number(alert.listingId ?? security?.id ?? 0),
+      ticker: alert.ticker ?? security?.ticker ?? `#${alert.listingId}`,
+      securityName: alert.securityName ?? security?.name ?? alert.ticker ?? `Hartija #${alert.listingId}`,
+      currentPriceAtCreation: Number(security?.price ?? 0),
+      condition: this.mapConditionFromApi(alert.condition),
+      threshold: Number(alert.threshold ?? 0),
+      notificationType: alert.notificationType === 'PUSH' ? 'IN_APP' : alert.notificationType,
+      isActive: Boolean(alert.active),
+      createdAt: alert.createdAt,
+      triggeredAt: alert.lastTriggeredAt ?? undefined,
+    };
   }
 }

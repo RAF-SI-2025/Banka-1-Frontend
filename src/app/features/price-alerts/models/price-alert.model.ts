@@ -1,5 +1,5 @@
 export type PriceAlertCondition = 'ABOVE' | 'BELOW' | 'DAILY_DROP_PERCENT';
-export type PriceAlertNotificationType = 'IN_APP' | 'EMAIL' | 'SMS';
+export type PriceAlertNotificationType = 'IN_APP' | 'EMAIL';
 
 export interface SecurityForAlert {
   id: number;

@@ -81,7 +81,7 @@ export const NAV_MANIFEST: NavGroup[] = [
       { label: 'Fondovi',              route: '/funds',       icon: 'building',   requiredPermissions: ['FUND_AGENT_MANAGE', 'CLIENT_TRADING', 'TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED', 'SUPERVISOR', 'ADMIN'] },
       { label: 'Trajni nalozi',          route: '/recurring-orders', icon: 'briefcase',  requiredPermissions: [ 'CLIENT_TRADING','SECURITIES_TRADE_LIMITED','TRADE_UNLIMITED', 'SECURITIES_TRADE_UNLIMITED' ] },
       { label: 'Watchlista', route: '/watchlist', icon: 'trendingup', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING',],},
-      { label: 'Moji orderi', route: '/my-orders', icon: 'receipt', requiredPermissions: ['CLIENT_TRADING'] },
+      { label: 'Moji orderi', route: '/my-orders', icon: 'receipt', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING'] },
       { label: 'Price alerti', route: '/price-alerts', icon: 'bell', requiredPermissions: ['SECURITIES_TRADE_UNLIMITED', 'SECURITIES_TRADE_LIMITED', 'TRADE_UNLIMITED', 'CLIENT_TRADING',],},
     ],
   },
