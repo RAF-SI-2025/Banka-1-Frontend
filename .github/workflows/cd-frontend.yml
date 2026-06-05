@@ -1,0 +1,44 @@
+name: cd-frontend
+# Build + push the Angular frontend image to GHCR so the k8s frontend Deployment
+# (image: ghcr.io/raf-si-2025/banka-1-frontend:latest) has something to pull.
+# The repo Dockerfile already does: node build -> nginx:alpine serving the SPA.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase GHCR owner
+        id: owner
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build + push banka-1-frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.owner.outputs.owner }}/banka-1-frontend:latest
+            ghcr.io/${{ steps.owner.outputs.owner }}/banka-1-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
