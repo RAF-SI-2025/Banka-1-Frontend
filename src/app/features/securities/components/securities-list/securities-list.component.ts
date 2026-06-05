@@ -51,7 +51,7 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   watchlists: Watchlist[] = [];
-  selectedWatchlistBySecurityId: Record<number, string> = {};
+  selectedWatchlistBySecurityId: Record<number, number> = {};
 
   currentPage = 0;
   pageSize = 10;
@@ -367,49 +367,7 @@ export class SecuritiesListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const securityType =
-      security.securityType ??
-      security.type ??
-      security.listingType ??
-      this.getSecurityTypeFromActiveTab();
-
-    const price =
-      security.price ??
-      security.lastPrice ??
-      security.currentPrice ??
-      security.ask ??
-      0;
-
-    const dailyChange =
-      security.dailyChange ??
-      security.change ??
-      security.priceChange ??
-      0;
-
-    const dailyChangePercent =
-      security.dailyChangePercent ??
-      security.changePercent ??
-      security.changePercentage ??
-      0;
-
-    this.watchlistService.addSecurityToWatchlist(watchlistId, {
-      id: security.id,
-      ticker: security.ticker,
-      name: security.name,
-      securityType,
-      exchange:
-        security.exchange ??
-        security.exchangeAcronym ??
-        security.stockExchange ??
-        '-',
-      price: Number.isFinite(Number(price)) ? Number(price) : 0,
-      dailyChange: Number.isFinite(Number(dailyChange)) ? Number(dailyChange) : 0,
-      dailyChangePercent: Number.isFinite(Number(dailyChangePercent))
-        ? Number(dailyChangePercent)
-        : 0,
-      volume: Number.isFinite(Number(security.volume)) ? Number(security.volume) : 0,
-      currency: security.currency ?? 'USD',
-    });
+    this.watchlistService.addItem(watchlistId, security.id).subscribe();
   }
 
   private getSecurityTypeFromActiveTab(): 'STOCK' | 'FUTURE' | 'FOREX' {

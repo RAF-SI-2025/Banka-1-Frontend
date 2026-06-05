@@ -1,95 +1,47 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { Watchlist, WatchlistSecurity } from '../models/watchlist.model';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { Watchlist, WatchlistItem } from '../models/watchlist.model';
 
-const STORAGE_KEY = 'banka1_watchlists';
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class WatchlistService {
-  private readonly watchlistsSubject = new BehaviorSubject<Watchlist[]>(
-    this.loadInitialWatchlists(),
-  );
+  private readonly baseUrl = `${environment.apiUrl}/watchlists`;
+  private readonly watchlistsSubject = new BehaviorSubject<Watchlist[]>([]);
 
   readonly watchlists$ = this.watchlistsSubject.asObservable();
 
-  get currentWatchlists(): Watchlist[] {
-    return this.watchlistsSubject.value;
-  }
+  constructor(private readonly http: HttpClient) {}
 
-  createWatchlist(name: string): void {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      return;
-    }
-
-    const newWatchlist: Watchlist = {
-      id: crypto.randomUUID(),
-      name: trimmedName,
-      securities: [],
-    };
-
-    this.updateWatchlists([...this.currentWatchlists, newWatchlist]);
-  }
-
-  addSecurityToWatchlist(watchlistId: string, security: WatchlistSecurity): void {
-    const updated = this.currentWatchlists.map((watchlist) => {
-      if (watchlist.id !== watchlistId) {
-        return watchlist;
-      }
-
-      const alreadyExists = watchlist.securities.some(
-        (item) => item.id === security.id || item.ticker === security.ticker,
-      );
-
-      if (alreadyExists) {
-        return watchlist;
-      }
-
-      return {
-        ...watchlist,
-        securities: [...watchlist.securities, security],
-      };
+  refreshWatchlists(): void {
+    this.http.get<Watchlist[]>(this.baseUrl).subscribe({
+      next: (watchlists) => this.watchlistsSubject.next(watchlists),
+      error: () => {},
     });
-
-    this.updateWatchlists(updated);
   }
 
-  removeSecurityFromWatchlist(watchlistId: string, securityId: number): void {
-    const updated = this.currentWatchlists.map((watchlist) => {
-      if (watchlist.id !== watchlistId) {
-        return watchlist;
-      }
-
-      return {
-        ...watchlist,
-        securities: watchlist.securities.filter(
-          (security) => security.id !== securityId,
-        ),
-      };
-    });
-
-    this.updateWatchlists(updated);
+  createWatchlist(name: string): Observable<Watchlist> {
+    return this.http.post<Watchlist>(this.baseUrl, { name }).pipe(
+      tap(() => this.refreshWatchlists()),
+    );
   }
 
-  private loadInitialWatchlists(): Watchlist[] {
-    const saved = localStorage.getItem(STORAGE_KEY);
-
-    if (saved) {
-      try {
-        return JSON.parse(saved) as Watchlist[];
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-
-    return [];
+  deleteWatchlist(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.refreshWatchlists()),
+    );
   }
 
-  private updateWatchlists(watchlists: Watchlist[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-    this.watchlistsSubject.next(watchlists);
+  getItems(watchlistId: number): Observable<WatchlistItem[]> {
+    return this.http.get<WatchlistItem[]>(`${this.baseUrl}/${watchlistId}/items`);
+  }
+
+  addItem(watchlistId: number, listingId: number): Observable<WatchlistItem> {
+    return this.http.post<WatchlistItem>(`${this.baseUrl}/${watchlistId}/items`, { listingId });
+  }
+
+  removeItem(watchlistId: number, itemId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${watchlistId}/items/${itemId}`);
   }
 }

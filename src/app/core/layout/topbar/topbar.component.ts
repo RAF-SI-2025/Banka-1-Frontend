@@ -9,7 +9,6 @@ import { AppNotification } from '../../../shared/models/app-notification.model';
 import { AppNotificationService } from '../../../shared/services/app-notification.service';
 import { OtcService } from '../../../features/otc/services/otc.service';
 import { WatchlistService } from '../../../features/watchlist/services/watchlist.service';
-import { WatchlistSecurity } from '../../../features/watchlist/models/watchlist.model';
 
 type ThemeIcon = 'sun' | 'moon' | 'monitor';
 
@@ -60,7 +59,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   watchlistMenuOpen = false;
 
   userInitials = '';
-  watchlistPreview: WatchlistSecurity[] = [];
+  watchlistPreview: any[] = [];
 
   private sub?: Subscription;
   private watchlistSub?: Subscription;
@@ -147,11 +146,6 @@ export class TopbarComponent implements OnInit, OnDestroy {
     if (n.route) {
       this.router.navigateByUrl(n.route);
     }
-    this.watchlistSub = this.watchlistService.watchlists$.subscribe((watchlists) => {
-      this.watchlistPreview = watchlists
-        .flatMap((watchlist) => watchlist.securities)
-        .slice(0, 4);
-    });
   }
 
   setTheme(t: Theme): void {
@@ -205,19 +199,19 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return THEME_LABELS[t];
   }
 
-  formatHeaderPrice(security: WatchlistSecurity): string {
+  formatHeaderPrice(security: any): string {
     const currency = security.currency ?? 'USD';
 
     return `${this.formatNumber(security.price)} ${currency}`;
   }
 
-  formatHeaderChange(security: WatchlistSecurity): string {
+  formatHeaderChange(security: any): string {
     const sign = security.dailyChangePercent >= 0 ? '+' : '';
 
     return `${sign}${this.formatNumber(security.dailyChangePercent)}%`;
   }
 
-  getHeaderChangeClass(security: WatchlistSecurity): string {
+  getHeaderChangeClass(security: any): string {
     if (security.dailyChangePercent > 0) {
       return 'quick-change-positive';
     }
@@ -229,7 +223,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return 'quick-change-neutral';
   }
 
-  formatHeaderVolume(security: WatchlistSecurity): string {
+  formatHeaderVolume(security: any): string {
     return new Intl.NumberFormat('sr-RS').format(security.volume);
   }
 

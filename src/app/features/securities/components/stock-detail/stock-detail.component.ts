@@ -43,7 +43,7 @@ export class StockDetailComponent implements OnInit, OnDestroy {
 
   alertSecurity: SecurityForAlert | null = null;
   watchlists: Watchlist[] = [];
-  selectedWatchlistId = '';
+  selectedWatchlistId: number | null = null;
   priceHistory: PriceHistory | null = null;
   optionChain: OptionChain | null = null;
 
@@ -98,8 +98,8 @@ export class StockDetailComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((watchlists) => {
         this.watchlists = watchlists;
-        if (!this.selectedWatchlistId || !watchlists.some((w) => w.id === this.selectedWatchlistId)) {
-          this.selectedWatchlistId = watchlists[0]?.id ?? '';
+        if (this.selectedWatchlistId === null || !watchlists.some((w) => w.id === this.selectedWatchlistId)) {
+          this.selectedWatchlistId = watchlists[0]?.id ?? null;
         }
       });
   }
@@ -360,24 +360,15 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   }
 
   addStockToWatchlist(): void {
-    if (!this.stock || !this.selectedWatchlistId) {
+    if (!this.stock || this.selectedWatchlistId === null) {
       this.toastService.error('Prvo izaberite watchlistu.');
       return;
     }
 
-    this.watchlistService.addSecurityToWatchlist(this.selectedWatchlistId, {
-      id: this.stock.id,
-      ticker: this.stock.ticker,
-      name: this.stock.name,
-      securityType: 'STOCK',
-      exchange: this.stock.exchange,
-      price: Number(this.stock.price) || 0,
-      dailyChange: Number(this.stock.change) || 0,
-      dailyChangePercent: Number(this.stock.changePercent) || 0,
-      volume: Number(this.stock.volume) || 0,
-      currency: this.stock.currency,
+    this.watchlistService.addItem(this.selectedWatchlistId, this.stock.id).subscribe({
+      next: () => this.toastService.success(`${this.stock!.ticker} je dodat na watchlistu.`),
+      error: () => this.toastService.error('Greška pri dodavanju na watchlistu.'),
     });
-    this.toastService.success(`${this.stock.ticker} je dodat na watchlistu.`);
   }
 
   closeAlertModal(): void {

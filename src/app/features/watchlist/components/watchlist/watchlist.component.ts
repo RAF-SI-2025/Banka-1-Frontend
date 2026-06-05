@@ -3,14 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import {
-  Watchlist,
-  WatchlistSecurity,
-  WatchlistSecurityType,
-} from '../../models/watchlist.model';
+import { Watchlist, WatchlistItem, WatchlistListingType } from '../../models/watchlist.model';
 import { WatchlistService } from '../../services/watchlist.service';
 
-type SecurityTypeFilter = 'ALL' | WatchlistSecurityType;
+type ListingTypeFilter = 'ALL' | WatchlistListingType;
 
 @Component({
   selector: 'app-watchlist',
@@ -21,15 +17,18 @@ type SecurityTypeFilter = 'ALL' | WatchlistSecurityType;
 })
 export class WatchlistComponent implements OnInit {
   watchlists: Watchlist[] = [];
-  selectedWatchlistId = '';
-  selectedSecurityType: SecurityTypeFilter = 'ALL';
+  selectedWatchlistId: number | null = null;
+  items: WatchlistItem[] = [];
+  isLoadingItems = false;
+  selectedListingType: ListingTypeFilter = 'ALL';
   newWatchlistName = '';
 
-  readonly securityTypeOptions: { value: SecurityTypeFilter; label: string }[] = [
+  readonly listingTypeOptions: { value: ListingTypeFilter; label: string }[] = [
     { value: 'ALL', label: 'Sve hartije' },
     { value: 'STOCK', label: 'Akcije' },
-    { value: 'FUTURE', label: 'Fjučersi' },
+    { value: 'FUTURES', label: 'Fjučersi' },
     { value: 'FOREX', label: 'Forex' },
+    { value: 'OPTION', label: 'Opcije' },
   ];
 
   constructor(
@@ -38,70 +37,91 @@ export class WatchlistComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.watchlistService.refreshWatchlists();
+
     this.watchlistService.watchlists$.subscribe((watchlists) => {
       this.watchlists = watchlists;
 
-      if (!this.selectedWatchlistId && watchlists.length > 0) {
-        this.selectedWatchlistId = watchlists[0].id;
-      }
-
-      if (
-        this.selectedWatchlistId &&
-        !watchlists.some((watchlist) => watchlist.id === this.selectedWatchlistId)
+      if (this.selectedWatchlistId === null && watchlists.length > 0) {
+        this.selectWatchlist(watchlists[0].id);
+      } else if (
+        this.selectedWatchlistId !== null &&
+        !watchlists.some((w) => w.id === this.selectedWatchlistId)
       ) {
-        this.selectedWatchlistId = watchlists[0]?.id ?? '';
+        this.selectWatchlist(watchlists[0]?.id ?? null);
       }
     });
   }
 
   get selectedWatchlist(): Watchlist | undefined {
-    return this.watchlists.find(
-      (watchlist) => watchlist.id === this.selectedWatchlistId,
-    );
+    return this.watchlists.find((w) => w.id === this.selectedWatchlistId);
   }
 
-  get filteredSecurities(): WatchlistSecurity[] {
-    const securities = this.selectedWatchlist?.securities ?? [];
+  get filteredItems(): WatchlistItem[] {
+    if (this.selectedListingType === 'ALL') return this.items;
+    return this.items.filter((item) => item.listingType === this.selectedListingType);
+  }
 
-    if (this.selectedSecurityType === 'ALL') {
-      return securities;
+  selectWatchlist(id: number | null): void {
+    this.selectedWatchlistId = id;
+    if (id !== null) {
+      this.loadItems(id);
+    } else {
+      this.items = [];
     }
+  }
 
-    return securities.filter(
-      (security) => security.securityType === this.selectedSecurityType,
-    );
+  onWatchlistChange(id: number): void {
+    this.selectWatchlist(id);
+  }
+
+  private loadItems(watchlistId: number): void {
+    this.isLoadingItems = true;
+    this.watchlistService.getItems(watchlistId).subscribe({
+      next: (items) => {
+        this.items = items;
+        this.isLoadingItems = false;
+      },
+      error: () => {
+        this.items = [];
+        this.isLoadingItems = false;
+      },
+    });
   }
 
   createWatchlist(): void {
-    this.watchlistService.createWatchlist(this.newWatchlistName);
-    this.newWatchlistName = '';
+    const name = this.newWatchlistName.trim();
+    if (!name) return;
 
-    const lastWatchlist = this.watchlistService.currentWatchlists.at(-1);
-
-    if (lastWatchlist) {
-      this.selectedWatchlistId = lastWatchlist.id;
-    }
+    this.watchlistService.createWatchlist(name).subscribe({
+      next: (watchlist) => {
+        this.newWatchlistName = '';
+        this.selectWatchlist(watchlist.id);
+      },
+    });
   }
 
-  removeSecurity(security: WatchlistSecurity): void {
-    if (!this.selectedWatchlistId) {
-      return;
-    }
-
-    this.watchlistService.removeSecurityFromWatchlist(
-      this.selectedWatchlistId,
-      security.id,
-    );
+  deleteWatchlist(): void {
+    if (this.selectedWatchlistId === null) return;
+    this.watchlistService.deleteWatchlist(this.selectedWatchlistId).subscribe();
   }
 
-  createOrder(security: WatchlistSecurity): void {
-    this.router.navigate(['/orders/create/buy', security.id]);
+  removeItem(item: WatchlistItem): void {
+    if (this.selectedWatchlistId === null) return;
+
+    this.watchlistService.removeItem(this.selectedWatchlistId, item.id).subscribe({
+      next: () => {
+        this.items = this.items.filter((i) => i.id !== item.id);
+      },
+    });
   }
 
-  formatPrice(security: WatchlistSecurity): string {
-    const currency = security.currency ?? 'USD';
+  createOrder(item: WatchlistItem): void {
+    this.router.navigate(['/orders/create/buy', item.listingId]);
+  }
 
-    return `${this.formatNumber(security.price)} ${currency}`;
+  formatPrice(item: WatchlistItem): string {
+    return this.formatNumber(parseFloat(item.price));
   }
 
   formatNumber(value: number): string {
@@ -115,21 +135,16 @@ export class WatchlistComponent implements OnInit {
     return new Intl.NumberFormat('sr-RS').format(value);
   }
 
-  getChangeClass(security: WatchlistSecurity): string {
-    if (security.dailyChange > 0) {
-      return 'change-positive';
-    }
-
-    if (security.dailyChange < 0) {
-      return 'change-negative';
-    }
-
+  getChangeClass(item: WatchlistItem): string {
+    const change = parseFloat(item.change);
+    if (change > 0) return 'change-positive';
+    if (change < 0) return 'change-negative';
     return 'change-neutral';
   }
 
-  formatDailyChange(security: WatchlistSecurity): string {
-    const sign = security.dailyChange > 0 ? '+' : '';
-
-    return `${sign}${this.formatNumber(security.dailyChange)} (${sign}${this.formatNumber(security.dailyChangePercent)}%)`;
+  formatChange(item: WatchlistItem): string {
+    const change = parseFloat(item.change);
+    const sign = change > 0 ? '+' : '';
+    return `${sign}${this.formatNumber(change)}`;
   }
 }
