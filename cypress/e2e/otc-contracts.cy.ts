@@ -2,14 +2,28 @@
 // PR_18 C18.5: E2E testovi za OTC contracts stranicu
 // (PR_14 C14.5 backend wire + PR_15 C15.8 live profit kolona).
 
+const TOKEN_77 = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock';
+
+const OTC_CLIENT_USER = {
+  email: 'client@banka.com',
+  role: 'Client',
+  permissions: ['OTC_TRADE'],
+};
+
+function visitContracts() {
+  cy.visit('/otc/contracts', {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN_77);
+      win.localStorage.setItem('loggedUser', JSON.stringify(OTC_CLIENT_USER));
+    },
+  });
+}
+
 describe('OTC sklopljeni ugovori (PR_18)', () => {
 
   beforeEach(() => {
-    cy.clearLocalStorage();
-    window.localStorage.setItem('jwtToken',
-      'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock');
-    window.localStorage.setItem('userId', '77');
-    window.localStorage.setItem('role', 'ClientTrading');
+    cy.intercept('GET', '**/api/interbank/otc/negotiations', { statusCode: 200, body: [] });
+    cy.intercept('GET', '**/otc/offers/active', { statusCode: 200, body: [] });
 
     cy.intercept('GET', '**/otc/contracts/my?status=ACTIVE', {
       statusCode: 200,
@@ -43,7 +57,7 @@ describe('OTC sklopljeni ugovori (PR_18)', () => {
   });
 
   it('Ucita aktivne ugovore i prikazuje counterparty role', () => {
-    cy.visit('/otc/contracts');
+    visitContracts();
     cy.wait('@myContracts');
 
     cy.get('[data-testid=otc-contracts-table]').should('be.visible');
@@ -66,7 +80,7 @@ describe('OTC sklopljeni ugovori (PR_18)', () => {
       statusCode: 200, body: [],
     }).as('expired');
 
-    cy.visit('/otc/contracts');
+    visitContracts();
     cy.wait('@myContracts');
 
     cy.get('[data-testid=status-filter]').select('EXERCISED');
@@ -78,7 +92,7 @@ describe('OTC sklopljeni ugovori (PR_18)', () => {
   });
 
   it('Live profit kolona se popunjava iz price-feed-a', () => {
-    cy.visit('/otc/contracts');
+    visitContracts();
     cy.wait(['@myContracts', '@prices']);
 
     // AAPL: ja sam buyer, market 165 - strike 150 = +15 × 50 = +750.00
@@ -92,7 +106,7 @@ describe('OTC sklopljeni ugovori (PR_18)', () => {
 
   it('Iskoristi dugme zove POST /otc/contracts/{id}/exercise', () => {
     cy.intercept('POST', '**/otc/contracts/100/exercise', { statusCode: 202, body: {} }).as('exercise');
-    cy.visit('/otc/contracts');
+    visitContracts();
     cy.wait('@myContracts');
 
     // confirm() return true

@@ -2,7 +2,6 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { forkJoin, of, Subscription, timer } from 'rxjs';
 import { catchError, exhaustMap, retry, switchMap } from 'rxjs/operators';
 
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppNotificationService } from '../../../shared/services/app-notification.service';
 import { OtcService } from './otc.service';
@@ -29,10 +28,6 @@ declare global {
 
 /** Real-time preko WebSocket-a — buduće poboljšanje; trenutno HTTP poll. */
 export function resolveOtcNotificationPollMs(): number {
-  if (environment.production) {
-    return OTC_NOTIFICATION_POLL_MS_DEFAULT;
-  }
-
   const override =
     typeof window !== 'undefined' ? window.__OTC_POLL_MS : undefined;
   if (override == null || !Number.isFinite(override) || override <= 0) {

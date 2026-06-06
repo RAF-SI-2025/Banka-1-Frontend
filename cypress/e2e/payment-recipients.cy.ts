@@ -1,3 +1,5 @@
+const TOKEN_77 = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock';
+
 const MOCK_RECIPIENTS = [
   { id: 1, name: 'Pera Perić', accountNumber: '265000000923124323' },
   { id: 2, name: 'Maja Nikolić', accountNumber: '265000000923124325' }
@@ -41,7 +43,7 @@ describe('Payment Recipients Component', () => {
     // Autentifikacija
     cy.visit('/payments/recipients', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('authToken', 'fake-jwt-token');
+        win.localStorage.setItem('authToken', TOKEN_77);
         win.localStorage.setItem('loggedUser', JSON.stringify({
           email: 'klijent@test.com',
           role: 'Client',

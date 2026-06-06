@@ -1,6 +1,8 @@
 // cypress/e2e/transfer-same.cy.ts
 // E2E testovi za F3 - Prenos (ista valuta)
 
+const TOKEN_CLIENT = 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock';
+
 const mockAccounts = [
   {
     id: 1,
@@ -67,14 +69,16 @@ const mockAccounts = [
   }
 ];
 
-function setupAuth() {
-  cy.window().then(win => {
-    win.localStorage.setItem('authToken', 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock');
-    win.localStorage.setItem('loggedUser', JSON.stringify({
-      email: 'klijent@banka.rs',
-      role: 'Client',
-      permissions: ['BANKING_BASIC']
-    }));
+function visitTransferSame() {
+  cy.visit('/transfers/same', {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN_CLIENT);
+      win.localStorage.setItem('loggedUser', JSON.stringify({
+        email: 'klijent@banka.rs',
+        role: 'Client',
+        permissions: ['BANKING_BASIC']
+      }));
+    },
   });
 }
 
@@ -103,7 +107,6 @@ describe('F3 - Prenos (ista valuta)', () => {
 
   beforeEach(() => {
     cy.clearLocalStorage();
-    setupAuth();
     interceptAccounts();
     interceptPreview();
     interceptTransfer();
@@ -114,7 +117,7 @@ describe('F3 - Prenos (ista valuta)', () => {
   describe('Prikaz forme', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/same');
+      visitTransferSame();
       cy.wait('@getAccounts');
     });
 
@@ -152,7 +155,7 @@ describe('F3 - Prenos (ista valuta)', () => {
   describe('Validacija', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/same');
+      visitTransferSame();
       cy.wait('@getAccounts');
     });
 
@@ -176,7 +179,7 @@ describe('F3 - Prenos (ista valuta)', () => {
   describe('Potvrda i izvršavanje', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/same');
+      visitTransferSame();
       cy.wait('@getAccounts');
     });
 
@@ -240,7 +243,7 @@ describe('F3 - Prenos (ista valuta)', () => {
         body: { id: 1001, status: 'REALIZED' }
       }).as('transferSame');
 
-      cy.visit('/transfers/same');
+      visitTransferSame();
       cy.wait('@getAccounts');
 
       cy.get('[data-cy=from-account-select]').select('1');

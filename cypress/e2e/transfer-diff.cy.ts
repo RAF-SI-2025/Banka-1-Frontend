@@ -1,6 +1,8 @@
 // cypress/e2e/transfer-diff.cy.ts
 // E2E testovi za F4 - Transfer (različite valute)
 
+const TOKEN_CLIENT = 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock';
+
 const mockAccounts = [
   {
     id: 1,
@@ -101,14 +103,16 @@ const mockPreview = {
   ownerName: 'Marko Petrovic'
 };
 
-function setupAuth() {
-  cy.window().then(win => {
-    win.localStorage.setItem('authToken', 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock');
-    win.localStorage.setItem('loggedUser', JSON.stringify({
-      email: 'klijent@banka.rs',
-      role: 'Client',
-      permissions: ['BANKING_BASIC']
-    }));
+function visitTransferDiff() {
+  cy.visit('/transfers/different', {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN_CLIENT);
+      win.localStorage.setItem('loggedUser', JSON.stringify({
+        email: 'klijent@banka.rs',
+        role: 'Client',
+        permissions: ['BANKING_BASIC']
+      }));
+    },
   });
 }
 
@@ -137,7 +141,6 @@ describe('F4 - Transfer (različite valute)', () => {
 
   beforeEach(() => {
     cy.clearLocalStorage();
-    setupAuth();
     interceptAccounts();
     interceptPreview();
     interceptTransfer();
@@ -148,7 +151,7 @@ describe('F4 - Transfer (različite valute)', () => {
   describe('Prikaz forme', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/different');
+      visitTransferDiff();
       cy.wait('@getAccounts');
     });
 
@@ -187,7 +190,7 @@ describe('F4 - Transfer (različite valute)', () => {
   describe('Validacija', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/different');
+      visitTransferDiff();
       cy.wait('@getAccounts');
     });
 
@@ -211,7 +214,7 @@ describe('F4 - Transfer (različite valute)', () => {
   describe('Stranica potvrde', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/different');
+      visitTransferDiff();
       cy.wait('@getAccounts');
 
       cy.get('[data-cy=from-account-select]').select('1');
@@ -258,7 +261,7 @@ describe('F4 - Transfer (različite valute)', () => {
   describe('Izvršavanje transfera', () => {
 
     beforeEach(() => {
-      cy.visit('/transfers/different');
+      visitTransferDiff();
       cy.wait('@getAccounts');
     });
 
@@ -304,7 +307,7 @@ describe('F4 - Transfer (različite valute)', () => {
         body: { id: 1002, status: 'REALIZED' }
       }).as('transferDiff');
 
-      cy.visit('/transfers/different');
+      visitTransferDiff();
       cy.wait('@getAccounts');
 
       cy.get('[data-cy=from-account-select]').select('1');

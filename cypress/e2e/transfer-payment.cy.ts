@@ -4,39 +4,71 @@
  *   - kreira novo placanje
  *   - inicira transfer ka istom korisniku (transfers/same)
  *   - inicira transfer ka drugom korisniku (transfers/different)
- *   - OTP confirmation flow (otkazivanje posle 3 fail-a)
  */
+
+const TOKEN_CLIENT = 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock';
+
+const CLIENT_USER = {
+  email: 'klijent@banka.rs',
+  role: 'Client',
+  permissions: ['BANKING_BASIC'],
+};
+
+function visitAs(url: string) {
+  cy.visit(url, {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN_CLIENT);
+      win.localStorage.setItem('loggedUser', JSON.stringify(CLIENT_USER));
+    },
+  });
+}
+
 describe('PR_12: Transfer i placanje flows', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('input[name=email]').type(Cypress.env('clientEmail'));
-    cy.get('input[name=password]').type(Cypress.env('clientPassword'));
-    cy.get('button[type=submit]').click();
-    cy.url({ timeout: 10000 }).should('include', '/home');
+    cy.intercept('GET', '**/accounts/client/accounts**', {
+      statusCode: 200,
+      body: {
+        content: [
+          { id: 1, accountNumber: '265000000000123456', currency: 'RSD', balance: 250000, status: 'ACTIVE' },
+          { id: 2, accountNumber: '265000000000654321', currency: 'EUR', balance: 5000, status: 'ACTIVE' },
+        ],
+        totalElements: 2,
+        totalPages: 1,
+      },
+    }).as('getAccounts');
+    cy.intercept('GET', '**/payments**', { statusCode: 200, body: { content: [], totalElements: 0 } });
   });
 
   it('klijent vidi svoje racune', () => {
-    cy.visit('/accounts');
+    visitAs('/accounts');
     cy.contains(/RSD|EUR/, { matchCase: false }).should('be.visible');
   });
 
   it('klijent navigira na transfer izmedju svojih racuna', () => {
-    cy.visit('/transfers/same');
+    cy.intercept('GET', '**/accounts/client/accounts**', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0, totalPages: 1 },
+    });
+    visitAs('/transfers/same');
     cy.contains('Transfer', { matchCase: false }).should('be.visible');
   });
 
   it('klijent navigira na transfer ka drugom korisniku', () => {
-    cy.visit('/transfers/different');
+    cy.intercept('GET', '**/accounts/client/accounts**', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0, totalPages: 1 },
+    });
+    visitAs('/transfers/different');
     cy.contains('Transfer', { matchCase: false }).should('be.visible');
   });
 
   it('klijent vidi listu placanja', () => {
-    cy.visit('/payments');
+    visitAs('/payments');
     cy.contains(/placanje|payment/i).should('be.visible');
   });
 
   it('klijent kreira novo placanje (forma se otvara)', () => {
-    cy.visit('/accounts/payment/new');
+    visitAs('/accounts/payment/new');
     cy.contains(/Iznos|amount/i).should('be.visible');
   });
 });

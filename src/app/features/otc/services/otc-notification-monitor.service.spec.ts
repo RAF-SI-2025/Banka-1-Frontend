@@ -1,7 +1,6 @@
 import { TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppNotificationService } from '../../../shared/services/app-notification.service';
 import { OtcOffer } from '../models/otc.model';
@@ -28,10 +27,8 @@ const SAMPLE_OFFER: OtcOffer = {
 
 describe('resolveOtcNotificationPollMs', () => {
   const originalOverride = window.__OTC_POLL_MS;
-  const originalProduction = environment.production;
 
   afterEach(() => {
-    environment.production = originalProduction;
     if (originalOverride == null) {
       delete window.__OTC_POLL_MS;
     } else {
@@ -40,27 +37,23 @@ describe('resolveOtcNotificationPollMs', () => {
   });
 
   it('returns default 30s when no override', () => {
-    environment.production = false;
     delete window.__OTC_POLL_MS;
     expect(resolveOtcNotificationPollMs()).toBe(OTC_NOTIFICATION_POLL_MS_DEFAULT);
   });
 
-  it('ignores __OTC_POLL_MS in production', () => {
-    environment.production = true;
-    window.__OTC_POLL_MS = 500;
-    expect(resolveOtcNotificationPollMs()).toBe(OTC_NOTIFICATION_POLL_MS_DEFAULT);
-  });
-
-  it('enforces minimum 5s for dev override (blocks aggressive 500ms)', () => {
-    environment.production = false;
+  it('enforces minimum 5s even in production builds (blocks aggressive 500ms)', () => {
     window.__OTC_POLL_MS = 500;
     expect(resolveOtcNotificationPollMs()).toBe(5000);
   });
 
-  it('allows override at or above 5s in non-production', () => {
-    environment.production = false;
+  it('allows override at or above 5s', () => {
     window.__OTC_POLL_MS = 8000;
     expect(resolveOtcNotificationPollMs()).toBe(8000);
+  });
+
+  it('allows override at exactly 5s', () => {
+    window.__OTC_POLL_MS = 5000;
+    expect(resolveOtcNotificationPollMs()).toBe(5000);
   });
 });
 

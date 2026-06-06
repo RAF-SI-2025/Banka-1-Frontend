@@ -1,6 +1,8 @@
 // cypress/e2e/orders-overview.cy.ts
 // E2E testovi za Orders Overview komponentu
 
+const TOKEN_77 = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock';
+
 describe('Orders Overview Component', () => {
   const visitOrdersOverviewAs = (user: {
     email: string;
@@ -10,7 +12,7 @@ describe('Orders Overview Component', () => {
     cy.visit('/orders-overview', {
       onBeforeLoad: (win) => {
         win.localStorage.clear();
-        win.localStorage.setItem('authToken', 'fake-jwt-token');
+        win.localStorage.setItem('authToken', TOKEN_77);
         win.localStorage.setItem('loggedUser', JSON.stringify(user));
       },
     });
