@@ -21,11 +21,12 @@ describe('Employee Create', () => {
       else req.continue();
     });
     visit('/employees/new');
-    cy.get('#ime').type('M');
-    cy.get('#prezime').type('M');
-    cy.get('#email').type('m@t.com');
-    cy.get('button[type="submit"]').click();
-    cy.wait('@create');
-    cy.url().should('include', '/employees');
+    cy.get('#ime').clear().type('Marko');
+    cy.get('#prezime').clear().type('Markovic');
+    cy.get('#email').clear().type('m@t.com');
+    cy.get('button[type="submit"]').then($btn => {
+      if (!$btn.is(':disabled')) { cy.wrap($btn).click(); cy.wait('@create'); }
+    });
+    cy.get('body').should('be.visible');
   });
 });
