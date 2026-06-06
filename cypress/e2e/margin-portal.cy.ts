@@ -1,29 +1,33 @@
 // cypress/e2e/margin-portal.cy.ts
 // PR_18 C18.4: E2E testovi za marzni portal (PR_03 C3.8 + PR_14 C14.4 server-side wiring).
-//
-// Pokriveni flow-ovi:
-//   - Stranica ucita marzni racun + transakcionu istoriju
-//   - Add to margin: validacija (iznos > 0) + submit
-//   - Withdraw: validacija + disabled kad je racun blokiran
-//   - Server-side error mapping (insufficient funds -> error message)
 
 describe('Marzni racun portal (PR_18)', () => {
 
-  // JWT mock sa userId=77; localStorage key je 'access_token' jer je tako u
-  // MarginAccountPortalComponent.getCurrentUserId().
+  // JWT mock sa userId=77; auth guard cita 'authToken', MarginAccountPortalComponent
+  // cita 'access_token' za getCurrentUserId() — oba kljuca se postavljaju u onBeforeLoad.
   const mockJwt = (() => {
     const header = btoa('{"alg":"HS256","typ":"JWT"}');
     const payload = btoa('{"id":77,"sub":"77","exp":9999999999}');
     return `${header}.${payload}.signature`;
   })();
 
-  beforeEach(() => {
-    cy.clearLocalStorage();
-    window.localStorage.setItem('access_token', mockJwt);
-    window.localStorage.setItem('jwtToken', mockJwt);
-    window.localStorage.setItem('userId', '77');
-    window.localStorage.setItem('role', 'ClientTrading');
+  function visitMargin() {
+    cy.visit('/margin', {
+      onBeforeLoad(win: any) {
+        win.localStorage.setItem('authToken', mockJwt);
+        win.localStorage.setItem('access_token', mockJwt);
+        win.localStorage.setItem('userId', '77');
+        win.localStorage.setItem('role', 'ClientTrading');
+        win.localStorage.setItem('loggedUser', JSON.stringify({
+          email: 'client@banka.com',
+          role: 'Client',
+          permissions: []
+        }));
+      }
+    });
+  }
 
+  beforeEach(() => {
     cy.intercept('GET', '**/accounts/getMarginUser/77', {
       statusCode: 200,
       body: {
@@ -48,7 +52,7 @@ describe('Marzni racun portal (PR_18)', () => {
   });
 
   it('Ucita marzni racun i pokaze stanje', () => {
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getAccount', '@getTransactions']);
 
     cy.contains('5550001000000000077').should('be.visible');
@@ -58,19 +62,18 @@ describe('Marzni racun portal (PR_18)', () => {
 
   it('Add to margin: salje POST /transactions/addToMargin/77', () => {
     cy.intercept('POST', '**/transactions/addToMargin/77', { statusCode: 200, body: {} }).as('add');
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getAccount', '@getTransactions']);
 
     cy.get('[data-testid=margin-add-amount]').type('10000');
     cy.get('[data-testid=margin-add-submit]').click();
 
     cy.wait('@add').its('request.body').should('deep.include', { amount: 10000 });
-    // Posle submit-a, page reload-uje racun.
     cy.wait('@getAccount');
   });
 
   it('Add to margin: dugme disabled kad je iznos prazan ili 0', () => {
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getAccount', '@getTransactions']);
 
     cy.get('[data-testid=margin-add-submit]').should('be.disabled');
@@ -80,7 +83,7 @@ describe('Marzni racun portal (PR_18)', () => {
 
   it('Withdraw: salje POST /transactions/withdrawFromMargin/77', () => {
     cy.intercept('POST', '**/transactions/withdrawFromMargin/77', { statusCode: 200, body: {} }).as('withdraw');
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getAccount', '@getTransactions']);
 
     cy.get('[data-testid=margin-withdraw-amount]').type('5000');
@@ -94,7 +97,7 @@ describe('Marzni racun portal (PR_18)', () => {
       statusCode: 400,
       body: { message: 'Isplata bi spustila initialMargin ispod maintenanceMargin' },
     }).as('withdrawFail');
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getAccount', '@getTransactions']);
 
     cy.get('[data-testid=margin-withdraw-amount]').type('99999');
@@ -110,7 +113,7 @@ describe('Marzni racun portal (PR_18)', () => {
       body: {
         accountNumber: '5550001000000000077',
         userId: 77,
-        initialMargin: 20000,           // ispod maintenance
+        initialMargin: 20000,
         loanValue: 50000,
         maintenanceMargin: 25000,
         bankParticipation: 0.30,
@@ -118,7 +121,7 @@ describe('Marzni racun portal (PR_18)', () => {
       },
     }).as('getBlockedAccount');
 
-    cy.visit('/margin');
+    visitMargin();
     cy.wait(['@getBlockedAccount', '@getTransactions']);
 
     cy.get('[data-testid=margin-blocked-warning]').should('be.visible');

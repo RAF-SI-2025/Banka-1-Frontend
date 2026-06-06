@@ -117,15 +117,6 @@ describe('Home - Pregled transakcija (F9)', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
 
-    cy.window().then(win => {
-      win.localStorage.setItem('authToken', mockToken);
-      win.localStorage.setItem('loggedUser', JSON.stringify({
-        email: 'klijent@test.com',
-        role: 'Client',
-        permissions: []
-      }));
-    });
-
     cy.intercept('GET', '**/accounts/client/accounts*', {
       statusCode: 200,
       body: { content: mockAccounts, totalElements: 2, totalPages: 1, number: 0, size: 10 }
@@ -136,7 +127,16 @@ describe('Home - Pregled transakcija (F9)', () => {
       body: { content: mockTransactions, totalElements: 5, totalPages: 1, number: 0, size: 5 }
     }).as('getTransactions');
 
-    cy.visit('/home');
+    cy.visit('/home', {
+      onBeforeLoad(win: any) {
+        win.localStorage.setItem('authToken', mockToken);
+        win.localStorage.setItem('loggedUser', JSON.stringify({
+          email: 'klijent@test.com',
+          role: 'Client',
+          permissions: []
+        }));
+      }
+    });
     cy.wait('@getAccounts', { timeout: 10000 });
     // Transakcije se učitavaju asinkrono, ne trebam čekati jer testovi će koristiti mock podatke direktno
   });

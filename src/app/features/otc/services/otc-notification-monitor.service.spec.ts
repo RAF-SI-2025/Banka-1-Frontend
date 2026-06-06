@@ -96,7 +96,6 @@ describe('OtcNotificationMonitorService — network resilience', () => {
     });
 
     service = TestBed.inject(OtcNotificationMonitorService);
-    environment.production = false;
     window.__OTC_POLL_MS = 100;
   });
 

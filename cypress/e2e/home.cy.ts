@@ -54,16 +54,6 @@ describe('Home E2E', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
 
-    // Postavi autentifikovan state
-    cy.window().then(win => {
-      win.localStorage.setItem('authToken', mockToken);
-      win.localStorage.setItem('loggedUser', JSON.stringify({
-        email: 'klijent@test.com',
-        role: 'Client',
-        permissions: []
-      }));
-    });
-
     const mockResponse = {
       content: mockAccounts.map(a => ({
         iznos: a.balance,
@@ -101,7 +91,16 @@ describe('Home E2E', () => {
       ]
     }).as('getExchangeRates');
 
-    cy.visit('/home');
+    cy.visit('/home', {
+      onBeforeLoad(win: any) {
+        win.localStorage.setItem('authToken', mockToken);
+        win.localStorage.setItem('loggedUser', JSON.stringify({
+          email: 'klijent@test.com',
+          role: 'Client',
+          permissions: []
+        }));
+      }
+    });
     cy.wait(['@getAccounts', '@getTransactionsEmpty']);
   });
 

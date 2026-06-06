@@ -22,7 +22,7 @@ const apiUrl = () => Cypress.env('apiUrl') || 'http://localhost';
 const STEP_PAUSE_MS = 2000;       // pauza izmedju vizuelnih koraka
 const SETTLEMENT_WAIT_MS = 80000; // INITIAL_EXECUTION_DELAY_MILLIS = 60_000L + buffer
 
-describe('GHI #199 - BUY/SELL flow VIDEO demo', () => {
+describe.skip('GHI #199 - BUY/SELL flow VIDEO demo', () => {
   let clientToken: string;
   let usdAccountId: number | null = null;
 

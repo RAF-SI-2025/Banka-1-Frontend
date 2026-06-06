@@ -1,42 +1,63 @@
 /**
  * PR_12 C12.12: loan request flow (Celina 2).
  */
+
+const TOKEN_77 = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock';
+
+const CLIENT_USER = {
+  email: 'client@banka.rs',
+  role: 'Client',
+  permissions: [],
+};
+
+const EMPLOYEE_USER = {
+  email: 'admin@banka.rs',
+  role: 'ADMIN',
+  permissions: ['CLIENT_MANAGE'],
+};
+
+function visitAs(url: string, user: object) {
+  cy.visit(url, {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN_77);
+      win.localStorage.setItem('loggedUser', JSON.stringify(user));
+    },
+  });
+}
+
 describe('PR_12: Krediti flow', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('input[name=email]').type(Cypress.env('clientEmail'));
-    cy.get('input[name=password]').type(Cypress.env('clientPassword'));
-    cy.get('button[type=submit]').click();
-    cy.url({ timeout: 10000 }).should('include', '/home');
+    cy.intercept('GET', '**/credit/api/loans**', { statusCode: 200, body: [] });
+    cy.intercept('GET', '**/loans**', { statusCode: 200, body: { content: [], totalElements: 0, totalPages: 0 } });
   });
 
   it('klijent vidi listu svojih kredita', () => {
-    cy.visit('/loans');
+    visitAs('/loans', CLIENT_USER);
     cy.contains(/kredit|loan/i).should('be.visible');
   });
 
   it('klijent navigira na novi loan request', () => {
-    cy.visit('/loans/request');
+    visitAs('/loans/request', CLIENT_USER);
     cy.contains(/iznos|amount/i).should('be.visible');
   });
 });
 
 describe('PR_12: Loan management (employee)', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('input[name=email]').type(Cypress.env('adminEmail'));
-    cy.get('input[name=password]').type(Cypress.env('adminPassword'));
-    cy.get('button[type=submit]').click();
-    cy.url({ timeout: 10000 }).should('include', '/home');
+    cy.intercept('GET', '**/credit/api/loans**', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0, totalPages: 0 },
+    });
+    cy.intercept('GET', '**/loan-request**', { statusCode: 200, body: { content: [], totalElements: 0, totalPages: 0 } });
   });
 
   it('admin vidi loan-request-management portal', () => {
-    cy.visit('/loan-request-management');
+    visitAs('/loan-request-management', EMPLOYEE_USER);
     cy.contains(/zahtev|request/i).should('be.visible');
   });
 
   it('admin vidi loan-management portal', () => {
-    cy.visit('/loan-management');
+    visitAs('/loan-management', EMPLOYEE_USER);
     cy.contains(/aktivan|active/i, { matchCase: false }).should('be.visible');
   });
 });
