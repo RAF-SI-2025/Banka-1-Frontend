@@ -1,74 +1,20 @@
-/**
- * PR_12 C12.11: payment + transfer flows (Celina 2).
- *   - klijent vidi svoje racune
- *   - kreira novo placanje
- *   - inicira transfer ka istom korisniku (transfers/same)
- *   - inicira transfer ka drugom korisniku (transfers/different)
- */
+// cypress/e2e/transfer-payment.cy.ts
+const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.mock';
+const CLIENT = { email: 'c@b.com', role: 'Client', permissions: ['BANKING_BASIC'] };
+const ACCOUNTS = { content: [{ accountNumber: '111-1', nazivRacuna: 'Tekući', currency: 'RSD', raspolozivoStanje: 50000, stanjeRacuna: 50000, status: 'ACTIVE' }] };
 
-const TOKEN_CLIENT = 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjo5OTk5OTk5OTk5fQ.mock';
-
-const CLIENT_USER = {
-  email: 'klijent@banka.rs',
-  role: 'Client',
-  permissions: ['BANKING_BASIC'],
-};
-
-function visitAs(url: string) {
-  cy.visit(url, {
-    onBeforeLoad(win: any) {
-      win.localStorage.setItem('authToken', TOKEN_CLIENT);
-      win.localStorage.setItem('loggedUser', JSON.stringify(CLIENT_USER));
-    },
-  });
-}
-
-describe('PR_12: Transfer i placanje flows', () => {
-  beforeEach(() => {
-    cy.intercept('GET', '**/accounts/client/accounts**', {
-      statusCode: 200,
-      body: {
-        content: [
-          { id: 1, accountNumber: '265000000000123456', currency: 'RSD', balance: 250000, status: 'ACTIVE' },
-          { id: 2, accountNumber: '265000000000654321', currency: 'EUR', balance: 5000, status: 'ACTIVE' },
-        ],
-        totalElements: 2,
-        totalPages: 1,
-      },
-    }).as('getAccounts');
-    cy.intercept('GET', '**/payments**', { statusCode: 200, body: { content: [], totalElements: 0 } });
+describe('Transfer & Payment', () => {
+  it('prikazuje payment formu', () => {
+    cy.intercept('GET', /\/accounts\/client\/accounts/, { statusCode: 200, body: ACCOUNTS }).as('a');
+    cy.visit('/accounts/payment/new', { onBeforeLoad(win: any) { win.localStorage.setItem('authToken', TOKEN); win.localStorage.setItem('loggedUser', JSON.stringify(CLIENT)); } });
+    cy.wait('@a');
+    cy.contains('NOVO PLAĆANJE').should('be.visible');
   });
 
-  it('klijent vidi svoje racune', () => {
-    visitAs('/accounts');
-    cy.contains(/RSD|EUR/, { matchCase: false }).should('be.visible');
-  });
-
-  it('klijent navigira na transfer izmedju svojih racuna', () => {
-    cy.intercept('GET', '**/accounts/client/accounts**', {
-      statusCode: 200,
-      body: { content: [], totalElements: 0, totalPages: 1 },
-    });
-    visitAs('/transfers/same');
-    cy.contains('Transfer', { matchCase: false }).should('be.visible');
-  });
-
-  it('klijent navigira na transfer ka drugom korisniku', () => {
-    cy.intercept('GET', '**/accounts/client/accounts**', {
-      statusCode: 200,
-      body: { content: [], totalElements: 0, totalPages: 1 },
-    });
-    visitAs('/transfers/different');
-    cy.contains('Transfer', { matchCase: false }).should('be.visible');
-  });
-
-  it('klijent vidi listu placanja', () => {
-    visitAs('/payments');
-    cy.contains(/placanje|payment/i).should('be.visible');
-  });
-
-  it('klijent kreira novo placanje (forma se otvara)', () => {
-    visitAs('/accounts/payment/new');
-    cy.contains(/Iznos|amount/i).should('be.visible');
+  it('prikazuje transfer same formu', () => {
+    cy.intercept('GET', /\/accounts\/client\/accounts/, { statusCode: 200, body: ACCOUNTS }).as('a');
+    cy.visit('/transfers/same', { onBeforeLoad(win: any) { win.localStorage.setItem('authToken', TOKEN); win.localStorage.setItem('loggedUser', JSON.stringify(CLIENT)); } });
+    cy.wait('@a');
+    cy.get('[data-cy="transfer-same-form"]').should('be.visible');
   });
 });

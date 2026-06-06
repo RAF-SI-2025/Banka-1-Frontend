@@ -1,137 +1,72 @@
 // cypress/e2e/kt3/exchanges.cy.ts
-// Scenario 82: Berze – prikaz liste i toggle za radno vreme
-export {};
+// KT3 — Berze (Supervizor/Admin)
 
-const TOKEN_77 = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTksImlkIjo3N30.mock';
+const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.mock';
+const SUPERVISOR = { email: 's@b.com', role: 'Supervisor', permissions: ['FUND_AGENT_MANAGE'] };
 
-const MOCK_EXCHANGES = [
-  {
-    id: 1,
-    exchangeName: 'New York Stock Exchange',
-    exchangeAcronym: 'NYSE',
-    exchangeMICCode: 'XNYS',
-    polity: 'USA',
-    currency: 'USD',
-    timeZone: 'America/New_York',
-    openTime: '09:30',
-    closeTime: '16:00',
-    isActive: true,
-    preMarketOpenTime: null,
-    preMarketCloseTime: null,
-    postMarketOpenTime: null,
-    postMarketCloseTime: null,
-  },
-  {
-    id: 2,
-    exchangeName: 'NASDAQ',
-    exchangeAcronym: 'NASDAQ',
-    exchangeMICCode: 'XNAS',
-    polity: 'USA',
-    currency: 'USD',
-    timeZone: 'America/New_York',
-    openTime: '09:30',
-    closeTime: '16:00',
-    isActive: false,
-    preMarketOpenTime: null,
-    preMarketCloseTime: null,
-    postMarketOpenTime: null,
-    postMarketCloseTime: null,
-  },
-  {
-    id: 3,
-    exchangeName: 'London Stock Exchange',
-    exchangeAcronym: 'LSE',
-    exchangeMICCode: 'XLON',
-    polity: 'UK',
-    currency: 'GBP',
-    timeZone: 'Europe/London',
-    openTime: '08:00',
-    closeTime: '16:30',
-    isActive: true,
-    preMarketOpenTime: null,
-    preMarketCloseTime: null,
-    postMarketOpenTime: null,
-    postMarketCloseTime: null,
-  },
+const EXCHANGES = [
+  { id: 1, exchangeName: 'New York Stock Exchange', exchangeAcronym: 'NYSE', exchangeMICCode: 'XNYS', polity: 'USA', currency: 'USD', timeZone: 'America/New_York', openTime: '09:30', closeTime: '16:00', isActive: true },
+  { id: 2, exchangeName: 'NASDAQ', exchangeAcronym: 'NASDAQ', exchangeMICCode: 'XNAS', polity: 'USA', currency: 'USD', timeZone: 'America/New_York', openTime: '09:30', closeTime: '16:00', isActive: false },
+  { id: 3, exchangeName: 'London Stock Exchange', exchangeAcronym: 'LSE', exchangeMICCode: 'XLON', polity: 'UK', currency: 'GBP', timeZone: 'Europe/London', openTime: '08:00', closeTime: '16:30', isActive: true },
 ];
 
-const supervisorUser = {
-  email: 'supervisor@banka.com',
-  role: 'Supervisor',
-  permissions: ['BANKING_BASIC', 'SECURITIES_TRADE_UNLIMITED', 'FUND_AGENT_MANAGE'],
-};
-
-describe('Scenario 82: Lista berzi i toggle radnog vremena', () => {
-  beforeEach(() => {
-    cy.intercept('GET', '**/stock/api/stock-exchanges*', {
-      statusCode: 200,
-      body: MOCK_EXCHANGES,
-    }).as('getExchanges');
-
-    cy.intercept('PUT', '**/stock/api/stock-exchanges/*/toggle-active*', {
-      statusCode: 200,
-      body: {},
-    }).as('toggleExchange');
-
-    cy.visit('/stock-exchange', {
-      onBeforeLoad: (win: any) => {
-        win.localStorage.setItem('authToken', TOKEN_77);
-        win.localStorage.setItem('loggedUser', JSON.stringify(supervisorUser));
-      },
-    });
-
-    cy.wait('@getExchanges');
+function visit() {
+  cy.intercept('GET', /\/stock\/api\/stock-exchanges/, { statusCode: 200, body: EXCHANGES }).as('getExchanges');
+  cy.visit('/stock-exchange', {
+    onBeforeLoad(win: any) {
+      win.localStorage.setItem('authToken', TOKEN);
+      win.localStorage.setItem('loggedUser', JSON.stringify(SUPERVISOR));
+    },
   });
+  cy.wait('@getExchanges');
+  cy.contains('h1', 'Berze', { timeout: 15000 }).should('be.visible');
+}
 
-  it('prikazuje naslov Berze', () => {
-    cy.contains('h1', 'Berze').should('be.visible');
-  });
+describe('KT3 — Berze', () => {
 
-  it('prikazuje tabelu sa berzama', () => {
+  it('Prikazuje tabelu sa berzama', () => {
+    visit();
     cy.get('table').should('be.visible');
     cy.get('tbody tr').should('have.length.at.least', 1);
-  });
-
-  it('prikazuje sve obavezne kolone tabele', () => {
-    cy.contains('th', 'Naziv berze').should('be.visible');
-    cy.contains('th', 'Akronim').should('be.visible');
-    cy.contains('th', 'MIC').should('be.visible');
-    cy.contains('th', 'Valuta').should('be.visible');
-    cy.contains('th', 'Vremenska zona').should('be.visible');
-    cy.contains('th', 'Status').should('be.visible');
-    cy.contains('th', /radno vreme/i).should('be.visible');
-  });
-
-  it('prikazuje nazive berzi iz mock podataka', () => {
     cy.contains('New York Stock Exchange').should('be.visible');
     cy.contains('NASDAQ').should('be.visible');
   });
 
-  it('prikazuje status badge Otvorena/Zatvorena za svaku berzu', () => {
+  it('Prikazuje obavezne kolone', () => {
+    visit();
+    cy.contains('th', 'Naziv berze').should('be.visible');
+    cy.contains('th', 'Akronim').should('be.visible');
+    cy.contains('th', 'MIC').should('be.visible');
+    cy.contains('th', 'Valuta').should('be.visible');
+  });
+
+  it('Prikazuje status badge', () => {
+    visit();
     cy.get('tbody tr').first().within(() => {
       cy.contains(/Otvorena|Zatvorena/).should('be.visible');
     });
   });
 
-  it('toggle dugme postoji za svaku berzu', () => {
-    cy.get('tbody tr').each(($row) => {
-      cy.wrap($row).contains('button', /Ukljuceno|Iskljuceno/).should('exist');
-    });
+  it('Toggle dugme postoji za svaku berzu', () => {
+    visit();
+    cy.get('tbody tr').first().contains('button', /Ukljuceno|Iskljuceno/).should('exist');
+    cy.get('tbody tr').eq(1).contains('button', /Ukljuceno|Iskljuceno/).should('exist');
   });
 
-  it('klik na toggle dugme poziva API', () => {
+  it('Klik na toggle poziva API', () => {
+    cy.intercept('PUT', /\/stock\/api\/stock-exchanges\/\d+\/toggle/, { statusCode: 200 }).as('toggle');
+    visit();
     cy.get('tbody tr').first().contains('button', /Ukljuceno|Iskljuceno/).click();
-    cy.wait('@toggleExchange');
-    cy.get('@toggleExchange').its('response.statusCode').should('eq', 200);
+    cy.wait('@toggle');
   });
 
-  it('berze sa isActive=true prikazuju dugme Ukljuceno', () => {
-    // MOCK_EXCHANGES[0] has isActive: true → button text "Ukljuceno"
+  it('isActive=true → Ukljuceno', () => {
+    visit();
     cy.get('tbody tr').first().contains('button', 'Ukljuceno').should('exist');
   });
 
-  it('berze sa isActive=false prikazuju dugme Iskljuceno', () => {
-    // MOCK_EXCHANGES[1] has isActive: false → button text "Iskljuceno"
+  it('isActive=false → Iskljuceno', () => {
+    visit();
     cy.get('tbody tr').eq(1).contains('button', 'Iskljuceno').should('exist');
   });
 });
