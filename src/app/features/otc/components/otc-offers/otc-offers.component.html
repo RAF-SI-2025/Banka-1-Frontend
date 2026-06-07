@@ -72,14 +72,14 @@
                 </span>
               </td>
               <td class="text-right font-mono">{{ o.amount | number }}</td>
-              <td class="text-right font-mono">{{ o.pricePerStock | number:'1.2-2' }}</td>
+              <td class="text-right font-mono">{{ o.pricePerStock | number:'1.2-2' }}<span *ngIf="o.priceCurrency"> {{ o.priceCurrency }}</span></td>
               <td class="text-right font-mono">
                 {{ marketPriceFor(o.stockTicker) ? (marketPriceFor(o.stockTicker) | number:'1.2-2') : '—' }}
               </td>
               <td class="text-right font-mono font-semibold" [ngClass]="deviationClass(o)">
                 {{ deviationText(o) }}
               </td>
-              <td class="text-right font-mono">{{ o.premium | number:'1.2-2' }}</td>
+              <td class="text-right font-mono">{{ o.premium | number:'1.2-2' }}<span *ngIf="o.premiumCurrency"> {{ o.premiumCurrency }}</span></td>
               <td class="whitespace-nowrap">{{ formatSettlementDate(o.settlementDate) }}</td>
               <td>
                 <span class="z-badge"

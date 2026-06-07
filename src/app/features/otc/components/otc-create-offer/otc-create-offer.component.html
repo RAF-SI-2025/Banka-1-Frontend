@@ -81,7 +81,10 @@
                  class="z-input font-mono"
                  data-testid="seller-foreign-input"
                  placeholder="C-2" />
-          <p class="text-xs text-muted-foreground mt-1">Routing number: <span class="font-mono">222</span> (Banka 2).</p>
+          <p class="text-xs text-muted-foreground mt-1">
+            Routing number: <span class="font-mono">222</span> (Banka 2) ·
+            Valuta: <span class="font-mono">{{ form.controls['currency'].value || 'USD' }}</span>
+          </p>
           <p *ngIf="form.controls['sellerForeignId'].invalid && form.controls['sellerForeignId'].touched" class="z-error">
             Format: "C-2" (klijent) ili "E-7" (employee).
           </p>

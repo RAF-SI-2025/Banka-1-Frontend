@@ -53,6 +53,9 @@ export class OtcCreateOfferComponent implements OnInit {
       pricePerStock: [null, [Validators.required, Validators.min(0.01)]],
       premium: [null, [Validators.required, Validators.min(0)]],
       settlementDate: ['', Validators.required],
+      // PR_33 Phase B: valuta cross-bank ponude — preuzeta iz Banka 2 discovery-ja
+      // (query param), default 'USD'. Koristi se za price/premium currency.
+      currency: ['USD'],
     });
 
     if (this.preselectedStockTicker) {
@@ -75,6 +78,8 @@ export class OtcCreateOfferComponent implements OnInit {
     if (ticker) this.form.patchValue({ stockTicker: ticker });
     const sellerForeignId = params.get('sellerForeignId');
     if (sellerForeignId) this.form.patchValue({ sellerForeignId });
+    const currency = params.get('currency');
+    if (currency) this.form.patchValue({ currency });
   }
 
   /**
@@ -107,12 +112,13 @@ export class OtcCreateOfferComponent implements OnInit {
       // `OffsetDateTime` (Tim 2 protokol §3.4); HTML <input type="date">
       // daje samo "YYYY-MM-DD" pa rucno dodajemo midnight UTC suffix.
       const settlementIso = v.settlementDate ? `${v.settlementDate}T00:00:00Z` : '';
+      const currency = v.currency || 'USD';
       const req: CreateInterbankNegotiationRequest = {
         stockTicker: v.stockTicker,
         settlementDate: settlementIso,
-        priceCurrency: 'USD',
+        priceCurrency: currency,
         pricePerUnit: v.pricePerStock,
-        premiumCurrency: 'USD',
+        premiumCurrency: currency,
         premium: v.premium,
         sellerForeignBankId: {
           routingNumber: BANKA2_ROUTING,
