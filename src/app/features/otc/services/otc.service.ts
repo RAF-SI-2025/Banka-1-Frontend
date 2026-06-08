@@ -247,6 +247,10 @@ export class OtcService {
       counterpartyBankName: this.bankNameFor(n.remoteForeignBankId.routingNumber),
       localId: n.localId,
       remoteId: n.remoteForeignBankId.id,
+      // PR_33 Phase B: sacuvaj valutu iz protokol payload-a da counter/accept
+      // path moze da je procita (umesto hard-coded 'USD').
+      priceCurrency: s.pricePerUnit.currency,
+      premiumCurrency: s.premium.currency,
     };
   }
 

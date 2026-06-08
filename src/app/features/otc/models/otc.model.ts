@@ -31,6 +31,13 @@ export interface OtcOffer {
   counterpartyBankName?: string;
   localId?: string;
   remoteId?: string;
+  /**
+   * PR_33 Phase B: valuta cene/premije (npr. "USD", "EUR").
+   * Za inter-bank pregovore dolazi iz `state.pricePerUnit.currency` /
+   * `state.premium.currency`; za intra-bank ostaje undefined (implicitno RSD/USD).
+   */
+  priceCurrency?: string;
+  premiumCurrency?: string;
 }
 
 export interface CreateOtcOfferRequest {

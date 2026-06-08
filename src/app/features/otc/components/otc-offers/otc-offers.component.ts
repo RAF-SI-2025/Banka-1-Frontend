@@ -10,6 +10,9 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 export type OtcFilterMode = 'all' | 'local' | 'banka2';
 
+/** PR_33 Phase B: routing number partner banke (Banka 2) — mora se poklapati sa OtcService. */
+const BANKA2_ROUTING = 222;
+
 @Component({
   selector: 'app-otc-offers',
   templateUrl: './otc-offers.component.html',
@@ -76,9 +79,24 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
   }
 
   canAccept(offer: OtcOffer): boolean {
-    if (offer.interbank) return false;
+    if (offer.interbank) {
+      // Inter-bank: prihvatamo kada je na nama red — tj. Banka 2 (routing 222)
+      // je poslednja modifikovala pregovor — i pregovor jos nije sklopljen.
+      return offer.status !== 'ACCEPTED' && this.lastModifierRouting(offer) === BANKA2_ROUTING;
+    }
     // Seller accepts buyer's offer; buyer accepts seller's counter-offer.
     return this.canRespond(offer);
+  }
+
+  /**
+   * PR_33 Phase B: routing number poslednjeg modifikatora cross-bank pregovora.
+   * `modifiedBy` je format "{routingNumber}:{id}" (mapiran u OtcService iz
+   * `state.lastModifiedBy`). Vraca NaN ako parsiranje ne uspe.
+   */
+  private lastModifierRouting(offer: OtcOffer): number {
+    const raw = offer.modifiedBy ?? '';
+    const idx = raw.indexOf(':');
+    return Number(idx >= 0 ? raw.substring(0, idx) : raw);
   }
 
   myRoleIn(offer: OtcOffer): 'Kupac' | 'Prodavac' | '—' {
@@ -228,9 +246,9 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
       const settlementIso = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? `${rawDate}T00:00:00Z` : rawDate;
       this.otcService.counterInterbankNegotiation(target.localId, {
         amount: this.counterDraft.amount,
-        priceCurrency: 'USD',
+        priceCurrency: target.priceCurrency ?? 'USD',
         pricePerUnit: this.counterDraft.pricePerStock,
-        premiumCurrency: 'USD',
+        premiumCurrency: target.premiumCurrency ?? 'USD',
         premium: this.counterDraft.premium,
         settlementDate: settlementIso,
       }).subscribe({
