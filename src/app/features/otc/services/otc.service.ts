@@ -16,6 +16,7 @@ import {
   OptionContract,
   OptionContractStatus,
   OtcHistoryParams,
+  OtcInterbankContract,
   OtcOffer,
   OtcOfferHistoryEvent,
   OtcPosition,
@@ -35,6 +36,7 @@ const BANKA2_LABEL = 'Banka 2';
 export class OtcService {
   private readonly baseUrl = `${environment.apiUrl}/otc`;
   private readonly interbankUrl = `${environment.apiUrl}/api/interbank/otc/negotiations`;
+  private readonly interbankContractsUrl = `${environment.apiUrl}/api/interbank/otc/contracts`;
   private readonly activeOffersUrl = `${this.baseUrl}/offers/active`;
   private readonly etagCache: OtcEtagCache;
 
@@ -149,7 +151,22 @@ export class OtcService {
   }
 
   createInterbankNegotiation(req: CreateInterbankNegotiationRequest): Observable<InterbankNegotiationView> {
-    return this.http.post<InterbankNegotiationView>(this.interbankUrl, req).pipe(
+    // Backend OutboundCreateRequest expects FLAT seller fields
+    // (sellerRoutingNumber + sellerForeignId), not a nested sellerForeignBankId.
+    // Sending the nested object made the backend read routing 0 → "partner not
+    // found: routing=0" → 500. Map to the wire shape the backend actually decodes.
+    const body = {
+      stockTicker: req.stockTicker,
+      settlementDate: req.settlementDate,
+      priceCurrency: req.priceCurrency,
+      pricePerUnit: req.pricePerUnit,
+      premiumCurrency: req.premiumCurrency,
+      premium: req.premium,
+      sellerRoutingNumber: req.sellerForeignBankId.routingNumber,
+      sellerForeignId: req.sellerForeignBankId.id,
+      amount: req.amount,
+    };
+    return this.http.post<InterbankNegotiationView>(this.interbankUrl, body).pipe(
       tap(() => this.invalidateOfferPollCache()),
     );
   }
@@ -172,6 +189,31 @@ export class OtcService {
   deleteInterbankNegotiation(localId: string): Observable<void> {
     return this.http.delete<void>(`${this.interbankUrl}/${localId}`).pipe(
       tap(() => this.invalidateOfferPollCache()),
+    );
+  }
+
+  /**
+   * Sklopljeni cross-bank opcioni ugovori za current user-a.
+   * Backend ruta `GET /api/interbank/otc/contracts/my` (server cita id iz JWT-a).
+   * `all=true` je dostupno samo admin/supervizor-ima (vraca ugovore svih korisnika).
+   */
+  listMyContracts(all = false): Observable<OtcInterbankContract[]> {
+    const url = all
+      ? `${this.interbankContractsUrl}/my?all=true`
+      : `${this.interbankContractsUrl}/my`;
+    return this.http.get<OtcInterbankContract[]>(url);
+  }
+
+  /**
+   * Iskoristi (exercise) sklopljeni cross-bank opcioni ugovor.
+   * Backend ruta `POST /api/interbank/otc/contracts/{localId}/exercise`;
+   * vraca azuriran ugovor. Greske: 404 (ne postoji), 403 (nije tvoj / nisi kupac),
+   * 409 (nije ACTIVE / settlement prosao / partner odbio) sa `{ error }` body-jem.
+   */
+  exerciseContract(localId: string): Observable<OtcInterbankContract> {
+    return this.http.post<OtcInterbankContract>(
+      `${this.interbankContractsUrl}/${localId}/exercise`,
+      null,
     );
   }
 
@@ -228,29 +270,37 @@ export class OtcService {
    * sentinel (UI bira `localId` za sve API pozive).
    */
   private toOfferFromNegotiation(n: InterbankNegotiationView): OtcOffer {
-    const s = n.state;
+    // Backend NegotiationView is FLAT (stockTicker, pricePerUnit as a decimal
+    // string, counterpartyBankCode, remoteId, isOngoing…) — there is no nested
+    // `state`/`remoteForeignBankId`. Reading n.state threw, so every interbank
+    // negotiation was silently dropped (catchError → []) and never displayed.
     return {
       // Sentinel: ne koristi se direktno za API pozive (interbank flow gleda localId).
       id: 0,
-      stockTicker: s.stock.ticker,
+      stockTicker: n.stockTicker,
       buyerId: 0,
       sellerId: 0,
-      amount: s.amount,
-      pricePerStock: s.pricePerUnit.amount,
-      premium: s.premium.amount,
-      settlementDate: s.settlementDate,
-      status: s.isOngoing ? 'PENDING_BUYER' : 'ACCEPTED',
-      modifiedBy: `${s.lastModifiedBy.routingNumber}:${s.lastModifiedBy.id}`,
-      lastModified: '',
+      amount: n.amount,
+      pricePerStock: Number(n.pricePerUnit),
+      premium: Number(n.premium),
+      settlementDate: n.settlementDate,
+      // FIX 4: ne mapiraj slepo zatvoren pregovor u 'ACCEPTED'. Protokol nema reject
+      // poruku, pa `is_ongoing=false` moze znaciti i odbijeno/zatvoreno od partnera.
+      // Cuvamo realno stanje u `isOngoing`; status ostaje gruba aproksimacija koju
+      // template prikazuje kao "Zatvoreno" za zatvorene interbank pregovore.
+      status: n.isOngoing ? 'PENDING_BUYER' : 'ACCEPTED',
+      isOngoing: n.isOngoing,
+      modifiedBy: `${n.lastModifiedBy.routingNumber}:${n.lastModifiedBy.id}`,
+      lastModified: n.lastModifiedAt ?? '',
       interbank: true,
-      counterpartyBankCode: n.remoteForeignBankId.routingNumber,
-      counterpartyBankName: this.bankNameFor(n.remoteForeignBankId.routingNumber),
+      counterpartyBankCode: n.counterpartyBankCode,
+      counterpartyBankName: n.counterpartyBankName || this.bankNameFor(n.counterpartyBankCode),
       localId: n.localId,
-      remoteId: n.remoteForeignBankId.id,
+      remoteId: n.remoteId ?? undefined,
       // PR_33 Phase B: sacuvaj valutu iz protokol payload-a da counter/accept
       // path moze da je procita (umesto hard-coded 'USD').
-      priceCurrency: s.pricePerUnit.currency,
-      premiumCurrency: s.premium.currency,
+      priceCurrency: n.priceCurrency,
+      premiumCurrency: n.premiumCurrency,
     };
   }
 

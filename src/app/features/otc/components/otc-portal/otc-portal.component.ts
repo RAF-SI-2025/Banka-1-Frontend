@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-export type OtcTab = 'available-stocks' | 'positions' | 'negotiations' | 'contracts' | 'history';
+export type OtcTab = 'available-stocks' | 'positions' | 'negotiations' | 'contracts' | 'interbank-contracts' | 'history';
 
 @Component({
   selector: 'app-otc-portal',

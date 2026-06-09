@@ -67,9 +67,14 @@ export class OtcAvailableStocksComponent implements OnInit, OnDestroy {
   }
 
   private startPricePolling(): void {
-    const tickers = Array.from(new Set(this.entries.map(e => e.ticker)));
-    if (tickers.length === 0) return;
-    this.stockPriceService.poll(tickers).pipe(takeUntil(this.destroy$)).subscribe({
+    this.pollPrices(this.entries.map(e => e.ticker));
+  }
+
+  /** Poll current market prices for the given tickers into the shared `prices` map. */
+  private pollPrices(tickers: string[]): void {
+    const unique = Array.from(new Set(tickers));
+    if (unique.length === 0) return;
+    this.stockPriceService.poll(unique).pipe(takeUntil(this.destroy$)).subscribe({
       next: (snapshots: StockPriceSnapshot[]) => {
         for (const s of snapshots) this.prices.set(s.ticker, s.currentPrice);
       },
@@ -102,6 +107,10 @@ export class OtcAvailableStocksComponent implements OnInit, OnDestroy {
           })),
         }));
         this.banka2Loading = false;
+        // The inter-bank /public-stock protocol carries no price (ticker + sellers
+        // only), so enrich with the current market price — global per ticker —
+        // exactly like the local offers table and Banka 2's own /listings do.
+        this.pollPrices(this.banka2PublicStock.map(r => r.ticker));
       },
       error: err => {
         this.banka2Error = err?.error?.message || 'Banka 2 nije dostupna.';

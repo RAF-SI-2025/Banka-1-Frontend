@@ -84,11 +84,13 @@
               <td>
                 <span class="z-badge"
                       [ngClass]="{
-                        'z-badge-green': o.status === 'ACCEPTED',
+                        'z-badge-green': o.status === 'ACCEPTED' && !isInterbankClosed(o),
                         'z-badge-yellow': o.status === 'PENDING_BUYER' || o.status === 'PENDING_SELLER',
+                        'z-badge-gray': isInterbankClosed(o),
                         'z-badge-red': o.status === 'REJECTED' || o.status === 'EXPIRED'
-                      }">
-                  {{ canWithdraw(o) && !o.interbank ? 'Čekamo drugu stranu' : o.status }}
+                      }"
+                      [attr.data-testid]="isInterbankClosed(o) ? 'offer-status-closed' : null">
+                  {{ statusLabel(o) }}
                 </span>
               </td>
               <td>

@@ -8,6 +8,7 @@ import { OtcAvailableStocksComponent } from './components/otc-available-stocks/o
 import { OtcPositionsComponent } from './components/otc-positions/otc-positions.component';
 import { OtcOffersComponent } from './components/otc-offers/otc-offers.component';
 import { OtcContractsComponent } from './components/otc-contracts/otc-contracts.component';
+import { OtcInterbankContractsComponent } from './components/otc-interbank-contracts/otc-interbank-contracts.component';
 import { OtcCreateOfferComponent } from './components/otc-create-offer/otc-create-offer.component';
 import { roleGuard } from '../../core/guards/role.guard';
 import { StateComponent } from '../../shared/components/state/state.component';
@@ -33,6 +34,7 @@ const routes: Routes = [
     OtcPositionsComponent,
     OtcOffersComponent,
     OtcContractsComponent,
+    OtcInterbankContractsComponent,
     OtcCreateOfferComponent,
     OtcHistoryComponent,
   ],

@@ -81,11 +81,41 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
   canAccept(offer: OtcOffer): boolean {
     if (offer.interbank) {
       // Inter-bank: prihvatamo kada je na nama red — tj. Banka 2 (routing 222)
-      // je poslednja modifikovala pregovor — i pregovor jos nije sklopljen.
-      return offer.status !== 'ACCEPTED' && this.lastModifierRouting(offer) === BANKA2_ROUTING;
+      // je poslednja modifikovala pregovor — i pregovor je JOS aktivan (FIX 4).
+      // Ranije se gledao samo `status !== 'ACCEPTED'`, ali zatvoren/odbijen pregovor
+      // se mapira u 'ACCEPTED', pa je dugme "Prihvati" ostajalo i nudilo ponovni accept
+      // koji bi partner odbio sa 409. `isOngoing` je sada izvor istine.
+      return this.isInterbankOngoing(offer) && this.lastModifierRouting(offer) === BANKA2_ROUTING;
     }
     // Seller accepts buyer's offer; buyer accepts seller's counter-offer.
     return this.canRespond(offer);
+  }
+
+  /**
+   * FIX 4: za interbank ponudu — da li je pregovor jos aktivan. `isOngoing` je
+   * autoritativno polje sa backenda; kada nedostaje (stari payload) padamo na
+   * `status !== 'ACCEPTED'` da ne bismo regresirali postojece ponasanje.
+   */
+  isInterbankOngoing(offer: OtcOffer): boolean {
+    if (offer.isOngoing !== undefined) return offer.isOngoing;
+    return offer.status !== 'ACCEPTED';
+  }
+
+  /** FIX 4: interbank pregovor koji vise nije aktivan (zatvoren/odbijen/sklopljen). */
+  isInterbankClosed(offer: OtcOffer): boolean {
+    return !!offer.interbank && !this.isInterbankOngoing(offer);
+  }
+
+  /**
+   * FIX 4: label za status badge. Za zatvoren interbank pregovor prikazujemo
+   * "Zatvoreno" (protokol nema reject poruku pa ne mozemo razlikovati prihvaceno od
+   * odbijenog/zatvorenog — ne tvrdimo lazno "Prihvaceno"). Za intra-bank dok cekamo
+   * drugu stranu prikazemo "Čekamo drugu stranu", inace sirov status.
+   */
+  statusLabel(offer: OtcOffer): string {
+    if (this.isInterbankClosed(offer)) return 'Zatvoreno';
+    if (this.canWithdraw(offer) && !offer.interbank) return 'Čekamo drugu stranu';
+    return offer.status;
   }
 
   /**
@@ -107,7 +137,8 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
   }
 
   canCounter(offer: OtcOffer): boolean {
-    if (offer.interbank) return true;
+    // FIX 4: counter je moguc samo dok je interbank pregovor aktivan (ranije: uvek true).
+    if (offer.interbank) return this.isInterbankOngoing(offer);
     return this.canRespond(offer);
   }
 
@@ -123,7 +154,9 @@ export class OtcOffersComponent implements OnInit, OnDestroy {
    * For interbank offers, withdraw (delete) is always available.
    */
   canWithdraw(offer: OtcOffer): boolean {
-    if (offer.interbank) return true;
+    // FIX 4: withdraw (delete) je moguc samo dok je interbank pregovor aktivan
+    // (ranije: uvek true, pa se nudilo povlacenje vec zatvorenog pregovora).
+    if (offer.interbank) return this.isInterbankOngoing(offer);
     if (offer.status === 'PENDING_SELLER') return this.isCurrentUser(offer.buyerId);
     if (offer.status === 'PENDING_BUYER') return this.isCurrentUser(offer.sellerId);
     return false;

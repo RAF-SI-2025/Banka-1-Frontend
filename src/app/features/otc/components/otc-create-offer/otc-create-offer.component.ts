@@ -127,7 +127,7 @@ export class OtcCreateOfferComponent implements OnInit {
         amount: v.amount,
       };
       this.otcService.createInterbankNegotiation(req).subscribe({
-        next: () => this.router.navigate(['/otc/offers']),
+        next: () => this.router.navigate(['/otc']),
         error: err => {
           this.error = err?.error?.message || 'Greska pri kreiranju cross-bank pregovora.';
           this.loading = false;
@@ -137,7 +137,7 @@ export class OtcCreateOfferComponent implements OnInit {
     }
     const req = this.form.value as CreateOtcOfferRequest;
     this.otcService.createOffer(req).subscribe({
-      next: () => this.router.navigate(['/otc/offers']),
+      next: () => this.router.navigate(['/otc']),
       error: err => {
         this.error = err?.error?.message || 'Greska pri kreiranju ponude.';
         this.loading = false;
