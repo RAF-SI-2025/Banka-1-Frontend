@@ -32,7 +32,12 @@ describe('Scenario 1: Uspešno plaćanje na drugu banku', () => {
     }).as('getAccounts');
     cy.intercept('POST', /\/verification\/generate/, { statusCode: 200, body: { sessionId: 1 } }).as('generateCode');
     cy.intercept('POST', /\/verification\/validate/, { statusCode: 200, body: 'OK' }).as('validateCode');
-    cy.intercept('POST', /\/transactions\/payments/, { statusCode: 200, body: 'SUCCESS' }).as('createPayment');
+    // Racun primaoca pocinje sa 444 (routing != 111) -> cross-bank placanje ide
+    // preko interbank endpointa, ne preko intra-bank /transactions/payments.
+    cy.intercept('POST', /\/api\/interbank\/payments/, {
+      statusCode: 200,
+      body: { transactionId: 'tx-1', status: 'COMPLETED' },
+    }).as('createPayment');
 
     visitPayment();
     cy.wait('@getAccounts');
@@ -69,9 +74,10 @@ describe('Scenario 2: Plaćanje na neaktivan račun', () => {
     }).as('getAccounts');
     cy.intercept('POST', /\/verification\/generate/, { statusCode: 200, body: { sessionId: 1 } }).as('generateCode');
     cy.intercept('POST', /\/verification\/validate/, { statusCode: 200, body: 'OK' }).as('validateCode');
-    cy.intercept('POST', /\/transactions\/payments/, {
+    // Cross-bank (444...) placanje -> interbank endpoint; greska dolazi kao {error}.
+    cy.intercept('POST', /\/api\/interbank\/payments/, {
       statusCode: 400,
-      body: { errorTitle: 'Račun primaoca je neaktivan', errorDesc: 'Transakcija nije uspela' },
+      body: { error: 'Račun primaoca je neaktivan' },
     }).as('createPaymentFail');
 
     visitPayment();
