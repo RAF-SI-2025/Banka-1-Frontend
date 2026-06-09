@@ -46,7 +46,7 @@
                   <td class="font-semibold">{{ row.ticker }}</td>
                   <td><span class="font-mono">{{ s.id }}</span></td>
                   <td class="text-right font-mono">{{ s.amount | number }}</td>
-                  <td class="text-right font-mono">{{ s.pricePerUnit | number:'1.2-2' }} {{ s.currency }}</td>
+                  <td class="text-right font-mono">{{ marketPriceFor(row.ticker) ? (marketPriceFor(row.ticker) | number:'1.2-2') + ' USD' : '—' }}</td>
                   <td class="text-right">
                     <a class="z-btn-gold z-btn-sm"
                        [routerLink]="['/otc/create']"

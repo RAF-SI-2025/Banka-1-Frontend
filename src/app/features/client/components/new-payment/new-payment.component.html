@@ -35,9 +35,22 @@
           </div>
           <div>
             <label class="z-label">Račun primaoca</label>
-            <input type="text" formControlName="receiverAccount" class="z-input" placeholder="Npr. 1110001000123456789" maxlength="19"
+            <input type="text" formControlName="receiverAccount" class="z-input" placeholder="Npr. 1110001000123456789" maxlength="34"
                    [class.border-destructive]="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched" />
-            <p class="z-error" *ngIf="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">Unesite ispravan broj računa (19 cifara).</p>
+            <p class="z-error" *ngIf="paymentForm.get('receiverAccount')?.invalid && paymentForm.get('receiverAccount')?.touched">Unesite ispravan broj računa (18–34 cifre; Banka 1 = 19, Banka 2 = 18).</p>
+            <p *ngIf="isCrossBank && !crossBankNonRsdBlocked" class="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-amber-700">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7h18M3 7l4-4M3 7l4 4M21 17H3m18 0l-4-4m4 4l-4 4"></path>
+              </svg>
+              Račun je u drugoj banci — plaćanje ide kao međubankarsko ({{ senderCurrency }}).
+            </p>
+            <!-- FIX 5: cross-bank ne-RSD placanje je blokirano -->
+            <p *ngIf="crossBankNonRsdBlocked" class="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-destructive" data-testid="cross-bank-rsd-only-warning">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              {{ crossBankRsdOnlyMessage }}
+            </p>
           </div>
         </div>
 
@@ -61,7 +74,7 @@
             <div class="relative">
               <input type="number" formControlName="amount" class="z-input pr-16" placeholder="0.00"
                      [class.border-destructive]="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" />
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded">RSD</span>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded">{{ senderCurrency }}</span>
             </div>
             <p class="z-error" *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched">Unesite validan iznos veci od 0.</p>
             <div *ngIf="showLimitInfo && selectedAccount"
@@ -121,7 +134,7 @@
 
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" class="z-btn-outline" (click)="onCancel()">Nazad na listu</button>
-          <button type="submit" class="z-btn-primary" [disabled]="paymentForm.invalid">POTVRDI PLAĆANJE &rsaquo;</button>
+          <button type="submit" class="z-btn-primary" [disabled]="paymentForm.invalid || crossBankNonRsdBlocked">POTVRDI PLAĆANJE &rsaquo;</button>
         </div>
       </form>
 

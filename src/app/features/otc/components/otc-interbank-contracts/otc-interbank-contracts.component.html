@@ -1,0 +1,88 @@
+<div>
+  <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+    <div>
+      <h1 class="text-2xl font-bold text-foreground">Cross-bank opcioni ugovori</h1>
+      <p class="text-sm text-muted-foreground mt-1">
+        Sklopljeni OTC opcioni ugovori koje ste kupili od druge banke. Aktivne opcije
+        u kojima ste kupac možete iskoristiti pre datuma poravnanja.
+      </p>
+    </div>
+    <button type="button" class="z-btn-outline z-btn-sm" (click)="load()" [disabled]="loading">
+      Osveži
+    </button>
+  </div>
+
+  <app-state *ngIf="loading" mode="loading" text="Ucitavanje ugovora..."></app-state>
+  <app-state *ngIf="error && !loading" mode="error" [text]="error"></app-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <app-state *ngIf="contracts.length === 0"
+               mode="empty" title="Nema cross-bank ugovora"
+               text="Ovde će se pojaviti opcioni ugovori sklopljeni sa drugom bankom."></app-state>
+
+    <div *ngIf="contracts.length > 0" class="z-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Cross-bank ugovori</p>
+          <p class="text-sm text-muted-foreground mt-0.5">Iskorišćavanje opcije pokreće poravnanje sa drugom bankom.</p>
+        </div>
+        <span class="z-badge z-badge-blue">{{ contracts.length }} ugovora</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="z-table min-w-[1020px]" data-testid="otc-interbank-contracts-table">
+          <thead>
+            <tr>
+              <th>Akcija</th>
+              <th>Banka</th>
+              <th>Druga strana</th>
+              <th class="text-right">Količina</th>
+              <th class="text-right">Strike</th>
+              <th>Settlement</th>
+              <th>Sklopljen</th>
+              <th>Status</th>
+              <th class="text-right">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of contracts; trackBy: trackByLocalId"
+                [attr.data-testid]="'interbank-contract-row'">
+              <td class="font-semibold">{{ c.ticker }}</td>
+              <td>
+                <span class="z-badge z-badge-gold" data-testid="bank-badge">
+                  {{ counterpartyBankName(c) }}
+                </span>
+              </td>
+              <td>
+                <span class="z-badge"
+                      [ngClass]="iAmBuyer(c) ? 'z-badge-blue' : 'z-badge-gold'">
+                  {{ counterpartyLabel(c) }} · {{ iAmBuyer(c) ? 'Prodavac' : 'Kupac' }}
+                </span>
+              </td>
+              <td class="text-right font-mono">{{ c.amount | number }}</td>
+              <td class="text-right font-mono whitespace-nowrap">{{ c.strikeAmount }} {{ c.strikeCurrency }}</td>
+              <td class="whitespace-nowrap">{{ c.settlementDate | slice:0:10 }}</td>
+              <td class="text-muted-foreground whitespace-nowrap">{{ c.createdAt | date:'short' }}</td>
+              <td>
+                <span class="z-badge" [ngClass]="statusBadgeClass(c.status)">
+                  {{ c.status }}
+                </span>
+              </td>
+              <td class="text-right">
+                <button type="button"
+                        *ngIf="canExercise(c) || (c.status === 'ACTIVE' && iAmBuyer(c))"
+                        (click)="exercise(c)"
+                        [disabled]="!canExercise(c)"
+                        class="z-btn-gold z-btn-sm"
+                        data-testid="exercise-btn">
+                  {{ exercisingId === c.localId ? 'Slanje...' : 'Iskoristi' }}
+                </button>
+                <span *ngIf="!(c.status === 'ACTIVE' && iAmBuyer(c))" class="text-xs text-muted-foreground">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>

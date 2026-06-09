@@ -32,6 +32,15 @@ export interface OtcOffer {
   localId?: string;
   remoteId?: string;
   /**
+   * FIX 4: za inter-bank pregovore — pravo stanje iz backenda (`is_ongoing`).
+   * `status` se za interbank mapira na 'ACCEPTED' kada je pregovor zatvoren, ali to
+   * NE znaci nuzno da je prihvacen — moze biti i odbijen/zatvoren od partnera (protokol
+   * nema reject poruku). `isOngoing=false` znaci samo da pregovor vise nije aktivan;
+   * UI koristi ovo polje da odluci da li su Counter/Withdraw akcije i dalje moguce i da
+   * prikaze "Zatvoreno" umesto laznog "Prihvaceno". Za intra-bank ostaje undefined.
+   */
+  isOngoing?: boolean;
+  /**
    * PR_33 Phase B: valuta cene/premije (npr. "USD", "EUR").
    * Za inter-bank pregovore dolazi iz `state.pricePerUnit.currency` /
    * `state.premium.currency`; za intra-bank ostaje undefined (implicitno RSD/USD).
@@ -183,18 +192,23 @@ export interface StockRef {
  */
 export interface InterbankNegotiationView {
   localId: string;
-  remoteForeignBankId: ForeignBankId;
-  state: {
-    stock: StockRef;
-    settlementDate: string;
-    pricePerUnit: MonetaryValue;
-    premium: MonetaryValue;
-    buyerId: ForeignBankId;
-    sellerId: ForeignBankId;
-    amount: number;
-    lastModifiedBy: ForeignBankId;
-    isOngoing: boolean;
-  };
+  remoteId?: string | null;
+  isAuthoritative: boolean;
+  counterpartyBankCode: number;
+  counterpartyBankName?: string;
+  buyerId: ForeignBankId;
+  sellerId: ForeignBankId;
+  lastModifiedBy: ForeignBankId;
+  stockTicker: string;
+  priceCurrency: string;
+  pricePerUnit: string;
+  amount: number;
+  settlementDate: string;
+  premiumCurrency: string;
+  premium: string;
+  isOngoing: boolean;
+  createdAt: string;
+  lastModifiedAt: string;
 }
 
 /**
@@ -223,4 +237,37 @@ export interface CounterInterbankNegotiationRequest {
   premiumCurrency: string;
   premium: number;
   settlementDate: string;
+}
+
+/** Status sklopljenog cross-bank opcionog ugovora (vidi GET /api/interbank/otc/contracts/my). */
+export type OtcInterbankContractStatus = 'ACTIVE' | 'EXERCISED' | 'EXPIRED';
+
+/**
+ * Sklopljeni cross-bank OTC opcioni ugovor — response shape iz
+ * `GET /api/interbank/otc/contracts/my` (backend `OtcInterbankContractDto`).
+ *
+ * <p>Za razliku od intra-bank {@link OptionContract}, ovde su `buyerId`/`sellerId`
+ * parovi (routingNumber, id) per inter-bank protokol §3, a strike je `MonetaryValue`
+ * razdvojen na `strikeCurrency` + `strikeAmount` (serijalizovan kao string da bi se
+ * sacuvala BigDecimal preciznost).
+ *
+ * <p>`localId` je nas mirror id ugovora i koristi se za exercise poziv
+ * (`POST /api/interbank/otc/contracts/{localId}/exercise`).
+ */
+export interface OtcInterbankContract {
+  localId: string;
+  negotiationId: string;
+  buyerId: ForeignBankId;
+  sellerId: ForeignBankId;
+  ticker: string;
+  amount: number;
+  strikeCurrency: string;
+  strikeAmount: string;
+  settlementDate: string;
+  status: OtcInterbankContractStatus;
+  optionPseudoOwnerRouting: number;
+  optionPseudoOwnerId: string;
+  createdAt: string;
+  exercisedAt?: string;
+  expiredAt?: string;
 }
